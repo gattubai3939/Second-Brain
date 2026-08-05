@@ -19,7 +19,6 @@ import {
   Activity,
   GripVertical,
   Moon,
-  Flame,
   X,
   Settings,
   User,
@@ -64,7 +63,7 @@ const loadLocalData = () => {
 
 const savedData = loadLocalData();
 
-// 2. Press and Hold Hook (800ms)
+// 2. Press and Hold Hook (Supports custom duration)
 function useLongPress(callback = () => {}, ms = 800) {
   const [startLongPress, setStartLongPress] = useState(false);
   const timerRef = useRef();
@@ -194,30 +193,29 @@ export default function App() {
   }, [lastActiveDate, todayStr]);
 
   // LONG PRESS DELETE HANDLER (Hold to Delete)
-  const LongPressItem = ({ item, onDelete, children }) => {
-    // REPLACED window.confirm with internal V3 state to avoid crashing the canvas
+  const LongPressItem = ({ item, onDelete, children, duration = 800 }) => {
     const [showConfirm, setShowConfirm] = useState(false);
     
     const longPressEvent = useLongPress(() => {
       setShowConfirm(true);
-    });
+    }, duration);
 
     return (
-      <div {...longPressEvent} className="relative group cursor-pointer w-full">
+      <div {...longPressEvent} className="relative group cursor-pointer w-full h-full">
         {children}
         {showConfirm && (
-          <div className="absolute inset-0 bg-yellow-400 border-4 border-black p-4 flex flex-col items-center justify-center z-10 shadow-[6px_6px_0px_white]">
-            <span className="font-black text-black uppercase text-[10px] mb-3 tracking-widest">Delete this item?</span>
-            <div className="flex gap-4">
+          <div className="absolute inset-0 bg-yellow-400 border-4 border-black p-4 flex flex-col items-center justify-center z-10 shadow-[4px_4px_0px_white] sm:shadow-[6px_6px_0px_white]">
+            <span className="font-black text-black uppercase text-[10px] mb-3 tracking-widest text-center">Delete this item?</span>
+            <div className="flex gap-2 sm:gap-4">
               <button 
                 onClick={(e) => { e.stopPropagation(); onDelete(item.id); setShowConfirm(false); }} 
-                className="bg-black text-white px-6 py-2 font-black uppercase tracking-widest hover:bg-white hover:text-black border-2 border-black transition-colors"
+                className="bg-black text-white px-4 sm:px-6 py-2 font-black uppercase tracking-widest hover:bg-white hover:text-black border-2 border-black transition-colors text-xs sm:text-base"
               >
                 Yes
               </button>
               <button 
                 onClick={(e) => { e.stopPropagation(); setShowConfirm(false); }} 
-                className="bg-white text-black px-6 py-2 font-black uppercase tracking-widest hover:bg-black hover:text-white border-2 border-black transition-colors"
+                className="bg-white text-black px-4 sm:px-6 py-2 font-black uppercase tracking-widest hover:bg-black hover:text-white border-2 border-black transition-colors text-xs sm:text-base"
               >
                 No
               </button>
@@ -232,6 +230,7 @@ export default function App() {
   const deleteStagingTopic = (id) => setStagingTopics(prev => prev.filter(t => t.id !== id));
   const deleteWisdomNote = (id) => setWisdomNotes(prev => prev.filter(n => n.id !== id));
   const deleteVaultNote = (id) => setVaultNotes(prev => prev.filter(n => n.id !== id));
+  const deleteStudyTopic = (id) => setStudyTopics(prev => prev.filter(t => t.id !== id)); // Added for History
 
   useEffect(() => {
     let timerInterval;
@@ -305,7 +304,7 @@ export default function App() {
       return;
     }
     
-    // 🔥 FIX: Ab Oracle dono jagah se exactly tumhara type kiya hua text (oracleQuery) hi padhega!
+    // 🔥 FIX: Oracle reads directly from input
     const query = oracleQuery; 
     
     if (!query.trim()) return;
@@ -582,52 +581,52 @@ export default function App() {
     const quoteOfTheDay = MORNING_QUOTES[baseDate.getDate() % MORNING_QUOTES.length];
 
     return (
-      <div className="space-y-8 pb-10">
+      <div className="space-y-6 sm:space-y-8 pb-10">
         
         {/* Morning Injection Brutalist */}
-        <div className="bg-yellow-400 p-6 border-4 border-white shadow-[8px_8px_0px_white]">
-          <h3 className="text-black text-xs font-black uppercase tracking-[0.2em] mb-4 flex items-center gap-2 border-b-2 border-black/20 pb-2">
+        <div className="bg-yellow-400 p-4 sm:p-6 border-4 border-white shadow-[6px_6px_0px_white] sm:shadow-[8px_8px_0px_white]">
+          <h3 className="text-black text-xs font-black uppercase tracking-[0.2em] mb-3 sm:mb-4 flex items-center gap-2 border-b-2 border-black/20 pb-2">
             <Zap size={16} /> PROTOCOL INITIATED
           </h3>
-          <p className="text-black text-2xl font-black uppercase tracking-tight leading-snug">
+          <p className="text-black text-xl sm:text-2xl font-black uppercase tracking-tight leading-snug">
             "{quoteOfTheDay}"
           </p>
         </div>
 
-        {/* Pace-Maker Engine (Now fully editable via Brutalist Input) */}
-        <div className="bg-black border-4 border-white p-6 shadow-[8px_8px_0px_#facc15] relative overflow-hidden">
+        {/* Pace-Maker Engine */}
+        <div className="bg-black border-4 border-white p-4 sm:p-6 shadow-[6px_6px_0px_#facc15] sm:shadow-[8px_8px_0px_#facc15] relative overflow-hidden">
           <h2 className="text-[10px] font-black text-yellow-400 tracking-[0.2em] uppercase mb-4 border-b-2 border-white/20 pb-2">GLOBAL DEADLINE</h2>
           <div className="flex justify-between items-end">
             
-            <div className="flex items-baseline gap-2 border-b-4 border-transparent hover:border-white/20 transition-colors focus-within:border-yellow-400">
+            <div className="flex items-baseline gap-1 sm:gap-2 border-b-4 border-transparent hover:border-white/20 transition-colors focus-within:border-yellow-400">
               <input 
                 type="number" 
                 value={globalDeadlineDays}
                 onChange={(e) => setGlobalDeadlineDays(Math.max(1, parseInt(e.target.value) || 1))}
-                className="w-24 bg-transparent text-6xl font-black tracking-tighter text-white outline-none p-0 m-0"
+                className="w-16 sm:w-24 bg-transparent text-4xl sm:text-6xl font-black tracking-tighter text-white outline-none p-0 m-0"
               />
-              <span className="text-xl text-yellow-400 font-black">DAYS</span>
+              <span className="text-lg sm:text-xl text-yellow-400 font-black">DAYS</span>
             </div>
 
             <div className="text-right">
-              <p className="text-[10px] text-white tracking-widest font-bold uppercase mb-1">PACE DETECTOR</p>
-              <p className={`text-2xl font-black ${paceStatus.color}`}>
-                {pace} <span className="text-xs">CH/DAY</span>
+              <p className="text-[9px] sm:text-[10px] text-white tracking-widest font-bold uppercase mb-1">PACE DETECTOR</p>
+              <p className={`text-xl sm:text-2xl font-black ${paceStatus.color}`}>
+                {pace} <span className="text-[10px] sm:text-xs">CH/DAY</span>
               </p>
-              <p className={`text-[10px] font-black uppercase tracking-widest mt-1 ${paceStatus.color}`}>{paceStatus.text}</p>
+              <p className={`text-[9px] sm:text-[10px] font-black uppercase tracking-widest mt-1 ${paceStatus.color}`}>{paceStatus.text}</p>
             </div>
           </div>
           
           {stagingTopics.length > 0 && (
-            <div className="mt-8 bg-yellow-400 p-4 border-2 border-white text-black">
+            <div className="mt-6 sm:mt-8 bg-yellow-400 p-3 sm:p-4 border-2 border-white text-black">
               <h3 className="text-[10px] font-black uppercase tracking-[0.2em] mb-2">CURRENT STRIKE TARGET</h3>
-              <h2 className="text-xl font-black uppercase tracking-tight truncate">{stagingTopics[0].title}</h2>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-white bg-black px-2 py-1 mt-2 inline-block">
+              <h2 className="text-lg sm:text-xl font-black uppercase tracking-tight truncate">{stagingTopics[0].title}</h2>
+              <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-white bg-black px-2 py-1 mt-2 inline-block">
                 {stagingTopics[0].category}
               </span>
               <button 
                 onClick={() => handleStartRevision(stagingTopics[0].id)}
-                className="w-full mt-4 bg-black text-yellow-400 py-3 border-2 border-white font-black tracking-widest uppercase hover:bg-white hover:text-black transition-all active:translate-y-1 shadow-[4px_4px_0px_black] active:shadow-none"
+                className="w-full mt-4 bg-black text-yellow-400 py-2.5 sm:py-3 text-sm sm:text-base border-2 border-white font-black tracking-widest uppercase hover:bg-white hover:text-black transition-all active:translate-y-1 shadow-[4px_4px_0px_black] active:shadow-none"
               >
                 TARGET DESTROYED
               </button>
@@ -636,47 +635,47 @@ export default function App() {
         </div>
 
         {todaysCustomMissions.length > 0 && (
-          <div className="pt-4">
-            <h3 className="text-[10px] font-black text-yellow-400 tracking-[0.2em] uppercase mb-4">TODAY'S MISSIONS</h3>
+          <div className="pt-2 sm:pt-4">
+            <h3 className="text-[10px] font-black text-yellow-400 tracking-[0.2em] uppercase mb-3 sm:mb-4">TODAY'S MISSIONS</h3>
             {todaysCustomMissions.map((mission) => (
-              <div key={mission.id} className="flex items-center justify-between bg-black p-4 mb-3 border-2 border-white shadow-[4px_4px_0px_#facc15]">
-                <span className="font-bold uppercase tracking-wider text-sm text-white">{mission.text}</span>
+              <div key={mission.id} className="flex items-center justify-between bg-black p-3 sm:p-4 mb-2 sm:mb-3 border-2 border-white shadow-[4px_4px_0px_#facc15]">
+                <span className="font-bold uppercase tracking-wider text-xs sm:text-sm text-white">{mission.text}</span>
                 <button 
                   onClick={() => setCustomMissions(prev => prev.filter(m => m.id !== mission.id))}
                   className="text-white hover:text-yellow-400 transition-colors"
                 >
-                  <CheckCircle2 className="w-6 h-6 stroke-[2.5]" />
+                  <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]" />
                 </button>
               </div>
             ))}
           </div>
         )}
 
-        <div className="pt-4">
-          <h3 className="text-[10px] font-black text-yellow-400 tracking-[0.2em] uppercase mb-4">MANDATORY REVISIONS (TODAY)</h3>
+        <div className="pt-2 sm:pt-4">
+          <h3 className="text-[10px] font-black text-yellow-400 tracking-[0.2em] uppercase mb-3 sm:mb-4">MANDATORY REVISIONS (TODAY)</h3>
           {todaysRevisions.length === 0 ? (
-            <div className="border-4 border-dashed border-zinc-800 p-8 text-center text-zinc-600 font-black uppercase tracking-widest">
+            <div className="border-4 border-dashed border-zinc-800 p-6 sm:p-8 text-center text-zinc-600 font-black uppercase tracking-widest text-sm sm:text-base">
               SYSTEM CLEAR
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {todaysRevisions.map((rev, idx) => (
-                <div key={idx} className={`bg-black border-2 border-white p-4 flex items-center justify-between shadow-[4px_4px_0px_white] ${rev.isOverdue ? 'border-red-500 shadow-[4px_4px_0px_#ef4444]' : ''}`}>
+                <div key={idx} className={`bg-black border-2 border-white p-3 sm:p-4 flex items-center justify-between shadow-[4px_4px_0px_white] ${rev.isOverdue ? 'border-red-500 shadow-[4px_4px_0px_#ef4444]' : ''}`}>
                   <div>
-                    <h4 className="text-white font-black uppercase text-sm flex items-center gap-2">
+                    <h4 className="text-white font-black uppercase text-xs sm:text-sm flex items-center gap-2">
                       {rev.title} 
-                      {rev.isOverdue && <span className="text-[9px] bg-red-500 text-white px-2 py-1 tracking-widest">OVERDUE</span>}
+                      {rev.isOverdue && <span className="text-[8px] sm:text-[9px] bg-red-500 text-white px-2 py-0.5 sm:py-1 tracking-widest">OVERDUE</span>}
                     </h4>
                     <div className="flex gap-2 mt-2">
-                      <span className="text-[9px] font-black uppercase tracking-widest text-yellow-400">{rev.category}</span>
-                      <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500">DAY {rev.dayOffset}</span>
+                      <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-yellow-400">{rev.category}</span>
+                      <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-zinc-500">DAY {rev.dayOffset}</span>
                     </div>
                   </div>
                   <button 
                     onClick={() => markRevisionComplete(rev.topicId, rev.targetDate, rev.dayOffset)}
-                    className="w-12 h-12 bg-white text-black border-2 border-black flex items-center justify-center hover:bg-yellow-400 transition-colors active:translate-y-1"
+                    className="w-10 h-10 sm:w-12 sm:h-12 bg-white text-black border-2 border-black flex items-center justify-center hover:bg-yellow-400 transition-colors active:translate-y-1 shrink-0"
                   >
-                    <Check size={24} className="stroke-[3]" />
+                    <Check size={20} className="sm:size-6 stroke-[3]" />
                   </button>
                 </div>
               ))}
@@ -688,39 +687,39 @@ export default function App() {
   };
 
   const renderStudyEngine = () => (
-    <div className="space-y-8 pb-10">
-      <div className="bg-black border-4 border-white p-5 shadow-[8px_8px_0px_#facc15]">
-        <div className="flex justify-between items-center mb-6 border-b-2 border-white/20 pb-2">
-           <h3 className="text-yellow-400 font-black uppercase tracking-widest flex items-center gap-2 text-sm">
+    <div className="space-y-6 sm:space-y-8 pb-10">
+      <div className="bg-black border-4 border-white p-4 sm:p-5 shadow-[6px_6px_0px_#facc15] sm:shadow-[8px_8px_0px_#facc15]">
+        <div className="flex justify-between items-center mb-4 sm:mb-6 border-b-2 border-white/20 pb-2">
+           <h3 className="text-yellow-400 font-black uppercase tracking-widest flex items-center gap-2 text-xs sm:text-sm">
              LIQUID STRIKE QUEUE
            </h3>
-           <span className="text-[10px] text-zinc-500 font-black uppercase tracking-widest">Hold to drag</span>
+           <span className="text-[9px] sm:text-[10px] text-zinc-500 font-black uppercase tracking-widest">Hold to drag</span>
         </div>
         
-        <div className="flex gap-2 mb-6">
+        <div className="flex gap-2 mb-4 sm:mb-6">
           <input 
             type="text" 
             value={newSyllabusCat}
             onChange={(e) => setNewSyllabusCat(e.target.value)}
             placeholder="NEW TAG..."
-            className="flex-1 bg-black border-2 border-white px-4 py-3 text-white font-black uppercase placeholder:text-zinc-600 focus:outline-none focus:bg-zinc-900 rounded-none"
+            className="flex-1 bg-black border-2 border-white px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-white font-black uppercase placeholder:text-zinc-600 focus:outline-none focus:bg-zinc-900 rounded-none"
           />
           <button 
             onClick={handleAddSyllabusCategory}
-            className="bg-yellow-400 text-black border-2 border-white px-4 font-black uppercase hover:bg-white active:translate-y-1 transition-all rounded-none"
+            className="bg-yellow-400 text-black border-2 border-white px-3 sm:px-4 font-black uppercase hover:bg-white active:translate-y-1 transition-all rounded-none"
           >
-            <Plus size={20} className="stroke-[3]" />
+            <Plus size={18} className="sm:size-5 stroke-[3]" />
           </button>
         </div>
 
         {syllabusCategories.length > 1 && (
-           <div className="flex flex-wrap gap-2 mb-6">
+           <div className="flex flex-wrap gap-2 mb-4 sm:mb-6">
              {syllabusCategories.map(cat => (
-               <div key={cat} className="group flex items-center gap-2 bg-black border-2 border-white px-3 py-2 text-xs font-black text-white uppercase tracking-widest hover:border-yellow-400 transition-colors cursor-pointer">
+               <div key={cat} className="group flex items-center gap-2 bg-black border-2 border-white px-2 sm:px-3 py-1 sm:py-2 text-[10px] sm:text-xs font-black text-white uppercase tracking-widest hover:border-yellow-400 transition-colors cursor-pointer">
                  {cat}
                  {cat !== "Raw Backlog" && (
                    <button onClick={() => handleDeleteSyllabusCategory(cat)} className="text-zinc-500 hover:text-red-500 transition-colors">
-                     <Trash2 size={14} />
+                     <Trash2 size={12} className="sm:size-4" />
                    </button>
                  )}
                </div>
@@ -732,7 +731,7 @@ export default function App() {
           <select 
             value={selectedSyllabusCat}
             onChange={(e) => setSelectedSyllabusCat(e.target.value)}
-            className="w-1/3 bg-black border-2 border-white px-2 py-3 text-xs font-black uppercase tracking-widest text-yellow-400 focus:outline-none rounded-none cursor-pointer"
+            className="w-1/3 bg-black border-2 border-white px-1 sm:px-2 py-2 sm:py-3 text-[9px] sm:text-xs font-black uppercase tracking-widest text-yellow-400 focus:outline-none rounded-none cursor-pointer"
           >
             {syllabusCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
           </select>
@@ -742,19 +741,19 @@ export default function App() {
             onChange={(e) => setNewTopic(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleAddStagingTopic()}
             placeholder="CHAPTER NAME..."
-            className="flex-1 bg-black border-2 border-white px-4 py-3 text-white font-black uppercase placeholder:text-zinc-600 focus:outline-none focus:bg-zinc-900 rounded-none"
+            className="flex-1 bg-black border-2 border-white px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-white font-black uppercase placeholder:text-zinc-600 focus:outline-none focus:bg-zinc-900 rounded-none"
           />
           <button 
             onClick={handleAddStagingTopic}
-            className="bg-white text-black border-2 border-white px-5 font-black hover:bg-yellow-400 active:translate-y-1 transition-all rounded-none"
+            className="bg-white text-black border-2 border-white px-4 sm:px-5 font-black hover:bg-yellow-400 active:translate-y-1 transition-all rounded-none"
           >
-            <Plus size={20} className="stroke-[3]" />
+            <Plus size={18} className="sm:size-5 stroke-[3]" />
           </button>
         </div>
 
-        <div className="mt-8 space-y-3">
+        <div className="mt-6 sm:mt-8 space-y-2 sm:space-y-3">
           {stagingTopics.length === 0 && (
-            <div className="text-center py-10 border-4 border-dashed border-zinc-800 text-zinc-600 font-black uppercase tracking-widest">
+            <div className="text-center py-8 sm:py-10 border-4 border-dashed border-zinc-800 text-zinc-600 font-black uppercase tracking-widest text-xs sm:text-sm">
               QUEUE EMPTY
             </div>
           )}
@@ -765,96 +764,99 @@ export default function App() {
                 onDragStart={() => handleDragStart(index)}
                 onDragOver={handleDragOver}
                 onDrop={() => handleDrop(index)}
-                className={`bg-black p-4 border-2 flex items-center justify-between cursor-move transition-all select-none
-                  ${index === 0 ? 'border-yellow-400 shadow-[6px_6px_0px_#facc15]' : 'border-white shadow-[4px_4px_0px_white] hover:border-yellow-400'}
+                className={`bg-black p-3 sm:p-4 border-2 flex items-center justify-between cursor-move transition-all select-none
+                  ${index === 0 ? 'border-yellow-400 shadow-[4px_4px_0px_#facc15] sm:shadow-[6px_6px_0px_#facc15]' : 'border-white shadow-[3px_3px_0px_white] sm:shadow-[4px_4px_0px_white] hover:border-yellow-400'}
                   ${draggedItemIndex === index ? 'opacity-50' : 'opacity-100'}
                 `}
               >
-                <div className="flex items-center gap-4">
-                  <GripVertical size={20} className={index === 0 ? "text-yellow-400" : "text-zinc-500"} />
+                <div className="flex items-center gap-3 sm:gap-4">
+                  <GripVertical size={18} className={`sm:size-5 ${index === 0 ? "text-yellow-400" : "text-zinc-500"}`} />
                   <div>
-                    <h4 className="font-black text-white text-sm uppercase flex items-center gap-2">
+                    <h4 className="font-black text-white text-xs sm:text-sm uppercase flex items-center gap-2">
                       {topic.title}
-                      {index === 0 && <span className="text-[9px] bg-yellow-400 text-black px-2 py-0.5 tracking-widest font-black">NEXT</span>}
+                      {index === 0 && <span className="text-[8px] sm:text-[9px] bg-yellow-400 text-black px-1.5 sm:px-2 py-0.5 tracking-widest font-black">NEXT</span>}
                     </h4>
-                    <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mt-1 block">{topic.category}</span>
+                    <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-zinc-500 mt-1 block">{topic.category}</span>
                   </div>
                 </div>
               </div>
             </LongPressItem>
           ))}
         </div>
-        <p className="text-[10px] font-black tracking-widest text-zinc-600 mt-6 text-center uppercase">Hold item to execute delete</p>
+        <p className="text-[9px] sm:text-[10px] font-black tracking-widest text-zinc-600 mt-4 sm:mt-6 text-center uppercase">Hold item to execute delete</p>
       </div>
     </div>
   );
 
   const renderHistory = () => (
-    <div className="space-y-8 pb-10">
-      <div className="bg-black border-4 border-white p-5 shadow-[8px_8px_0px_#facc15]">
-        <h3 className="text-yellow-400 font-black uppercase tracking-widest mb-6 flex items-center gap-2 text-sm border-b-2 border-white/20 pb-2">
+    <div className="space-y-6 sm:space-y-8 pb-10">
+      <div className="bg-black border-4 border-white p-4 sm:p-5 shadow-[6px_6px_0px_#facc15] sm:shadow-[8px_8px_0px_#facc15]">
+        <h3 className="text-yellow-400 font-black uppercase tracking-widest mb-4 sm:mb-6 flex items-center gap-2 text-xs sm:text-sm border-b-2 border-white/20 pb-2">
           ONGOING 30-DAY CYCLES
         </h3>
         {studyTopics.length === 0 ? (
-          <div className="text-center py-10 border-4 border-dashed border-zinc-800 text-zinc-600 font-black uppercase tracking-widest">
+          <div className="text-center py-8 sm:py-10 border-4 border-dashed border-zinc-800 text-zinc-600 font-black uppercase tracking-widest text-xs sm:text-sm">
             NO ACTIVE CYCLES
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
+            <p className="text-[9px] text-zinc-500 uppercase tracking-widest text-center mb-2">Hold item 5 seconds to delete</p>
             {studyTopics.map(topic => (
-              <div key={topic.id} className="bg-black border-2 border-white p-5 shadow-[4px_4px_0px_white]">
-                <div className="flex justify-between items-start mb-6">
-                  <div>
-                    <h4 className="font-black text-white text-lg uppercase">{topic.title}</h4>
-                    <span className="text-[10px] font-black uppercase tracking-widest text-black bg-white px-2 py-1 mt-2 inline-block">{topic.category}</span>
+              <LongPressItem key={topic.id} item={topic} onDelete={(id) => deleteStudyTopic(id)} duration={5000}>
+                <div className="bg-black border-2 border-white p-4 sm:p-5 shadow-[4px_4px_0px_white]">
+                  <div className="flex justify-between items-start mb-4 sm:mb-6">
+                    <div>
+                      <h4 className="font-black text-white text-base sm:text-lg uppercase">{topic.title}</h4>
+                      <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-black bg-white px-2 py-1 mt-2 inline-block">{topic.category}</span>
+                    </div>
+                    <span className="text-[9px] sm:text-[10px] font-black text-yellow-400 tracking-widest border border-yellow-400 px-1 sm:px-2 py-1">INIT: {topic.startDate}</span>
                   </div>
-                  <span className="text-[10px] font-black text-yellow-400 tracking-widest border border-yellow-400 px-2 py-1">INIT: {topic.startDate}</span>
+                  <div className="flex flex-wrap gap-2 sm:gap-3">
+                    {topic.schedule.map((rev, i) => {
+                      const isPending = !rev.completed && rev.targetDate <= todayStr;
+                      return (
+                        <div key={i} className={`flex flex-col items-center justify-center py-1.5 sm:py-2 px-2 sm:px-3 border-2 transition-all ${
+                          rev.completed 
+                            ? 'bg-yellow-400 border-yellow-400 text-black' 
+                            : isPending 
+                              ? 'bg-black border-red-500 text-red-500 shadow-[2px_2px_0px_#ef4444]'
+                              : 'bg-black border-zinc-800 text-zinc-600'
+                        }`}>
+                          <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest">D{rev.dayOffset}</span>
+                          {rev.completed ? (
+                            <Check size={14} className="sm:size-4 mt-1 stroke-[4]" />
+                          ) : (
+                            <Circle size={14} className={`sm:size-4 mt-1 stroke-[3] ${isPending ? 'animate-pulse' : ''}`} />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-                <div className="flex flex-wrap gap-3">
-                  {topic.schedule.map((rev, i) => {
-                    const isPending = !rev.completed && rev.targetDate <= todayStr;
-                    return (
-                      <div key={i} className={`flex flex-col items-center justify-center py-2 px-3 border-2 transition-all ${
-                        rev.completed 
-                          ? 'bg-yellow-400 border-yellow-400 text-black' 
-                          : isPending 
-                            ? 'bg-black border-red-500 text-red-500 shadow-[2px_2px_0px_#ef4444]'
-                            : 'bg-black border-zinc-800 text-zinc-600'
-                      }`}>
-                        <span className="text-[10px] font-black uppercase tracking-widest">D{rev.dayOffset}</span>
-                        {rev.completed ? (
-                          <Check size={16} className="mt-1 stroke-[4]" />
-                        ) : (
-                          <Circle size={16} className={`mt-1 stroke-[3] ${isPending ? 'animate-pulse' : ''}`} />
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+              </LongPressItem>
             ))}
           </div>
         )}
       </div>
 
-      <div className="bg-black border-4 border-white p-6 shadow-[8px_8px_0px_white]">
-        <h3 className="text-white font-black uppercase tracking-widest mb-6 flex items-center gap-2 text-sm border-b-2 border-zinc-800 pb-2">
+      <div className="bg-black border-4 border-white p-4 sm:p-6 shadow-[6px_6px_0px_white] sm:shadow-[8px_8px_0px_white]">
+        <h3 className="text-white font-black uppercase tracking-widest mb-4 sm:mb-6 flex items-center gap-2 text-xs sm:text-sm border-b-2 border-zinc-800 pb-2">
           HALL OF FAME (MASTERED)
         </h3>
         {masteredTopics.length === 0 ? (
-          <div className="text-center py-10 border-4 border-dashed border-zinc-800 text-zinc-600 font-black uppercase tracking-widest">
+          <div className="text-center py-8 sm:py-10 border-4 border-dashed border-zinc-800 text-zinc-600 font-black uppercase tracking-widest text-xs sm:text-sm">
             EMPTY VAULT
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 gap-3 sm:gap-4">
             {masteredTopics.map(topic => (
-              <div key={topic.id} className="bg-black p-4 border-2 border-zinc-700 flex items-center gap-4 hover:border-yellow-400 transition-colors">
-                <div className="w-12 h-12 bg-black border-2 border-yellow-400 flex items-center justify-center">
-                   <Trophy size={20} className="text-yellow-400" />
+              <div key={topic.id} className="bg-black p-3 sm:p-4 border-2 border-zinc-700 flex items-center gap-3 sm:gap-4 hover:border-yellow-400 transition-colors">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-black border-2 border-yellow-400 flex items-center justify-center shrink-0">
+                   <Trophy size={18} className="sm:size-5 text-yellow-400" />
                 </div>
                 <div>
-                  <h4 className="font-black text-white text-sm uppercase">{topic.title}</h4>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mt-1">{topic.category} • {topic.masteredDate}</p>
+                  <h4 className="font-black text-white text-xs sm:text-sm uppercase">{topic.title}</h4>
+                  <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-zinc-500 mt-1">{topic.category} • {topic.masteredDate}</p>
                 </div>
               </div>
             ))}
@@ -868,48 +870,48 @@ export default function App() {
     if (expandedWisdomCategory) {
       const filteredNotes = wisdomNotes.filter(n => n.category === expandedWisdomCategory);
       return (
-        <div className="space-y-6 pb-10">
-          <div className="flex items-center gap-4 mb-6">
-            <button onClick={() => setExpandedWisdomCategory(null)} className="p-3 bg-white text-black hover:bg-yellow-400 transition-colors border-2 border-black rounded-none active:translate-y-1">
-              <ChevronLeft size={24} className="stroke-[3]"/>
+        <div className="space-y-4 sm:space-y-6 pb-10">
+          <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+            <button onClick={() => setExpandedWisdomCategory(null)} className="p-2 sm:p-3 bg-white text-black hover:bg-yellow-400 transition-colors border-2 border-black rounded-none active:translate-y-1">
+              <ChevronLeft size={20} className="sm:size-6 stroke-[3]"/>
             </button>
-            <h2 className="text-xl font-black text-white uppercase tracking-widest flex items-center gap-2">
-              <FolderOpen size={24} className="text-zinc-500" /> {expandedWisdomCategory}
+            <h2 className="text-lg sm:text-xl font-black text-white uppercase tracking-widest flex items-center gap-2">
+              <FolderOpen size={20} className="sm:size-6 text-zinc-500" /> {expandedWisdomCategory}
             </h2>
           </div>
-          <div className="flex gap-2 shadow-[6px_6px_0px_#facc15] mb-8">
+          <div className="flex gap-2 shadow-[4px_4px_0px_#facc15] sm:shadow-[6px_6px_0px_#facc15] mb-6 sm:mb-8">
             <input 
               type="text" 
               value={newWisdom}
               onChange={(e) => setNewWisdom(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleAddWisdom()}
               placeholder="DUMP KNOWLEDGE..."
-              className="flex-1 bg-black border-4 border-white px-4 py-4 text-white font-black uppercase placeholder:text-zinc-600 focus:outline-none focus:bg-zinc-900 rounded-none"
+              className="flex-1 bg-black border-4 border-white px-3 sm:px-4 py-3 sm:py-4 text-xs sm:text-sm text-white font-black uppercase placeholder:text-zinc-600 focus:outline-none focus:bg-zinc-900 rounded-none"
             />
             <button 
               onClick={handleAddWisdom}
-              className="bg-yellow-400 text-black border-4 border-white px-6 font-black transition-all hover:bg-white rounded-none active:bg-zinc-300"
+              className="bg-yellow-400 text-black border-4 border-white px-4 sm:px-6 font-black transition-all hover:bg-white rounded-none active:bg-zinc-300"
             >
-              <Plus size={24} className="stroke-[4]" />
+              <Plus size={20} className="sm:size-6 stroke-[4]" />
             </button>
           </div>
-          <div className="grid gap-4">
-            {filteredNotes.length === 0 && <div className="text-center py-10 border-4 border-dashed border-zinc-800 text-zinc-600 font-black uppercase tracking-widest">EMPTY FOLDER</div>}
+          <div className="grid gap-3 sm:gap-4">
+            {filteredNotes.length === 0 && <div className="text-center py-8 sm:py-10 border-4 border-dashed border-zinc-800 text-zinc-600 font-black uppercase tracking-widest text-xs sm:text-sm">EMPTY FOLDER</div>}
             {filteredNotes.map(note => (
               <LongPressItem key={note.id} item={note} onDelete={(id) => deleteWisdomNote(id)}>
-                <div className="bg-black border-2 border-white p-5 shadow-[4px_4px_0px_white] flex flex-col gap-4 group hover:border-yellow-400 transition-colors cursor-pointer">
-                  <div className="flex items-start gap-3">
-                     <Mic size={18} className="text-zinc-600 mt-1 flex-shrink-0" />
-                     <p className="text-white text-sm font-bold leading-relaxed">{note.text}</p>
+                <div className="bg-black border-2 border-white p-4 sm:p-5 shadow-[3px_3px_0px_white] sm:shadow-[4px_4px_0px_white] flex flex-col gap-3 sm:gap-4 group hover:border-yellow-400 transition-colors cursor-pointer">
+                  <div className="flex items-start gap-2 sm:gap-3">
+                     <Mic size={16} className="sm:size-4 text-zinc-600 mt-1 flex-shrink-0" />
+                     <p className="text-white text-xs sm:text-sm font-bold leading-relaxed">{note.text}</p>
                   </div>
-                  <div className="flex justify-between items-center pt-4 border-t-2 border-zinc-800">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">{note.date}</span>
+                  <div className="flex justify-between items-center pt-3 sm:pt-4 border-t-2 border-zinc-800">
+                    <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-zinc-500">{note.date}</span>
                     <div className="flex items-center gap-2">
-                       <MoveRight size={14} className="text-zinc-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                       <MoveRight size={12} className="sm:size-3 text-zinc-600 opacity-0 group-hover:opacity-100 transition-opacity" />
                        <select 
                          onChange={(e) => handleMoveWisdomNote(note.id, e.target.value)}
                          value={note.category}
-                         className="bg-zinc-900 border-2 border-zinc-700 text-[10px] font-black text-white uppercase px-2 py-1 outline-none cursor-pointer"
+                         className="bg-zinc-900 border-2 border-zinc-700 text-[9px] sm:text-[10px] font-black text-white uppercase px-1 sm:px-2 py-1 outline-none cursor-pointer"
                        >
                          {wisdomCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                        </select>
@@ -923,14 +925,14 @@ export default function App() {
       );
     }
     return (
-      <div className="space-y-8 pb-10">
+      <div className="space-y-6 sm:space-y-8 pb-10">
         
         {/* Ask Oracle Brutalist Box */}
-        <div className="bg-black border-4 border-white p-6 shadow-[8px_8px_0px_#facc15]">
-          <h3 className="text-yellow-400 font-black uppercase tracking-widest mb-4 flex items-center gap-2 text-sm border-b-2 border-white/20 pb-2">
-            <Sparkles size={18} /> ASK THE ORACLE
+        <div className="bg-black border-4 border-white p-4 sm:p-6 shadow-[6px_6px_0px_#facc15] sm:shadow-[8px_8px_0px_#facc15]">
+          <h3 className="text-yellow-400 font-black uppercase tracking-widest mb-3 sm:mb-4 flex items-center gap-2 text-xs sm:text-sm border-b-2 border-white/20 pb-2">
+            <Sparkles size={16} className="sm:size-5" /> ASK THE ORACLE
           </h3>
-          <p className="text-[10px] text-zinc-400 font-bold tracking-widest uppercase mb-4">Chat with your Second Brain. Uses your saved Wisdom.</p>
+          <p className="text-[9px] sm:text-[10px] text-zinc-400 font-bold tracking-widest uppercase mb-3 sm:mb-4">Chat with your Second Brain. Uses your saved Wisdom.</p>
           <div className="flex gap-2">
             <input 
               type="text" 
@@ -938,63 +940,63 @@ export default function App() {
               onChange={(e) => setOracleQuery(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleAskOracle('wisdom')}
               placeholder="QUERY..."
-              className="flex-1 bg-black border-2 border-white px-4 py-3 text-white font-black uppercase placeholder:text-zinc-600 focus:outline-none focus:bg-zinc-900 rounded-none"
+              className="flex-1 bg-black border-2 border-white px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-white font-black uppercase placeholder:text-zinc-600 focus:outline-none focus:bg-zinc-900 rounded-none"
             />
             <button 
               onClick={() => handleAskOracle('wisdom')}
               disabled={isOracleThinking}
-              className="bg-white text-black border-2 border-white px-6 font-black uppercase hover:bg-yellow-400 active:translate-y-1 transition-all rounded-none disabled:opacity-50"
+              className="bg-white text-black border-2 border-white px-4 sm:px-6 font-black uppercase hover:bg-yellow-400 active:translate-y-1 transition-all rounded-none disabled:opacity-50"
             >
-              {isOracleThinking ? <Circle size={20} className="animate-pulse stroke-[4]" /> : <Send size={20} className="stroke-[3]" />}
+              {isOracleThinking ? <Circle size={18} className="sm:size-5 animate-pulse stroke-[4]" /> : <Send size={18} className="sm:size-5 stroke-[3]" />}
             </button>
           </div>
           {oracleResponse && (
-            <div className="mt-6 p-5 bg-zinc-900 border-l-4 border-yellow-400">
-              <p className="text-white text-sm font-bold leading-relaxed">{oracleResponse}</p>
+            <div className="mt-4 sm:mt-6 p-4 sm:p-5 bg-zinc-900 border-l-4 border-yellow-400">
+              <p className="text-white text-xs sm:text-sm font-bold leading-relaxed">{oracleResponse}</p>
             </div>
           )}
         </div>
 
-        <div className="bg-black border-4 border-white p-6 shadow-[8px_8px_0px_white]">
-          <h3 className="text-white font-black uppercase tracking-widest mb-6 flex items-center gap-2 text-sm border-b-2 border-zinc-800 pb-2">
-            <Folder size={18} /> WISDOM FOLDERS
+        <div className="bg-black border-4 border-white p-4 sm:p-6 shadow-[6px_6px_0px_white] sm:shadow-[8px_8px_0px_white]">
+          <h3 className="text-white font-black uppercase tracking-widest mb-4 sm:mb-6 flex items-center gap-2 text-xs sm:text-sm border-b-2 border-zinc-800 pb-2">
+            <Folder size={16} className="sm:size-5" /> WISDOM FOLDERS
           </h3>
-          <div className="flex gap-2 mb-8">
+          <div className="flex gap-2 mb-6 sm:mb-8">
             <input 
               type="text" 
               value={newWisdomCat}
               onChange={(e) => setNewWisdomCat(e.target.value)}
               placeholder="NEW FOLDER..."
-              className="flex-1 bg-black border-2 border-zinc-600 px-4 py-3 text-white font-black uppercase placeholder:text-zinc-700 focus:outline-none focus:border-white rounded-none"
+              className="flex-1 bg-black border-2 border-zinc-600 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-white font-black uppercase placeholder:text-zinc-700 focus:outline-none focus:border-white rounded-none"
             />
             <button 
               onClick={handleAddWisdomCategory}
-              className="bg-zinc-800 text-white border-2 border-zinc-600 px-5 font-black hover:bg-white hover:text-black transition-colors rounded-none"
+              className="bg-zinc-800 text-white border-2 border-zinc-600 px-4 sm:px-5 font-black hover:bg-white hover:text-black transition-colors rounded-none"
             >
-              <Plus size={20} className="stroke-[3]" />
+              <Plus size={18} className="sm:size-5 stroke-[3]" />
             </button>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
             {wisdomCategories.map(cat => {
               const count = wisdomNotes.filter(n => n.category === cat).length;
               return (
                 <div key={cat} className="group relative">
                   <button 
                     onClick={() => setExpandedWisdomCategory(cat)}
-                    className="w-full bg-black border-2 border-white p-5 flex flex-col items-start gap-4 hover:border-yellow-400 hover:shadow-[4px_4px_0px_#facc15] transition-all text-left active:translate-y-1 rounded-none h-full"
+                    className="w-full bg-black border-2 border-white p-4 sm:p-5 flex flex-col items-start gap-3 sm:gap-4 hover:border-yellow-400 hover:shadow-[3px_3px_0px_#facc15] sm:hover:shadow-[4px_4px_0px_#facc15] transition-all text-left active:translate-y-1 rounded-none h-full"
                   >
-                    <FolderOpen size={32} className="text-zinc-400 group-hover:text-yellow-400 transition-colors" />
+                    <FolderOpen size={24} className="sm:size-8 text-zinc-400 group-hover:text-yellow-400 transition-colors" />
                     <div>
-                      <h4 className="font-black text-white text-sm uppercase truncate w-full">{cat}</h4>
-                      <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mt-1 block">{count} NOTES</span>
+                      <h4 className="font-black text-white text-xs sm:text-sm uppercase truncate w-full">{cat}</h4>
+                      <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-zinc-500 mt-1 block">{count} NOTES</span>
                     </div>
                   </button>
                   {cat !== "Quick Thoughts" && (
                     <button 
                       onClick={(e) => { e.stopPropagation(); handleDeleteWisdomCategory(cat); }}
-                      className="absolute top-3 right-3 p-2 bg-black text-zinc-600 hover:text-red-500 border-2 border-transparent hover:border-red-500 transition-colors"
+                      className="absolute top-2 right-2 sm:top-3 sm:right-3 p-1.5 sm:p-2 bg-black text-zinc-600 hover:text-red-500 border-2 border-transparent hover:border-red-500 transition-colors"
                     >
-                      <Trash2 size={16} />
+                      <Trash2 size={14} className="sm:size-4" />
                     </button>
                   )}
                 </div>
@@ -1010,24 +1012,24 @@ export default function App() {
     if (expandedVaultCategory) {
       const notesInCat = vaultNotes.filter(n => n.category === expandedVaultCategory);
       return (
-        <div className="space-y-6 pb-10">
-          <div className="flex items-center gap-4 mb-6">
-            <button onClick={() => setExpandedVaultCategory(null)} className="p-3 bg-white text-black hover:bg-yellow-400 transition-colors border-2 border-black rounded-none active:translate-y-1">
-              <ChevronLeft size={24} className="stroke-[3]"/>
+        <div className="space-y-4 sm:space-y-6 pb-10">
+          <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+            <button onClick={() => setExpandedVaultCategory(null)} className="p-2 sm:p-3 bg-white text-black hover:bg-yellow-400 transition-colors border-2 border-black rounded-none active:translate-y-1">
+              <ChevronLeft size={20} className="sm:size-6 stroke-[3]"/>
             </button>
-            <h2 className="text-xl font-black text-white uppercase tracking-widest flex items-center gap-2">
-               <FolderOpen size={24} className="text-zinc-500" /> {expandedVaultCategory}
+            <h2 className="text-lg sm:text-xl font-black text-white uppercase tracking-widest flex items-center gap-2">
+               <FolderOpen size={20} className="sm:size-6 text-zinc-500" /> {expandedVaultCategory}
             </h2>
           </div>
-          <div className="grid gap-4">
-            {notesInCat.length === 0 && <div className="text-center py-10 border-4 border-dashed border-zinc-800 text-zinc-600 font-black uppercase tracking-widest">EMPTY FOLDER</div>}
+          <div className="grid gap-3 sm:gap-4">
+            {notesInCat.length === 0 && <div className="text-center py-8 sm:py-10 border-4 border-dashed border-zinc-800 text-zinc-600 font-black uppercase tracking-widest text-xs sm:text-sm">EMPTY FOLDER</div>}
             {notesInCat.map(note => (
               <LongPressItem key={note.id} item={note} onDelete={(id) => deleteVaultNote(id)}>
-                <div className="bg-black border-2 border-white p-5 shadow-[4px_4px_0px_white] flex items-start gap-4 hover:border-yellow-400 transition-colors group cursor-pointer">
-                  <BrainCircuit size={20} className="text-zinc-600 mt-1 shrink-0 group-hover:text-yellow-400 transition-colors" />
+                <div className="bg-black border-2 border-white p-4 sm:p-5 shadow-[3px_3px_0px_white] sm:shadow-[4px_4px_0px_white] flex items-start gap-3 sm:gap-4 hover:border-yellow-400 transition-colors group cursor-pointer">
+                  <BrainCircuit size={18} className="sm:size-5 text-zinc-600 mt-1 shrink-0 group-hover:text-yellow-400 transition-colors" />
                   <div>
-                    <p className="text-white text-sm font-bold leading-relaxed">{note.text}</p>
-                    <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500 mt-3 block">{note.date}</span>
+                    <p className="text-white text-xs sm:text-sm font-bold leading-relaxed">{note.text}</p>
+                    <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-zinc-500 mt-2 sm:mt-3 block">{note.date}</span>
                   </div>
                 </div>
               </LongPressItem>
@@ -1038,14 +1040,14 @@ export default function App() {
     }
 
     return (
-      <div className="space-y-8 pb-10">
+      <div className="space-y-6 sm:space-y-8 pb-10">
         
         {/* Ask Oracle Brutalist Box */}
-        <div className="bg-black border-4 border-white p-6 shadow-[8px_8px_0px_#facc15]">
-          <h3 className="text-yellow-400 font-black uppercase tracking-widest mb-4 flex items-center gap-2 text-sm border-b-2 border-white/20 pb-2">
-            <Sparkles size={18} /> ASK THE ORACLE
+        <div className="bg-black border-4 border-white p-4 sm:p-6 shadow-[6px_6px_0px_#facc15] sm:shadow-[8px_8px_0px_#facc15]">
+          <h3 className="text-yellow-400 font-black uppercase tracking-widest mb-3 sm:mb-4 flex items-center gap-2 text-xs sm:text-sm border-b-2 border-white/20 pb-2">
+            <Sparkles size={16} className="sm:size-5" /> ASK THE ORACLE
           </h3>
-          <p className="text-[10px] text-zinc-400 font-bold tracking-widest uppercase mb-4">Chat with your Second Brain. Uses your saved Dump notes.</p>
+          <p className="text-[9px] sm:text-[10px] text-zinc-400 font-bold tracking-widest uppercase mb-3 sm:mb-4">Chat with your Second Brain. Uses your saved Dump notes.</p>
           <div className="flex gap-2">
             <input 
               type="text" 
@@ -1053,36 +1055,36 @@ export default function App() {
               onChange={(e) => setOracleQuery(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleAskOracle('vault')}
               placeholder="QUERY..."
-              className="flex-1 bg-black border-2 border-white px-4 py-3 text-white font-black uppercase placeholder:text-zinc-600 focus:outline-none focus:bg-zinc-900 rounded-none"
+              className="flex-1 bg-black border-2 border-white px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-white font-black uppercase placeholder:text-zinc-600 focus:outline-none focus:bg-zinc-900 rounded-none"
             />
             <button 
               onClick={() => handleAskOracle('vault')}
               disabled={isOracleThinking}
-              className="bg-white text-black border-2 border-white px-6 font-black uppercase hover:bg-yellow-400 active:translate-y-1 transition-all rounded-none disabled:opacity-50"
+              className="bg-white text-black border-2 border-white px-4 sm:px-6 font-black uppercase hover:bg-yellow-400 active:translate-y-1 transition-all rounded-none disabled:opacity-50"
             >
-              {isOracleThinking ? <Circle size={20} className="animate-pulse stroke-[4]" /> : <Send size={20} className="stroke-[3]" />}
+              {isOracleThinking ? <Circle size={18} className="sm:size-5 animate-pulse stroke-[4]" /> : <Send size={18} className="sm:size-5 stroke-[3]" />}
             </button>
           </div>
           {oracleResponse && (
-            <div className="mt-6 p-5 bg-zinc-900 border-l-4 border-yellow-400">
-              <p className="text-white text-sm font-bold leading-relaxed">{oracleResponse}</p>
+            <div className="mt-4 sm:mt-6 p-4 sm:p-5 bg-zinc-900 border-l-4 border-yellow-400">
+              <p className="text-white text-xs sm:text-sm font-bold leading-relaxed">{oracleResponse}</p>
             </div>
           )}
         </div>
 
         {/* AI Inbox Input (Brain Dump) */}
-        <div className="bg-black border-4 border-white p-6 shadow-[8px_8px_0px_white]">
-          <div className="flex justify-between items-center mb-4 border-b-2 border-zinc-800 pb-2">
-            <h3 className="text-white font-black uppercase tracking-widest text-sm flex items-center gap-2">
-               <BrainCircuit size={18} /> BRAIN DUMP (INBOX)
+        <div className="bg-black border-4 border-white p-4 sm:p-6 shadow-[6px_6px_0px_white] sm:shadow-[8px_8px_0px_white]">
+          <div className="flex justify-between items-center mb-3 sm:mb-4 border-b-2 border-zinc-800 pb-2">
+            <h3 className="text-white font-black uppercase tracking-widest text-xs sm:text-sm flex items-center gap-2">
+               <BrainCircuit size={16} className="sm:size-5" /> BRAIN DUMP (INBOX)
             </h3>
             {isVaultSorting && (
-              <span className="text-[9px] bg-yellow-400 text-black px-2 py-1 font-black uppercase tracking-widest animate-pulse border-2 border-white">
+              <span className="text-[8px] sm:text-[9px] bg-yellow-400 text-black px-1.5 sm:px-2 py-1 font-black uppercase tracking-widest animate-pulse border-2 border-white flex items-center">
                 <Sparkles size={10} className="inline mr-1" /> AI SORTING
               </span>
             )}
           </div>
-          <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-5 leading-relaxed">
+          <p className="text-[9px] sm:text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-4 sm:mb-5 leading-relaxed">
              Fast-capture raw ideas. Add 3 similar thoughts, and AI will automatically build a new folder for them below.
           </p>
           
@@ -1105,9 +1107,9 @@ export default function App() {
                 recognition.onend = () => setIsListening(false);
                 recognition.start();
               }}
-              className={`p-3 border-2 transition-all rounded-none ${isListening ? 'bg-red-500 text-white border-red-500 animate-pulse' : 'bg-zinc-900 text-white border-zinc-700 hover:border-white'}`}
+              className={`p-2 sm:p-3 border-2 transition-all rounded-none ${isListening ? 'bg-red-500 text-white border-red-500 animate-pulse' : 'bg-zinc-900 text-white border-zinc-700 hover:border-white'}`}
             >
-              <Mic size={24} />
+              <Mic size={20} className="sm:size-6" />
             </button>
             <input 
               type="text" 
@@ -1115,43 +1117,43 @@ export default function App() {
               onChange={(e) => setNewNote(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleAddNote()}
               placeholder={isListening ? "SPEAKING..." : "RAW THOUGHT..."}
-              className="flex-1 bg-black border-2 border-white px-4 py-3 text-white font-black uppercase placeholder:text-zinc-600 focus:outline-none focus:bg-zinc-900 rounded-none"
+              className="flex-1 bg-black border-2 border-white px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-white font-black uppercase placeholder:text-zinc-600 focus:outline-none focus:bg-zinc-900 rounded-none"
             />
             <button 
               onClick={handleAddNote}
               disabled={isVaultSorting}
-              className="bg-yellow-400 text-black border-2 border-white px-5 font-black uppercase hover:bg-white active:translate-y-1 transition-all rounded-none disabled:opacity-50"
+              className="bg-yellow-400 text-black border-2 border-white px-4 sm:px-5 font-black uppercase hover:bg-white active:translate-y-1 transition-all rounded-none disabled:opacity-50"
             >
-              <Send size={20} className="stroke-[3]" />
+              <Send size={18} className="sm:size-5 stroke-[3]" />
             </button>
           </div>
         </div>
 
-        <div className="space-y-6">
-          <h3 className="text-white font-black uppercase tracking-widest text-sm flex items-center gap-2 px-1">
-             <Folder size={18} /> VAULT FOLDERS
+        <div className="space-y-4 sm:space-y-6">
+          <h3 className="text-white font-black uppercase tracking-widest text-xs sm:text-sm flex items-center gap-2 px-1">
+             <Folder size={16} className="sm:size-5" /> VAULT FOLDERS
           </h3>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
             {vaultCategories.map(cat => {
               const count = vaultNotes.filter(n => n.category === cat).length;
               return (
                 <div key={cat} className="group relative">
                   <button 
                     onClick={() => setExpandedVaultCategory(cat)}
-                    className="w-full bg-black border-2 border-white p-5 flex flex-col items-start gap-4 hover:border-yellow-400 hover:shadow-[4px_4px_0px_#facc15] transition-all text-left active:translate-y-1 rounded-none h-full"
+                    className="w-full bg-black border-2 border-white p-4 sm:p-5 flex flex-col items-start gap-3 sm:gap-4 hover:border-yellow-400 hover:shadow-[3px_3px_0px_#facc15] sm:hover:shadow-[4px_4px_0px_#facc15] transition-all text-left active:translate-y-1 rounded-none h-full"
                   >
-                    <FolderOpen size={32} className="text-zinc-400 group-hover:text-yellow-400 transition-colors" />
+                    <FolderOpen size={24} className="sm:size-8 text-zinc-400 group-hover:text-yellow-400 transition-colors" />
                     <div>
-                      <h4 className="font-black text-white text-sm uppercase truncate w-full">{cat}</h4>
-                      <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mt-1 block">{count} NOTES</span>
+                      <h4 className="font-black text-white text-xs sm:text-sm uppercase truncate w-full">{cat}</h4>
+                      <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-zinc-500 mt-1 block">{count} NOTES</span>
                     </div>
                   </button>
                   {cat !== "Others" && (
                     <button 
                       onClick={(e) => { e.stopPropagation(); handleDeleteVaultCategory(cat); }}
-                      className="absolute top-3 right-3 p-2 bg-black text-zinc-600 hover:text-red-500 border-2 border-transparent hover:border-red-500 transition-colors"
+                      className="absolute top-2 right-2 sm:top-3 sm:right-3 p-1.5 sm:p-2 bg-black text-zinc-600 hover:text-red-500 border-2 border-transparent hover:border-red-500 transition-colors"
                     >
-                      <Trash2 size={16} />
+                      <Trash2 size={14} className="sm:size-4" />
                     </button>
                   )}
                 </div>
@@ -1159,7 +1161,7 @@ export default function App() {
             })}
           </div>
           {vaultNotes.length === 0 && (
-            <div className="text-center py-12 border-4 border-dashed border-zinc-800 text-zinc-600 font-black uppercase tracking-widest">
+            <div className="text-center py-8 sm:py-12 border-4 border-dashed border-zinc-800 text-zinc-600 font-black uppercase tracking-widest text-xs sm:text-sm">
               INBOX ZERO
             </div>
           )}
@@ -1169,34 +1171,34 @@ export default function App() {
   };
 
   const renderUrgeKiller = () => (
-    <div className="space-y-10 pb-10 pt-4 text-center max-w-md mx-auto">
-      <h2 className="text-2xl font-black text-white uppercase tracking-widest flex justify-center items-center gap-3">
-        <ShieldAlert className="text-yellow-400 stroke-[3]" size={32} /> INTERCEPTOR
+    <div className="space-y-8 sm:space-y-10 pb-10 pt-4 text-center max-w-md mx-auto">
+      <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-widest flex justify-center items-center gap-2 sm:gap-3">
+        <ShieldAlert className="text-yellow-400 stroke-[3]" size={28} /> INTERCEPTOR
       </h2>
-      <p className="text-zinc-500 font-black uppercase tracking-widest text-[10px] px-8">Trigger this protocol if you are about to break discipline.</p>
+      <p className="text-zinc-500 font-black uppercase tracking-widest text-[9px] sm:text-[10px] px-4 sm:px-8">Trigger this protocol if you are about to break discipline.</p>
 
       {!isUrgeActive ? (
         <button 
           onClick={triggerUrgeInterceptor}
-          className="w-full aspect-square max-w-[280px] mx-auto bg-yellow-400 hover:bg-white text-black border-8 border-black outline outline-4 outline-yellow-400 shadow-[12px_12px_0px_white] active:translate-y-2 active:shadow-none transition-all flex flex-col items-center justify-center gap-6 group rounded-none"
+          className="w-full aspect-square max-w-[220px] sm:max-w-[280px] mx-auto bg-yellow-400 hover:bg-white text-black border-[6px] sm:border-8 border-black outline outline-2 sm:outline-4 outline-yellow-400 shadow-[8px_8px_0px_white] sm:shadow-[12px_12px_0px_white] active:translate-y-2 active:shadow-none transition-all flex flex-col items-center justify-center gap-4 sm:gap-6 group rounded-none mt-8"
         >
-          <Skull size={80} className="stroke-[2] group-hover:scale-110 transition-transform" />
-          <span className="font-black text-3xl uppercase tracking-widest text-center px-4">I HAVE AN URGE</span>
+          <Skull size={60} className="sm:size-20 stroke-[2] group-hover:scale-110 transition-transform" />
+          <span className="font-black text-2xl sm:text-3xl uppercase tracking-widest text-center px-4">I HAVE AN URGE</span>
         </button>
       ) : (
-        <div className="bg-black border-4 border-yellow-400 p-8 shadow-[12px_12px_0px_#facc15] relative">
+        <div className="bg-black border-4 border-yellow-400 p-6 sm:p-8 shadow-[8px_8px_0px_#facc15] sm:shadow-[12px_12px_0px_#facc15] relative mt-8">
           <div className="absolute top-0 left-0 w-full h-2 bg-zinc-900">
             <div 
               className="bg-yellow-400 h-full transition-all duration-1000 ease-linear"
               style={{ width: `${(urgeTimer / 90) * 100}%` }}
             ></div>
           </div>
-          <h3 className="text-yellow-400 font-black mt-4 mb-6 uppercase tracking-[0.2em] text-xs">FRICTION ZONE ACTIVE</h3>
-          <div className="text-8xl font-black text-white mb-8 tabular-nums tracking-tighter">
+          <h3 className="text-yellow-400 font-black mt-2 sm:mt-4 mb-4 sm:mb-6 uppercase tracking-[0.2em] text-[10px] sm:text-xs">FRICTION ZONE ACTIVE</h3>
+          <div className="text-6xl sm:text-8xl font-black text-white mb-6 sm:mb-8 tabular-nums tracking-tighter">
             {urgeTimer}s
           </div>
-          <div className="min-h-[100px] flex items-center justify-center border-t-2 border-zinc-800 pt-6">
-            <p className="text-white font-bold text-lg uppercase tracking-wider leading-relaxed px-2" key={currentQuoteIndex}>
+          <div className="min-h-[80px] sm:min-h-[100px] flex items-center justify-center border-t-2 border-zinc-800 pt-4 sm:pt-6">
+            <p className="text-white font-bold text-base sm:text-lg uppercase tracking-wider leading-relaxed px-2" key={currentQuoteIndex}>
               "{urgeQuotes[currentQuoteIndex] || 'STAY STRONG. DO NOT GIVE IN.'}"
             </p>
           </div>
@@ -1206,19 +1208,19 @@ export default function App() {
   );
 
   const renderSettings = () => (
-    <div className="space-y-8 pb-10">
+    <div className="space-y-6 sm:space-y-8 pb-10">
       
       {/* Profile Section */}
-      <div className="bg-black border-4 border-white p-6 shadow-[8px_8px_0px_white]">
-        <h3 className="text-white font-black uppercase tracking-widest mb-6 flex items-center gap-2 text-sm border-b-2 border-zinc-800 pb-2">
-           <User size={18} /> PROFILE COMMAND
+      <div className="bg-black border-4 border-white p-4 sm:p-6 shadow-[6px_6px_0px_white] sm:shadow-[8px_8px_0px_white]">
+        <h3 className="text-white font-black uppercase tracking-widest mb-4 sm:mb-6 flex items-center gap-2 text-xs sm:text-sm border-b-2 border-zinc-800 pb-2">
+           <User size={16} className="sm:size-5" /> PROFILE COMMAND
         </h3>
-        <div className="flex flex-col items-center gap-6 mb-8">
-          <div className="w-32 h-32 bg-black border-4 border-yellow-400 flex items-center justify-center overflow-hidden shadow-[6px_6px_0px_#facc15] relative">
+        <div className="flex flex-col items-center gap-4 sm:gap-6 mb-6 sm:mb-8">
+          <div className="w-24 h-24 sm:w-32 sm:h-32 bg-black border-4 border-yellow-400 flex items-center justify-center overflow-hidden shadow-[4px_4px_0px_#facc15] sm:shadow-[6px_6px_0px_#facc15] relative">
             {profilePic ? (
               <img src={profilePic} alt="Profile" className="w-full h-full object-cover grayscale contrast-125" />
             ) : (
-              <span className="text-5xl">🦊</span>
+              <span className="text-4xl sm:text-5xl">🦊</span>
             )}
             {/* Direct Hidden Input */}
             <input 
@@ -1228,26 +1230,26 @@ export default function App() {
               onChange={handleImageUpload} 
             />
           </div>
-          <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">TAP AVATAR TO UPLOAD</p>
+          <p className="text-[9px] sm:text-[10px] text-zinc-500 font-bold uppercase tracking-widest">TAP AVATAR TO UPLOAD</p>
         </div>
         <div>
-          <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2 block">DISPLAY NAME</label>
+          <label className="text-[9px] sm:text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2 block">DISPLAY NAME</label>
           <input 
             type="text" 
             value={userName} 
             onChange={(e) => setUserName(e.target.value)} 
             placeholder="e.g., APEX HUNTER" 
-            className="w-full bg-black border-2 border-white px-4 py-4 text-white font-black uppercase placeholder:text-zinc-700 focus:outline-none focus:border-yellow-400 transition-colors rounded-none" 
+            className="w-full bg-black border-2 border-white px-3 sm:px-4 py-3 sm:py-4 text-xs sm:text-sm text-white font-black uppercase placeholder:text-zinc-700 focus:outline-none focus:border-yellow-400 transition-colors rounded-none" 
           />
         </div>
       </div>
 
       {/* AI Key Section */}
-      <div className="bg-black border-4 border-white p-6 shadow-[8px_8px_0px_#facc15]">
-        <h3 className="text-yellow-400 font-black uppercase tracking-widest mb-4 flex items-center gap-2 text-sm border-b-2 border-white/20 pb-2">
-           <Lock size={18} /> AI ENGINE CORE
+      <div className="bg-black border-4 border-white p-4 sm:p-6 shadow-[6px_6px_0px_#facc15] sm:shadow-[8px_8px_0px_#facc15]">
+        <h3 className="text-yellow-400 font-black uppercase tracking-widest mb-3 sm:mb-4 flex items-center gap-2 text-xs sm:text-sm border-b-2 border-white/20 pb-2">
+           <Lock size={16} className="sm:size-5" /> AI ENGINE CORE
         </h3>
-        <p className="text-[10px] text-zinc-400 font-black uppercase tracking-widest leading-relaxed mb-6">
+        <p className="text-[9px] sm:text-[10px] text-zinc-400 font-black uppercase tracking-widest leading-relaxed mb-4 sm:mb-6">
           Paste Groq API Key. Required for Oracle, Sorter, and dynamic Urges. Stored locally.
         </p>
         <input 
@@ -1255,39 +1257,39 @@ export default function App() {
           value={groqKey} 
           onChange={(e) => setGroqKey(e.target.value)} 
           placeholder="GSK_XXXX..." 
-          className="w-full bg-black border-2 border-white px-4 py-4 text-white font-bold tracking-widest focus:outline-none focus:border-yellow-400 transition-colors rounded-none" 
+          className="w-full bg-black border-2 border-white px-3 sm:px-4 py-3 sm:py-4 text-xs sm:text-sm text-white font-bold tracking-widest focus:outline-none focus:border-yellow-400 transition-colors rounded-none" 
         />
       </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-black text-white font-sans pb-28 selection:bg-yellow-400 selection:text-black overflow-x-hidden relative">
+    <div className="min-h-screen bg-black text-white font-sans pb-24 sm:pb-28 selection:bg-yellow-400 selection:text-black overflow-x-hidden relative">
       
-      <div className="max-w-2xl mx-auto p-4 md:p-6 relative z-10 pt-8">
+      <div className="max-w-2xl mx-auto p-3 sm:p-6 relative z-10 pt-4 sm:pt-8">
         
         {/* Header */}
-        <div className="flex justify-between items-center mb-10 border-b-4 border-white pb-6">
+        <div className="flex justify-between items-center mb-6 sm:mb-10 border-b-4 border-white pb-4 sm:pb-6">
           <div>
-            <h1 className="text-3xl font-black text-white tracking-tighter flex items-center gap-3 uppercase">
-              Apex Mind <span className="text-[10px] bg-yellow-400 text-black px-2 py-1 font-black uppercase tracking-widest align-middle border-2 border-white">V3.0</span>
+            <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tighter flex items-center gap-2 sm:gap-3 uppercase">
+              Apex Mind <span className="text-[8px] sm:text-[10px] bg-yellow-400 text-black px-1.5 sm:px-2 py-0.5 sm:py-1 font-black uppercase tracking-widest align-middle border-2 border-white">V3.0</span>
             </h1>
-            <p className="text-[10px] text-zinc-500 font-black uppercase tracking-[0.2em] mt-2">SECOND BRAIN OS</p>
+            <p className="text-[9px] sm:text-[10px] text-zinc-500 font-black uppercase tracking-[0.2em] mt-1 sm:mt-2">SECOND BRAIN OS</p>
           </div>
           <div 
-            className="flex items-center gap-4 cursor-pointer group" 
+            className="flex items-center gap-3 sm:gap-4 cursor-pointer group" 
             onClick={() => setActiveTab('settings')}
           >
             {userName && (
-              <span className="font-black uppercase tracking-widest text-white text-xs hidden sm:block group-hover:text-yellow-400 transition-colors">
+              <span className="font-black uppercase tracking-widest text-white text-[10px] sm:text-xs hidden sm:block group-hover:text-yellow-400 transition-colors">
                 {userName}
               </span>
             )}
-            <div className="w-14 h-14 bg-black border-2 border-white flex items-center justify-center shadow-[4px_4px_0px_#facc15] overflow-hidden group-hover:shadow-[6px_6px_0px_white] transition-all">
+            <div className="w-10 h-10 sm:w-14 sm:h-14 bg-black border-2 border-white flex items-center justify-center shadow-[3px_3px_0px_#facc15] sm:shadow-[4px_4px_0px_#facc15] overflow-hidden group-hover:shadow-[4px_4px_0px_white] sm:group-hover:shadow-[6px_6px_0px_white] transition-all">
               {profilePic ? (
                 <img src={profilePic} alt="Profile" className="w-full h-full object-cover grayscale contrast-125" />
               ) : (
-                <span className="text-xl">🦊</span>
+                <span className="text-base sm:text-xl">🦊</span>
               )}
             </div>
           </div>
@@ -1305,28 +1307,28 @@ export default function App() {
 
       {/* Floating Night Shift Widget */}
       {isNightTime && (
-        <div className="fixed bottom-28 right-4 z-40 flex flex-col items-end">
+        <div className="fixed bottom-24 sm:bottom-28 right-4 z-40 flex flex-col items-end">
           {!isNightShiftOpen ? (
             <button 
               onClick={() => setIsNightShiftOpen(true)}
-              className="bg-yellow-400 text-black border-4 border-white px-6 py-4 font-black shadow-[6px_6px_0px_white] flex items-center gap-3 uppercase tracking-widest hover:translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_white] transition-all rounded-none"
+              className="bg-yellow-400 text-black border-4 border-white px-4 sm:px-6 py-3 sm:py-4 font-black shadow-[4px_4px_0px_white] sm:shadow-[6px_6px_0px_white] flex items-center gap-2 sm:gap-3 text-xs sm:text-sm uppercase tracking-widest hover:translate-x-1 hover:-translate-y-1 hover:shadow-[6px_6px_0px_white] sm:hover:shadow-[8px_8px_0px_white] transition-all rounded-none"
             >
-              <Moon size={20} className="stroke-[3]" /> PLAN TOMORROW
+              <Moon size={18} className="sm:size-5 stroke-[3]" /> PLAN TOMORROW
             </button>
           ) : (
-            <div className="bg-black border-4 border-white p-6 w-[320px] shadow-[8px_8px_0px_#facc15] rounded-none">
-               <div className="flex justify-between items-center mb-6 border-b-2 border-white/20 pb-3">
-                 <h3 className="font-black text-yellow-400 text-xs uppercase tracking-widest flex items-center gap-2">
-                   <Moon size={16} className="stroke-[3]"/> NIGHT SHIFT INBOX
+            <div className="bg-black border-4 border-white p-4 sm:p-6 w-[280px] sm:w-[320px] shadow-[6px_6px_0px_#facc15] sm:shadow-[8px_8px_0px_#facc15] rounded-none">
+               <div className="flex justify-between items-center mb-4 sm:mb-6 border-b-2 border-white/20 pb-2 sm:pb-3">
+                 <h3 className="font-black text-yellow-400 text-[10px] sm:text-xs uppercase tracking-widest flex items-center gap-2">
+                   <Moon size={14} className="sm:size-4 stroke-[3]"/> NIGHT SHIFT INBOX
                  </h3>
                  <button onClick={() => setIsNightShiftOpen(false)} className="text-white hover:text-yellow-400 transition-colors">
-                   <X size={20} className="stroke-[3]"/>
+                   <X size={16} className="sm:size-5 stroke-[3]"/>
                  </button>
                </div>
                
-               <p className="text-[10px] text-zinc-400 font-bold mb-4">Add tasks for tomorrow, or pin a queue target.</p>
+               <p className="text-[9px] sm:text-[10px] text-zinc-400 font-bold mb-3 sm:mb-4">Add tasks for tomorrow, or pin a queue target.</p>
 
-               <div className="flex gap-2 mb-6">
+               <div className="flex gap-2 mb-4 sm:mb-6">
                  <input 
                    type="text"
                    value={newCustomMission}
@@ -1338,7 +1340,7 @@ export default function App() {
                       }
                    }}
                    placeholder="CUSTOM TASK..."
-                   className="flex-1 bg-black border-2 border-white px-3 py-3 text-xs text-white font-black uppercase placeholder:text-zinc-600 focus:outline-none focus:border-yellow-400"
+                   className="flex-1 bg-black border-2 border-white px-2 sm:px-3 py-2 sm:py-3 text-[10px] sm:text-xs text-white font-black uppercase placeholder:text-zinc-600 focus:outline-none focus:border-yellow-400"
                  />
                  <button 
                    onClick={() => {
@@ -1347,19 +1349,19 @@ export default function App() {
                          setNewCustomMission("");
                       }
                    }}
-                   className="bg-white hover:bg-yellow-400 text-black border-2 border-black px-4 transition-colors active:translate-y-1"
+                   className="bg-white hover:bg-yellow-400 text-black border-2 border-black px-3 sm:px-4 transition-colors active:translate-y-1"
                  >
-                   <Send size={16} className="stroke-[3]" />
+                   <Send size={14} className="sm:size-4 stroke-[3]" />
                  </button>
                </div>
 
                {customMissions.filter(m => m.targetDate === addDays(todayStr, 1)).length > 0 && (
-                  <div className="mb-6 space-y-2">
+                  <div className="mb-4 sm:mb-6 space-y-1.5 sm:space-y-2">
                     {customMissions.filter(m => m.targetDate === addDays(todayStr, 1)).map(m => (
-                       <div key={m.id} className="text-xs font-black uppercase tracking-wider text-white bg-zinc-900 border-2 border-zinc-700 px-3 py-2 flex justify-between items-center">
+                       <div key={m.id} className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-white bg-zinc-900 border-2 border-zinc-700 px-2 sm:px-3 py-1.5 sm:py-2 flex justify-between items-center">
                          <span className="truncate pr-2">• {m.text}</span>
                          <button onClick={() => setCustomMissions(prev => prev.filter(task => task.id !== m.id))} className="text-zinc-500 hover:text-red-500 transition-colors shrink-0">
-                           <Trash2 size={14} className="stroke-[3]" />
+                           <Trash2 size={12} className="sm:size-3 stroke-[3]" />
                          </button>
                        </div>
                     ))}
@@ -1368,8 +1370,8 @@ export default function App() {
 
                {stagingTopics.length > 0 && (
                  <>
-                   <div className="text-[10px] font-black text-yellow-400 uppercase tracking-widest mb-3 border-t-2 border-white/20 pt-4">PIN SYLLABUS TARGET</div>
-                   <div className="space-y-2 max-h-32 overflow-y-auto hide-scrollbar pr-1">
+                   <div className="text-[9px] sm:text-[10px] font-black text-yellow-400 uppercase tracking-widest mb-2 sm:mb-3 border-t-2 border-white/20 pt-3 sm:pt-4">PIN SYLLABUS TARGET</div>
+                   <div className="space-y-1.5 sm:space-y-2 max-h-32 overflow-y-auto hide-scrollbar pr-1">
                      {stagingTopics.slice(0, 3).map((topic, idx) => (
                        <button 
                          key={topic.id}
@@ -1379,10 +1381,10 @@ export default function App() {
                            items.unshift(clickedItem);
                            setStagingTopics(items);
                          }}
-                         className="w-full text-left bg-black hover:bg-white border-2 border-white p-3 transition-colors flex items-center justify-between group"
+                         className="w-full text-left bg-black hover:bg-white border-2 border-white p-2 sm:p-3 transition-colors flex items-center justify-between group"
                        >
-                         <span className="font-black text-white group-hover:text-black text-[10px] uppercase truncate pr-2 tracking-widest">{topic.title}</span>
-                         <span className="text-[9px] font-black uppercase tracking-widest text-black bg-yellow-400 px-2 py-0.5 opacity-0 group-hover:opacity-100 transition-opacity">PIN</span>
+                         <span className="font-black text-white group-hover:text-black text-[9px] sm:text-[10px] uppercase truncate pr-2 tracking-widest">{topic.title}</span>
+                         <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-black bg-yellow-400 px-1.5 sm:px-2 py-0.5 opacity-0 group-hover:opacity-100 transition-opacity">PIN</span>
                        </button>
                      ))}
                    </div>
@@ -1395,7 +1397,7 @@ export default function App() {
 
       {/* Brutalist Bottom Navigation */}
       <div className="fixed bottom-0 left-0 w-full bg-black border-t-4 border-white z-50 overflow-x-auto hide-scrollbar">
-        <div className="max-w-2xl mx-auto flex justify-between px-2 py-3 min-w-[360px]">
+        <div className="max-w-2xl mx-auto flex justify-between px-1 sm:px-2 py-2 sm:py-3 min-w-[320px]">
           {[
             { id: 'dashboard', icon: Calendar, label: 'MISSION' },
             { id: 'study', icon: Activity, label: 'QUEUE' },
@@ -1408,10 +1410,10 @@ export default function App() {
             <button 
               key={tab.id}
               onClick={() => setActiveTab(tab.id)} 
-              className={`flex-1 flex flex-col items-center justify-center gap-1.5 p-2 transition-colors border-b-4 ${activeTab === tab.id ? 'text-yellow-400 border-yellow-400' : 'text-zinc-600 border-transparent hover:text-white'}`}
+              className={`flex-1 flex flex-col items-center justify-center gap-1 sm:gap-1.5 p-1 sm:p-2 transition-colors border-b-4 ${activeTab === tab.id ? 'text-yellow-400 border-yellow-400' : 'text-zinc-600 border-transparent hover:text-white'}`}
             >
-              <tab.icon size={22} className={activeTab === tab.id ? 'stroke-[2.5]' : 'stroke-2'} />
-              <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest">{tab.label}</span>
+              <tab.icon size={20} className={`sm:size-[22px] ${activeTab === tab.id ? 'stroke-[2.5]' : 'stroke-2'}`} />
+              <span className="text-[7px] sm:text-[9px] font-black uppercase tracking-widest">{tab.label}</span>
             </button>
           ))}
         </div>
