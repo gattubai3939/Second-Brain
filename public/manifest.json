@@ -1,0 +1,17 @@
+{
+  "name": "Apex Mind OS",
+  "short_name": "Apex Mind",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "description": "My Personal Second Brain & Discipline OS",
+  "icons": [
+    {
+      "src": "https://img.icons8.com/nolan/512/brain.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
