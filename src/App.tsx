@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   BrainCircuit,
   BookOpen,
@@ -56,7 +56,7 @@ const addDays = (dateStr, days) => {
 
 const loadLocalData = () => {
   try {
-    const local = localStorage.getItem('apexMindData_Final_V3');
+    const local = localStorage.getItem('apexMindData_Final_V4');
     if (local) return JSON.parse(local);
   } catch (e) {
     console.error("Storage error", e);
@@ -88,6 +88,7 @@ export default function App() {
   
   const [vaultNotes, setVaultNotes] = useState(savedData.vaultNotes ?? []);
   const [vaultCategories, setVaultCategories] = useState(savedData.vaultCategories ?? ["Others"]);
+  const [expandedVaultCategory, setExpandedVaultCategory] = useState(null);
   const [isVaultSorting, setIsVaultSorting] = useState(false);
   
   // Input States
@@ -116,7 +117,23 @@ export default function App() {
   const [isOracleThinking, setIsOracleThinking] = useState(false);
 
   // PHASE 2 & 3: Pace-Maker & Night-Shift States
-  const [globalDeadlineDays, setGlobalDeadlineDays] = useState(savedData.globalDeadlineDays ?? 30);
+  // AUTO DECREMENT LOGIC: Calculate days missed since last active
+  let initialDeadline = savedData.globalDeadlineDays ?? 30;
+  let initialLastActive = savedData.lastActiveDate ?? todayStr;
+
+  if (initialLastActive !== todayStr) {
+      const oldDate = new Date(initialLastActive);
+      const currentDate = new Date(todayStr);
+      const diffDays = Math.floor((currentDate - oldDate) / (1000 * 60 * 60 * 24));
+      if (diffDays > 0) {
+          initialDeadline = Math.max(1, initialDeadline - diffDays);
+          initialLastActive = todayStr;
+      }
+  }
+
+  const [globalDeadlineDays, setGlobalDeadlineDays] = useState(initialDeadline);
+  const [lastActiveDate, setLastActiveDate] = useState(initialLastActive);
+
   const [draggedItemIndex, setDraggedItemIndex] = useState(null);
   
   // NIGHT SHIFT INBOX STATES
@@ -124,17 +141,37 @@ export default function App() {
   const [isNightShiftOpen, setIsNightShiftOpen] = useState(false);
   const [newCustomMission, setNewCustomMission] = useState("");
 
+  // LONG PRESS DELETE HANDLER (Hold to Delete)
+  const longPressTimer = useRef(null);
+  const handlePressStart = (action) => {
+    longPressTimer.current = setTimeout(() => {
+      if(window.confirm("Delete this item permanently?")) {
+        action();
+      }
+    }, 800); // 800ms hold time
+  };
+  const handlePressEnd = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+    }
+  };
+
+  // DELETE ACTIONS
+  const deleteStagingTopic = (id) => setStagingTopics(prev => prev.filter(t => t.id !== id));
+  const deleteWisdomNote = (id) => setWisdomNotes(prev => prev.filter(n => n.id !== id));
+  const deleteVaultNote = (id) => setVaultNotes(prev => prev.filter(n => n.id !== id));
+
   // ==========================================
-  // 🚀 BULLETPROOF LOCAL SAVE ENGINE (Zero Glitches)
+  // 🚀 BULLETPROOF LOCAL SAVE ENGINE
   // ==========================================
   useEffect(() => {
     const dataPayload = {
       userName, profilePic, syllabusCategories, stagingTopics, studyTopics,
       masteredTopics, wisdomCategories, wisdomNotes, vaultNotes, vaultCategories,
-      globalDeadlineDays, customMissions, groqKey
+      globalDeadlineDays, customMissions, groqKey, lastActiveDate
     };
-    localStorage.setItem('apexMindData_Final_V3', JSON.stringify(dataPayload));
-  }, [userName, profilePic, syllabusCategories, stagingTopics, studyTopics, masteredTopics, wisdomCategories, wisdomNotes, vaultNotes, vaultCategories, globalDeadlineDays, customMissions, groqKey]);
+    localStorage.setItem('apexMindData_Final_V4', JSON.stringify(dataPayload));
+  }, [userName, profilePic, syllabusCategories, stagingTopics, studyTopics, masteredTopics, wisdomCategories, wisdomNotes, vaultNotes, vaultCategories, globalDeadlineDays, customMissions, groqKey, lastActiveDate]);
   // ==========================================
 
   useEffect(() => {
@@ -440,6 +477,13 @@ export default function App() {
     setIsVaultSorting(false);
   };
 
+  const handleDeleteVaultCategory = (cat) => {
+    if (cat === "Others") return;
+    setVaultCategories(vaultCategories.filter(c => c !== cat));
+    setVaultNotes(prev => prev.map(n => n.category === cat ? { ...n, category: "Others" } : n));
+    if (expandedVaultCategory === cat) setExpandedVaultCategory(null);
+  };
+
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -523,7 +567,7 @@ export default function App() {
                    value={globalDeadlineDays}
                    onChange={(e) => setGlobalDeadlineDays(Math.max(1, parseInt(e.target.value) || 1))}
                    className="w-12 bg-zinc-900 border border-zinc-700 rounded text-center text-xs font-bold text-white py-0.5 outline-none"
-                   title="Global Master Deadline in Days"
+                   title="Global Master Deadline in Days (Auto-decrements daily)"
                  />
                  <span className="text-[10px] text-zinc-500 font-bold uppercase">Days</span>
               </div>
@@ -688,6 +732,12 @@ export default function App() {
               onDragStart={() => handleDragStart(index)}
               onDragOver={handleDragOver}
               onDrop={() => handleDrop(index)}
+              onTouchStart={() => handlePressStart(() => deleteStagingTopic(topic.id))}
+              onTouchEnd={handlePressEnd}
+              onMouseDown={() => handlePressStart(() => deleteStagingTopic(topic.id))}
+              onMouseUp={handlePressEnd}
+              onMouseLeave={handlePressEnd}
+              title="Hold to Delete"
               className={`bg-zinc-950 p-3 rounded-xl border flex items-center justify-between group transition-colors cursor-move 
                 ${index === 0 ? 'border-zinc-500 shadow-[0_0_10px_rgba(255,255,255,0.05)]' : 'border-zinc-800 hover:border-zinc-700'}
                 ${draggedItemIndex === index ? 'opacity-50' : 'opacity-100'}
@@ -818,7 +868,16 @@ export default function App() {
           <div className="grid gap-4 mt-6">
             {filteredNotes.length === 0 && <p className="text-zinc-500 font-medium text-center py-10 border border-dashed border-zinc-800 rounded-2xl">Folder is empty.</p>}
             {filteredNotes.map(note => (
-              <div key={note.id} className="bg-zinc-900 border border-zinc-800 p-5 rounded-2xl flex flex-col gap-3 transition-colors group hover:border-zinc-600 shadow-sm">
+              <div 
+                key={note.id} 
+                onTouchStart={() => handlePressStart(() => deleteWisdomNote(note.id))}
+                onTouchEnd={handlePressEnd}
+                onMouseDown={() => handlePressStart(() => deleteWisdomNote(note.id))}
+                onMouseUp={handlePressEnd}
+                onMouseLeave={handlePressEnd}
+                title="Hold to Delete"
+                className="bg-zinc-900 border border-zinc-800 p-5 rounded-2xl flex flex-col gap-3 transition-colors group hover:border-zinc-600 shadow-sm cursor-pointer"
+              >
                 <div className="flex items-start gap-3">
                   <Mic size={18} className="text-zinc-500 mt-1 flex-shrink-0" />
                   <div className="flex-1">
@@ -929,129 +988,180 @@ export default function App() {
     );
   };
 
-  const renderVault = () => (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      
-      {/* Ask The Oracle */}
-      <div className="bg-indigo-950/20 border border-indigo-900/50 p-5 rounded-2xl shadow-xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-600 opacity-10 rounded-full blur-3xl"></div>
-        <h3 className="text-indigo-300 font-bold text-lg mb-3 flex items-center gap-2">
-          <Sparkles size={20} className="text-indigo-400" /> Ask The Oracle
-        </h3>
-        <p className="text-xs font-medium text-indigo-200/60 mb-4 leading-relaxed">
-          Chat with your Second Brain. The AI will synthesize answers using exclusively your saved Wisdom and Dump notes.
-        </p>
-        <div className="flex gap-2">
-          <input 
-            type="text" 
-            value={oracleQuery}
-            onChange={(e) => setOracleQuery(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleAskOracle('wisdom')}
-            placeholder="E.g., What did I learn about focus?"
-            className="flex-1 bg-zinc-950/80 border border-indigo-900/50 rounded-xl px-4 py-3 text-white font-medium focus:outline-none focus:border-indigo-500 transition-colors placeholder:text-indigo-900/50"
-          />
-          <button 
-            onClick={() => handleAskOracle('wisdom')}
-            disabled={isOracleThinking}
-            className="bg-indigo-600 hover:bg-indigo-500 text-white active:scale-95 px-6 rounded-xl font-black transition-all flex items-center justify-center shadow-lg shadow-indigo-900/20 disabled:opacity-50"
-          >
-            {isOracleThinking ? <Circle size={18} className="animate-pulse" /> : <Send size={18} className="stroke-[3]" />}
-          </button>
-        </div>
-        {oracleResponse && (
-          <div className="mt-4 p-4 bg-zinc-950/80 border border-indigo-900/50 rounded-xl animate-in fade-in duration-300">
-            <p className="text-indigo-100 text-sm whitespace-pre-line leading-relaxed font-medium">{oracleResponse}</p>
+  const renderVault = () => {
+    if (expandedVaultCategory) {
+      const notesInCat = vaultNotes.filter(n => n.category === expandedVaultCategory);
+      return (
+        <div className="space-y-6 animate-in fade-in duration-300">
+          <div className="flex items-center gap-4 mb-4">
+            <button onClick={() => setExpandedVaultCategory(null)} className="p-2 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 hover:text-white rounded-lg text-zinc-400 transition-colors active:scale-95">
+              <ChevronLeft size={20} />
+            </button>
+            <h2 className="text-2xl font-black text-white flex items-center gap-2">
+              <FolderOpen size={24} className="text-zinc-400" /> {expandedVaultCategory}
+            </h2>
           </div>
-        )}
-      </div>
+          <div className="grid gap-4 mt-6">
+            {notesInCat.length === 0 && <p className="text-zinc-500 font-medium text-center py-10 border border-dashed border-zinc-800 rounded-2xl">Folder is empty.</p>}
+            {notesInCat.map(note => (
+              <div 
+                key={note.id} 
+                onTouchStart={() => handlePressStart(() => deleteVaultNote(note.id))}
+                onTouchEnd={handlePressEnd}
+                onMouseDown={() => handlePressStart(() => deleteVaultNote(note.id))}
+                onMouseUp={handlePressEnd}
+                onMouseLeave={handlePressEnd}
+                title="Hold to Delete"
+                className="bg-zinc-950 border border-zinc-800 p-4 rounded-xl flex items-start gap-4 hover:border-zinc-700 transition-colors shadow-sm group cursor-pointer"
+              >
+                <BrainCircuit size={16} className="text-zinc-600 mt-1 flex-shrink-0 group-hover:text-zinc-400 transition-colors" />
+                <div>
+                  <p className="text-zinc-200 text-sm font-medium leading-relaxed">{note.text}</p>
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-600 mt-2 block">{note.date}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
 
-      <div className="bg-zinc-900 border border-zinc-800/80 p-5 rounded-2xl shadow-xl">
-        <div className="flex justify-between items-center mb-2">
-          <h3 className="text-white font-bold text-lg flex items-center gap-2">
-            <BrainCircuit className="text-zinc-400" size={20} /> Brain Dump (Inbox)
+    return (
+      <div className="space-y-6 animate-in fade-in duration-500">
+        
+        {/* Ask The Oracle */}
+        <div className="bg-indigo-950/20 border border-indigo-900/50 p-5 rounded-2xl shadow-xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-600 opacity-10 rounded-full blur-3xl"></div>
+          <h3 className="text-indigo-300 font-bold text-lg mb-3 flex items-center gap-2">
+            <Sparkles size={20} className="text-indigo-400" /> Ask The Oracle
           </h3>
-          {isVaultSorting && (
-            <span className="text-[10px] bg-blue-950 text-blue-400 px-3 py-1 rounded-full font-black uppercase tracking-widest animate-pulse border border-blue-900/50 flex items-center gap-1 shadow-lg">
-              <Sparkles size={12}/> AI Sorting
-            </span>
+          <p className="text-xs font-medium text-indigo-200/60 mb-4 leading-relaxed">
+            Chat with your Second Brain. The AI will synthesize answers using exclusively your saved Wisdom and Dump notes.
+          </p>
+          <div className="flex gap-2">
+            <input 
+              type="text" 
+              value={oracleQuery}
+              onChange={(e) => setOracleQuery(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleAskOracle('wisdom')}
+              placeholder="E.g., What did I learn about focus?"
+              className="flex-1 bg-zinc-950/80 border border-indigo-900/50 rounded-xl px-4 py-3 text-white font-medium focus:outline-none focus:border-indigo-500 transition-colors placeholder:text-indigo-900/50"
+            />
+            <button 
+              onClick={() => handleAskOracle('wisdom')}
+              disabled={isOracleThinking}
+              className="bg-indigo-600 hover:bg-indigo-500 text-white active:scale-95 px-6 rounded-xl font-black transition-all flex items-center justify-center shadow-lg shadow-indigo-900/20 disabled:opacity-50"
+            >
+              {isOracleThinking ? <Circle size={18} className="animate-pulse" /> : <Send size={18} className="stroke-[3]" />}
+            </button>
+          </div>
+          {oracleResponse && (
+            <div className="mt-4 p-4 bg-zinc-950/80 border border-indigo-900/50 rounded-xl animate-in fade-in duration-300">
+              <p className="text-indigo-100 text-sm whitespace-pre-line leading-relaxed font-medium">{oracleResponse}</p>
+            </div>
           )}
         </div>
-        <p className="text-xs font-medium text-zinc-500 mb-5 leading-relaxed">
-          Fast-capture raw ideas. Add 3 similar thoughts, and AI will automatically build a new folder for them.
-        </p>
-        
-        <div className="flex gap-2 relative">
-          <button 
-            onClick={() => {
-              const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-              if (!SpeechRecognition) {
-                alert("Voice typing is not supported in this browser. Please use Chrome/Edge.");
-                return;
-              }
-              const recognition = new SpeechRecognition();
-              recognition.onstart = () => setIsListening(true);
-              recognition.onresult = (event) => {
-                const current = event.resultIndex;
-                const transcript = event.results[current][0].transcript;
-                setNewNote(prev => prev + (prev ? " " : "") + transcript);
-              };
-              recognition.onerror = () => setIsListening(false);
-              recognition.onend = () => setIsListening(false);
-              recognition.start();
-            }}
-            className={`p-3 rounded-xl flex items-center justify-center transition-all shadow-md ${isListening ? 'bg-red-950 text-red-500 border border-red-900 animate-pulse' : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700'}`}
-            title="Speak your thought"
-          >
-            <Mic size={20} />
-          </button>
-          <input 
-            type="text" 
-            value={newNote}
-            onChange={(e) => setNewNote(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleAddNote()}
-            placeholder={isListening ? "Listening (Speak now)..." : "Type your raw thought..."}
-            className="flex-1 bg-zinc-950 border border-zinc-700/50 rounded-xl px-4 py-3 text-white font-medium focus:outline-none focus:border-white transition-colors"
-          />
-          <button 
-            onClick={handleAddNote}
-            disabled={isVaultSorting}
-            className="bg-zinc-100 hover:bg-white text-zinc-900 active:scale-95 px-6 rounded-xl font-black transition-all flex items-center justify-center shadow-lg disabled:opacity-50 disabled:active:scale-100"
-          >
-            <Send size={18} className="stroke-[3]" />
-          </button>
+
+        {/* AI Inbox Input */}
+        <div className="bg-zinc-900 border border-zinc-800/80 p-5 rounded-2xl shadow-xl">
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="text-white font-bold text-lg flex items-center gap-2">
+              <BrainCircuit className="text-zinc-400" size={20} /> Brain Dump (Inbox)
+            </h3>
+            {isVaultSorting && (
+              <span className="text-[10px] bg-blue-950 text-blue-400 px-3 py-1 rounded-full font-black uppercase tracking-widest animate-pulse border border-blue-900/50 flex items-center gap-1 shadow-lg">
+                <Sparkles size={12}/> AI Sorting
+              </span>
+            )}
+          </div>
+          <p className="text-xs font-medium text-zinc-500 mb-5 leading-relaxed">
+            Fast-capture raw ideas. Add 3 similar thoughts, and AI will automatically build a new folder for them below.
+          </p>
+          
+          <div className="flex gap-2 relative">
+            <button 
+              onClick={() => {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SpeechRecognition) {
+                  alert("Voice typing is not supported in this browser. Please use Chrome/Edge.");
+                  return;
+                }
+                const recognition = new SpeechRecognition();
+                recognition.onstart = () => setIsListening(true);
+                recognition.onresult = (event) => {
+                  const current = event.resultIndex;
+                  const transcript = event.results[current][0].transcript;
+                  setNewNote(prev => prev + (prev ? " " : "") + transcript);
+                };
+                recognition.onerror = () => setIsListening(false);
+                recognition.onend = () => setIsListening(false);
+                recognition.start();
+              }}
+              className={`p-3 rounded-xl flex items-center justify-center transition-all shadow-md ${isListening ? 'bg-red-950 text-red-500 border border-red-900 animate-pulse' : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700'}`}
+              title="Speak your thought"
+            >
+              <Mic size={20} />
+            </button>
+            <input 
+              type="text" 
+              value={newNote}
+              onChange={(e) => setNewNote(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleAddNote()}
+              placeholder={isListening ? "Listening (Speak now)..." : "Type your raw thought..."}
+              className="flex-1 bg-zinc-950 border border-zinc-700/50 rounded-xl px-4 py-3 text-white font-medium focus:outline-none focus:border-white transition-colors"
+            />
+            <button 
+              onClick={handleAddNote}
+              disabled={isVaultSorting}
+              className="bg-zinc-100 hover:bg-white text-zinc-900 active:scale-95 px-6 rounded-xl font-black transition-all flex items-center justify-center shadow-lg disabled:opacity-50 disabled:active:scale-100"
+            >
+              <Send size={18} className="stroke-[3]" />
+            </button>
+          </div>
+        </div>
+
+        {/* VAULT FOLDER GRID */}
+        <div className="space-y-6">
+          <h3 className="text-white font-bold text-lg mb-1 flex items-center gap-2">
+             <Folder className="text-zinc-300" size={20} /> Vault Folders
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {vaultCategories.map(cat => {
+              const count = vaultNotes.filter(n => n.category === cat).length;
+              return (
+                <div key={cat} className="group relative">
+                  <button 
+                    onClick={() => setExpandedVaultCategory(cat)}
+                    className="w-full bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-600 p-5 rounded-2xl flex flex-col items-start gap-4 transition-all duration-300 active:scale-95 shadow-sm text-left h-full"
+                  >
+                    <FolderOpen size={32} className="text-zinc-400 group-hover:text-white transition-colors" />
+                    <div>
+                      <h4 className="font-bold text-white text-sm line-clamp-1">{cat}</h4>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 mt-1 block">{count} Notes</span>
+                    </div>
+                  </button>
+                  {cat !== "Others" && (
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); handleDeleteVaultCategory(cat); }}
+                      className="absolute top-3 right-3 p-1.5 bg-zinc-950 hover:bg-red-950 text-zinc-600 hover:text-red-500 rounded-lg opacity-0 group-hover:opacity-100 transition-all border border-transparent hover:border-red-900/50"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+          {vaultNotes.length === 0 && (
+            <div className="text-center py-12 border border-dashed border-zinc-800 rounded-2xl bg-zinc-950/30">
+              <p className="font-bold text-zinc-500">Inbox Zero.</p>
+              <p className="text-xs text-zinc-600 mt-1">Dump your messy thoughts here.</p>
+            </div>
+          )}
         </div>
       </div>
-
-      <div className="space-y-6">
-        {vaultCategories.map(cat => {
-          const notesInCat = vaultNotes.filter(n => n.category === cat);
-          if (notesInCat.length === 0) return null;
-          return (
-            <div key={cat} className="space-y-3 animate-in slide-in-from-bottom-2 duration-300">
-              <h4 className="text-[10px] font-black uppercase tracking-widest text-zinc-400 border-b border-zinc-800/80 pb-2 flex items-center gap-2">
-                <Folder size={12}/> {cat}
-              </h4>
-              {notesInCat.map(note => (
-                <div key={note.id} className="bg-zinc-950 border border-zinc-800 p-4 rounded-xl flex items-start gap-4 hover:border-zinc-700 transition-colors shadow-sm group">
-                  <BrainCircuit size={16} className="text-zinc-600 mt-1 flex-shrink-0 group-hover:text-zinc-400 transition-colors" />
-                  <div>
-                    <p className="text-zinc-200 text-sm font-medium leading-relaxed">{note.text}</p>
-                    <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-600 mt-2 block">{note.date}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          );
-        })}
-        {vaultNotes.length === 0 && (
-          <div className="text-center py-12 border border-dashed border-zinc-800 rounded-2xl bg-zinc-950/30">
-            <p className="font-bold text-zinc-500">Inbox Zero.</p>
-            <p className="text-xs text-zinc-600 mt-1">Dump your messy thoughts here.</p>
-          </div>
-        )}
-      </div>
-    </div>
-  );
+    );
+  };
 
   const renderUrgeKiller = () => (
     <div className="space-y-6 animate-in fade-in duration-500 max-w-md mx-auto text-center pt-10">
