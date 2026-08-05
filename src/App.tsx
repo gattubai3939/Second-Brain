@@ -11,15 +11,8 @@ import {
   Zap,
   Send,
   Skull,
-  Lightbulb,
   Trophy,
   FolderOpen,
-  Tag,
-  ArrowRight,
-  Check,
-  Trash2,
-  Folder,
-  ChevronLeft,
   MoveRight,
   History,
   Sparkles,
@@ -31,7 +24,12 @@ import {
   Settings,
   User,
   Image as ImageIcon,
-  Lock
+  Lock,
+  Search,
+  Trash2,
+  ChevronLeft,
+  Check,
+  Folder
 } from "lucide-react";
 
 // Revision Intervals: Tomorrow, Day 3, 7, 14, 21, 28, 30
@@ -65,6 +63,29 @@ const loadLocalData = () => {
 };
 
 const savedData = loadLocalData();
+
+// 2. Press and Hold Hook (800ms)
+function useLongPress(callback = () => {}, ms = 800) {
+  const [startLongPress, setStartLongPress] = useState(false);
+  const timerRef = useRef();
+
+  useEffect(() => {
+    if (startLongPress) {
+      timerRef.current = setTimeout(callback, ms);
+    } else {
+      clearTimeout(timerRef.current);
+    }
+    return () => clearTimeout(timerRef.current);
+  }, [startLongPress, callback, ms]);
+
+  return {
+    onMouseDown: () => setStartLongPress(true),
+    onMouseUp: () => setStartLongPress(false),
+    onMouseLeave: () => setStartLongPress(false),
+    onTouchStart: () => setStartLongPress(true),
+    onTouchEnd: () => setStartLongPress(false),
+  };
+}
 
 export default function App() {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -116,23 +137,21 @@ export default function App() {
   const [oracleResponse, setOracleResponse] = useState("");
   const [isOracleThinking, setIsOracleThinking] = useState(false);
 
-  // PHASE 2 & 3: Pace-Maker & Night-Shift States
-  // AUTO DECREMENT LOGIC: Calculate days missed since last active
-  let initialDeadline = savedData.globalDeadlineDays ?? 30;
-  let initialLastActive = savedData.lastActiveDate ?? todayStr;
+  const [globalDeadlineDays, setGlobalDeadlineDays] = useState(savedData.globalDeadlineDays ?? 30);
+  const [lastActiveDate, setLastActiveDate] = useState(savedData.lastActiveDate ?? todayStr);
+  
+  // Automatic Night Shift Checker (9 PM to 4 AM)
+  const [isNightTime, setIsNightTime] = useState(
+    new Date().getHours() >= 21 || new Date().getHours() < 4
+  );
 
-  if (initialLastActive !== todayStr) {
-      const oldDate = new Date(initialLastActive);
-      const currentDate = new Date(todayStr);
-      const diffDays = Math.floor((currentDate - oldDate) / (1000 * 60 * 60 * 24));
-      if (diffDays > 0) {
-          initialDeadline = Math.max(1, initialDeadline - diffDays);
-          initialLastActive = todayStr;
-      }
-  }
-
-  const [globalDeadlineDays, setGlobalDeadlineDays] = useState(initialDeadline);
-  const [lastActiveDate, setLastActiveDate] = useState(initialLastActive);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const hour = new Date().getHours();
+      setIsNightTime(hour >= 21 || hour < 4);
+    }, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   const [draggedItemIndex, setDraggedItemIndex] = useState(null);
   
@@ -140,26 +159,6 @@ export default function App() {
   const [customMissions, setCustomMissions] = useState(savedData.customMissions ?? []);
   const [isNightShiftOpen, setIsNightShiftOpen] = useState(false);
   const [newCustomMission, setNewCustomMission] = useState("");
-
-  // LONG PRESS DELETE HANDLER (Hold to Delete)
-  const longPressTimer = useRef(null);
-  const handlePressStart = (action) => {
-    longPressTimer.current = setTimeout(() => {
-      if(window.confirm("Delete this item permanently?")) {
-        action();
-      }
-    }, 800); // 800ms hold time
-  };
-  const handlePressEnd = () => {
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-    }
-  };
-
-  // DELETE ACTIONS
-  const deleteStagingTopic = (id) => setStagingTopics(prev => prev.filter(t => t.id !== id));
-  const deleteWisdomNote = (id) => setWisdomNotes(prev => prev.filter(n => n.id !== id));
-  const deleteVaultNote = (id) => setVaultNotes(prev => prev.filter(n => n.id !== id));
 
   // ==========================================
   // 🚀 BULLETPROOF LOCAL SAVE ENGINE
@@ -172,7 +171,67 @@ export default function App() {
     };
     localStorage.setItem('apexMindData_Final_V4', JSON.stringify(dataPayload));
   }, [userName, profilePic, syllabusCategories, stagingTopics, studyTopics, masteredTopics, wisdomCategories, wisdomNotes, vaultNotes, vaultCategories, globalDeadlineDays, customMissions, groqKey, lastActiveDate]);
+
   // ==========================================
+  // BULLETPROOF AUTO-DECREMENT LOGIC
+  // ==========================================
+  useEffect(() => {
+    if (lastActiveDate !== todayStr) {
+      const partsOld = lastActiveDate.split('-');
+      const partsNow = todayStr.split('-');
+      // Strict Date Parsing bypassing Timezones (YYYY, MM-1, DD)
+      const dOld = new Date(partsOld[0], partsOld[1] - 1, partsOld[2]);
+      const dNow = new Date(partsNow[0], partsNow[1] - 1, partsNow[2]);
+      
+      const diffTime = dNow.getTime() - dOld.getTime();
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (diffDays > 0) {
+        setGlobalDeadlineDays((prev) => Math.max(1, prev - diffDays));
+        setLastActiveDate(todayStr);
+      }
+    }
+  }, [lastActiveDate, todayStr]);
+
+  // LONG PRESS DELETE HANDLER (Hold to Delete)
+  const LongPressItem = ({ item, onDelete, children }) => {
+    // REPLACED window.confirm with internal V3 state to avoid crashing the canvas
+    const [showConfirm, setShowConfirm] = useState(false);
+    
+    const longPressEvent = useLongPress(() => {
+      setShowConfirm(true);
+    });
+
+    return (
+      <div {...longPressEvent} className="relative group cursor-pointer w-full">
+        {children}
+        {showConfirm && (
+          <div className="absolute inset-0 bg-yellow-400 border-4 border-black p-4 flex flex-col items-center justify-center z-10 shadow-[6px_6px_0px_white]">
+            <span className="font-black text-black uppercase text-[10px] mb-3 tracking-widest">Delete this item?</span>
+            <div className="flex gap-4">
+              <button 
+                onClick={(e) => { e.stopPropagation(); onDelete(item.id); setShowConfirm(false); }} 
+                className="bg-black text-white px-6 py-2 font-black uppercase tracking-widest hover:bg-white hover:text-black border-2 border-black transition-colors"
+              >
+                Yes
+              </button>
+              <button 
+                onClick={(e) => { e.stopPropagation(); setShowConfirm(false); }} 
+                className="bg-white text-black px-6 py-2 font-black uppercase tracking-widest hover:bg-black hover:text-white border-2 border-black transition-colors"
+              >
+                No
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // DELETE ACTIONS
+  const deleteStagingTopic = (id) => setStagingTopics(prev => prev.filter(t => t.id !== id));
+  const deleteWisdomNote = (id) => setWisdomNotes(prev => prev.filter(n => n.id !== id));
+  const deleteVaultNote = (id) => setVaultNotes(prev => prev.filter(n => n.id !== id));
 
   useEffect(() => {
     let timerInterval;
@@ -242,10 +301,13 @@ export default function App() {
 
   const handleAskOracle = async (querySource) => {
     if (!groqKey) {
-      alert("Please configure your Groq API Key in the Settings tab.");
+      setOracleResponse("ERROR: API KEY MISSING. CONFIGURE IN SETTINGS.");
       return;
     }
-    const query = querySource === 'wisdom' ? oracleQuery : querySource;
+    
+    // 🔥 FIX: Ab Oracle dono jagah se exactly tumhara type kiya hua text (oracleQuery) hi padhega!
+    const query = oracleQuery; 
+    
     if (!query.trim()) return;
 
     setIsOracleThinking(true);
@@ -284,7 +346,7 @@ export default function App() {
       }
     } catch (error) {
       console.error("Oracle failed", error);
-      setOracleResponse("The Oracle's connection was disrupted. Please check your API key in Settings.");
+      setOracleResponse("CONNECTION DISRUPTED. Please check your API key in Settings.");
     }
     setIsOracleThinking(false);
   };
@@ -339,7 +401,7 @@ export default function App() {
 
     const revisionSchedule = REVISION_INTERVALS.map((interval) => ({
       dayOffset: interval,
-      targetDate: addDays(todayStr, interval),
+      targetDate: addDays(todayStr, interval), // Automatically schedules for TOMORROW onwards
       completed: false,
     }));
 
@@ -499,26 +561,18 @@ export default function App() {
     const remainingChapters = stagingTopics.length;
     const pace = remainingChapters > 0 ? (globalDeadlineDays / remainingChapters).toFixed(1) : 0;
     
-    let paceStatus = { text: "On Track", color: "text-green-400", bg: "bg-green-950", border: "border-green-900/50" };
-    if (pace < 1 && remainingChapters > 0) {
-      paceStatus = { text: "Danger (Speed Up)", color: "text-red-400", bg: "bg-red-950", border: "border-red-900/50" };
-    } else if (pace >= 1 && pace <= 1.5) {
-      paceStatus = { text: "Moderate Pace", color: "text-yellow-400", bg: "bg-yellow-950", border: "border-yellow-900/50" };
-    } else if (remainingChapters === 0) {
-       paceStatus = { text: "Queue Empty", color: "text-zinc-400", bg: "bg-zinc-900", border: "border-zinc-800" };
-    }
+    let paceStatus = { text: "ON TRACK", color: "text-white" };
+    if (pace < 1 && remainingChapters > 0) paceStatus = { text: "DANGER", color: "text-red-500" };
+    else if (pace >= 1 && pace <= 1.5) paceStatus = { text: "WARNING", color: "text-yellow-400" };
+    else if (remainingChapters === 0) paceStatus = { text: "STANDBY", color: "text-zinc-500" };
 
     const todaysRevisions = [];
     studyTopics.forEach(topic => {
       topic.schedule.forEach(rev => {
         if (rev.targetDate <= todayStr && !rev.completed) {
           todaysRevisions.push({
-            topicId: topic.id,
-            title: topic.title,
-            category: topic.category,
-            targetDate: rev.targetDate,
-            dayOffset: rev.dayOffset,
-            isOverdue: rev.targetDate < todayStr
+            topicId: topic.id, title: topic.title, category: topic.category,
+            targetDate: rev.targetDate, dayOffset: rev.dayOffset, isOverdue: rev.targetDate < todayStr
           });
         }
       });
@@ -528,118 +582,99 @@ export default function App() {
     const quoteOfTheDay = MORNING_QUOTES[baseDate.getDate() % MORNING_QUOTES.length];
 
     return (
-      <div className="space-y-6 animate-in fade-in duration-500">
+      <div className="space-y-8 pb-10">
         
-        {/* Morning Injection */}
-        <div className="bg-[#121212] border-l-4 border-l-white border-y border-r border-zinc-800/50 p-6 rounded-2xl shadow-2xl transition-transform hover:-translate-y-1 duration-300">
-          <h3 className="text-zinc-500 text-xs font-black uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-            <Zap size={14} className="text-white" /> Morning Injection
+        {/* Morning Injection Brutalist */}
+        <div className="bg-yellow-400 p-6 border-4 border-white shadow-[8px_8px_0px_white]">
+          <h3 className="text-black text-xs font-black uppercase tracking-[0.2em] mb-4 flex items-center gap-2 border-b-2 border-black/20 pb-2">
+            <Zap size={16} /> PROTOCOL INITIATED
           </h3>
-          <p className="text-zinc-100 text-2xl font-black tracking-tight leading-snug">
+          <p className="text-black text-2xl font-black uppercase tracking-tight leading-snug">
             "{quoteOfTheDay}"
           </p>
         </div>
 
-        {/* Pace-Maker Engine */}
-        <div className="bg-[#121212] border border-zinc-800 p-6 rounded-2xl shadow-xl flex flex-col gap-5 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-zinc-800 opacity-20 blur-3xl rounded-full"></div>
-          <div className="flex justify-between items-start z-10">
-            <div>
-              <h3 className="text-zinc-400 text-[10px] font-black uppercase tracking-[0.2em] mb-1 flex items-center gap-1">
-                <Flame size={12} className="text-white"/> Current Strike Target
-              </h3>
-              {stagingTopics.length > 0 ? (
-                <h2 className="text-white text-2xl font-black tracking-tight mt-1">{stagingTopics[0].title}</h2>
-              ) : (
-                <h2 className="text-zinc-600 text-xl font-bold tracking-tight mt-1 italic">No active target in Queue</h2>
-              )}
-              {stagingTopics.length > 0 && (
-                <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800 mt-2 inline-block">
-                  {stagingTopics[0].category}
-                </span>
-              )}
+        {/* Pace-Maker Engine (Now fully editable via Brutalist Input) */}
+        <div className="bg-black border-4 border-white p-6 shadow-[8px_8px_0px_#facc15] relative overflow-hidden">
+          <h2 className="text-[10px] font-black text-yellow-400 tracking-[0.2em] uppercase mb-4 border-b-2 border-white/20 pb-2">GLOBAL DEADLINE</h2>
+          <div className="flex justify-between items-end">
+            
+            <div className="flex items-baseline gap-2 border-b-4 border-transparent hover:border-white/20 transition-colors focus-within:border-yellow-400">
+              <input 
+                type="number" 
+                value={globalDeadlineDays}
+                onChange={(e) => setGlobalDeadlineDays(Math.max(1, parseInt(e.target.value) || 1))}
+                className="w-24 bg-transparent text-6xl font-black tracking-tighter text-white outline-none p-0 m-0"
+              />
+              <span className="text-xl text-yellow-400 font-black">DAYS</span>
             </div>
-            <div className="text-right flex flex-col items-end">
-              <div className="flex items-center gap-2 mb-1">
-                 <span className="text-xs text-zinc-500 font-bold">Deadline:</span>
-                 <input 
-                   type="number" 
-                   value={globalDeadlineDays}
-                   onChange={(e) => setGlobalDeadlineDays(Math.max(1, parseInt(e.target.value) || 1))}
-                   className="w-12 bg-zinc-900 border border-zinc-700 rounded text-center text-xs font-bold text-white py-0.5 outline-none"
-                   title="Global Master Deadline in Days (Auto-decrements daily)"
-                 />
-                 <span className="text-[10px] text-zinc-500 font-bold uppercase">Days</span>
-              </div>
-              <div className={`mt-2 px-3 py-1.5 rounded-lg border flex flex-col items-end ${paceStatus.bg} ${paceStatus.border}`}>
-                 <span className={`text-[10px] font-black uppercase tracking-widest ${paceStatus.color}`}>
-                   {paceStatus.text}
-                 </span>
-                 <span className="text-white font-bold text-sm">
-                   {pace > 0 ? `${pace} Days / Ch.` : "N/A"}
-                 </span>
-              </div>
+
+            <div className="text-right">
+              <p className="text-[10px] text-white tracking-widest font-bold uppercase mb-1">PACE DETECTOR</p>
+              <p className={`text-2xl font-black ${paceStatus.color}`}>
+                {pace} <span className="text-xs">CH/DAY</span>
+              </p>
+              <p className={`text-[10px] font-black uppercase tracking-widest mt-1 ${paceStatus.color}`}>{paceStatus.text}</p>
             </div>
           </div>
+          
           {stagingTopics.length > 0 && (
-            <button 
-              onClick={() => handleStartRevision(stagingTopics[0].id)}
-              className="w-full bg-zinc-100 hover:bg-white text-zinc-900 py-3 rounded-xl text-sm font-black uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg z-10 mt-2"
-            >
-              Target Destroyed <Check size={18} className="stroke-[3]" />
-            </button>
+            <div className="mt-8 bg-yellow-400 p-4 border-2 border-white text-black">
+              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] mb-2">CURRENT STRIKE TARGET</h3>
+              <h2 className="text-xl font-black uppercase tracking-tight truncate">{stagingTopics[0].title}</h2>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-white bg-black px-2 py-1 mt-2 inline-block">
+                {stagingTopics[0].category}
+              </span>
+              <button 
+                onClick={() => handleStartRevision(stagingTopics[0].id)}
+                className="w-full mt-4 bg-black text-yellow-400 py-3 border-2 border-white font-black tracking-widest uppercase hover:bg-white hover:text-black transition-all active:translate-y-1 shadow-[4px_4px_0px_black] active:shadow-none"
+              >
+                TARGET DESTROYED
+              </button>
+            </div>
           )}
         </div>
 
-        {/* Custom Daily Targets */}
         {todaysCustomMissions.length > 0 && (
-          <div className="bg-zinc-900 border border-zinc-800/80 p-5 rounded-2xl shadow-xl">
-             <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
-               <CheckCircle2 className="text-indigo-400" size={20} /> Today's Custom Targets
-             </h3>
-             <div className="space-y-3">
-               {todaysCustomMissions.map((mission) => (
-                 <div key={mission.id} className="flex items-center justify-between p-4 rounded-xl border bg-indigo-950/20 border-indigo-900/50 hover:bg-indigo-950/40 transition-colors">
-                   <h4 className="text-indigo-100 font-bold text-sm">{mission.text}</h4>
-                   <button 
-                     onClick={() => setCustomMissions(prev => prev.filter(m => m.id !== mission.id))}
-                     className="w-12 h-12 rounded-xl flex items-center justify-center bg-indigo-900/50 border border-indigo-500/50 hover:bg-indigo-500 hover:text-white transition-all text-indigo-300 shadow-lg active:scale-90"
-                   >
-                     <Check size={24} className="stroke-[3]" />
-                   </button>
-                 </div>
-               ))}
-             </div>
+          <div className="pt-4">
+            <h3 className="text-[10px] font-black text-yellow-400 tracking-[0.2em] uppercase mb-4">TODAY'S MISSIONS</h3>
+            {todaysCustomMissions.map((mission) => (
+              <div key={mission.id} className="flex items-center justify-between bg-black p-4 mb-3 border-2 border-white shadow-[4px_4px_0px_#facc15]">
+                <span className="font-bold uppercase tracking-wider text-sm text-white">{mission.text}</span>
+                <button 
+                  onClick={() => setCustomMissions(prev => prev.filter(m => m.id !== mission.id))}
+                  className="text-white hover:text-yellow-400 transition-colors"
+                >
+                  <CheckCircle2 className="w-6 h-6 stroke-[2.5]" />
+                </button>
+              </div>
+            ))}
           </div>
         )}
 
-        {/* Revisions */}
-        <div className="bg-zinc-900 border border-zinc-800/80 p-5 rounded-2xl shadow-xl">
-          <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
-            <Calendar className="text-zinc-300" size={20} /> Today's Revisions
-          </h3>
+        <div className="pt-4">
+          <h3 className="text-[10px] font-black text-yellow-400 tracking-[0.2em] uppercase mb-4">MANDATORY REVISIONS (TODAY)</h3>
           {todaysRevisions.length === 0 ? (
-            <div className="text-center py-10 bg-zinc-950/50 border border-dashed border-zinc-800 rounded-xl">
-              <p className="font-bold text-zinc-500">All caught up.</p>
-              <p className="text-xs text-zinc-600 mt-1">Focus on destroying your Current Target.</p>
+            <div className="border-4 border-dashed border-zinc-800 p-8 text-center text-zinc-600 font-black uppercase tracking-widest">
+              SYSTEM CLEAR
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {todaysRevisions.map((rev, idx) => (
-                <div key={idx} className={`flex items-center justify-between p-4 rounded-xl border transition-all duration-300 hover:scale-[1.01] shadow-sm ${rev.isOverdue ? 'bg-red-950/10 border-red-900/40' : 'bg-zinc-950/80 border-zinc-800'}`}>
+                <div key={idx} className={`bg-black border-2 border-white p-4 flex items-center justify-between shadow-[4px_4px_0px_white] ${rev.isOverdue ? 'border-red-500 shadow-[4px_4px_0px_#ef4444]' : ''}`}>
                   <div>
-                    <h4 className="text-white font-bold flex items-center gap-2">
+                    <h4 className="text-white font-black uppercase text-sm flex items-center gap-2">
                       {rev.title} 
-                      {rev.isOverdue && <span className="text-[9px] bg-red-600 px-2 py-0.5 rounded-sm text-white font-black uppercase tracking-wider animate-pulse">Overdue</span>}
+                      {rev.isOverdue && <span className="text-[9px] bg-red-500 text-white px-2 py-1 tracking-widest">OVERDUE</span>}
                     </h4>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">{rev.category}</span>
-                      <span className="text-[10px] font-black uppercase tracking-wider text-zinc-300 bg-white/10 px-2 py-0.5 rounded">Day {rev.dayOffset} Revision</span>
+                    <div className="flex gap-2 mt-2">
+                      <span className="text-[9px] font-black uppercase tracking-widest text-yellow-400">{rev.category}</span>
+                      <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500">DAY {rev.dayOffset}</span>
                     </div>
                   </div>
                   <button 
                     onClick={() => markRevisionComplete(rev.topicId, rev.targetDate, rev.dayOffset)}
-                    className="w-12 h-12 rounded-xl flex items-center justify-center bg-zinc-900 border border-zinc-700 hover:bg-white hover:border-white hover:text-black active:scale-90 transition-all duration-200 text-zinc-500 shadow-lg"
+                    className="w-12 h-12 bg-white text-black border-2 border-black flex items-center justify-center hover:bg-yellow-400 transition-colors active:translate-y-1"
                   >
                     <Check size={24} className="stroke-[3]" />
                   </button>
@@ -653,39 +688,39 @@ export default function App() {
   };
 
   const renderStudyEngine = () => (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="bg-zinc-900 border border-zinc-800/80 p-5 rounded-2xl shadow-xl">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-white font-bold text-lg flex items-center gap-2">
-            <Activity className="text-zinc-300" size={20} /> Liquid Strike Queue
-          </h3>
-          <span className="text-[10px] text-zinc-500 font-bold uppercase">Drag to Reorder</span>
+    <div className="space-y-8 pb-10">
+      <div className="bg-black border-4 border-white p-5 shadow-[8px_8px_0px_#facc15]">
+        <div className="flex justify-between items-center mb-6 border-b-2 border-white/20 pb-2">
+           <h3 className="text-yellow-400 font-black uppercase tracking-widest flex items-center gap-2 text-sm">
+             LIQUID STRIKE QUEUE
+           </h3>
+           <span className="text-[10px] text-zinc-500 font-black uppercase tracking-widest">Hold to drag</span>
         </div>
         
-        <div className="flex gap-2 mb-4 border-b border-zinc-800/80 pb-4">
+        <div className="flex gap-2 mb-6">
           <input 
             type="text" 
             value={newSyllabusCat}
             onChange={(e) => setNewSyllabusCat(e.target.value)}
-            placeholder="New Category (e.g., Physics)"
-            className="flex-1 bg-zinc-950 border border-zinc-700/50 rounded-xl px-4 py-2.5 text-sm font-medium text-white focus:outline-none focus:border-white transition-colors"
+            placeholder="NEW TAG..."
+            className="flex-1 bg-black border-2 border-white px-4 py-3 text-white font-black uppercase placeholder:text-zinc-600 focus:outline-none focus:bg-zinc-900 rounded-none"
           />
           <button 
             onClick={handleAddSyllabusCategory}
-            className="bg-zinc-100 hover:bg-white text-zinc-900 active:scale-95 px-4 rounded-xl text-sm font-bold transition-all flex items-center gap-1 shadow-md"
+            className="bg-yellow-400 text-black border-2 border-white px-4 font-black uppercase hover:bg-white active:translate-y-1 transition-all rounded-none"
           >
-            <Plus size={18} className="stroke-[3]" /> Add Tag
+            <Plus size={20} className="stroke-[3]" />
           </button>
         </div>
 
         {syllabusCategories.length > 1 && (
            <div className="flex flex-wrap gap-2 mb-6">
              {syllabusCategories.map(cat => (
-               <div key={cat} className="group flex items-center gap-1 bg-zinc-950 border border-zinc-800 px-3 py-1.5 rounded-lg text-xs font-bold text-zinc-400">
+               <div key={cat} className="group flex items-center gap-2 bg-black border-2 border-white px-3 py-2 text-xs font-black text-white uppercase tracking-widest hover:border-yellow-400 transition-colors cursor-pointer">
                  {cat}
                  {cat !== "Raw Backlog" && (
-                   <button onClick={() => handleDeleteSyllabusCategory(cat)} className="text-zinc-600 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 ml-1">
-                     <Trash2 size={12} />
+                   <button onClick={() => handleDeleteSyllabusCategory(cat)} className="text-zinc-500 hover:text-red-500 transition-colors">
+                     <Trash2 size={14} />
                    </button>
                  )}
                </div>
@@ -697,108 +732,100 @@ export default function App() {
           <select 
             value={selectedSyllabusCat}
             onChange={(e) => setSelectedSyllabusCat(e.target.value)}
-            className="w-1/3 bg-zinc-950 border border-zinc-700/50 rounded-xl px-3 py-3 text-sm font-bold text-zinc-300 focus:outline-none focus:border-white transition-colors cursor-pointer"
+            className="w-1/3 bg-black border-2 border-white px-2 py-3 text-xs font-black uppercase tracking-widest text-yellow-400 focus:outline-none rounded-none cursor-pointer"
           >
-            {syllabusCategories.map(cat => (
-              <option key={cat} value={cat}>{cat}</option>
-            ))}
+            {syllabusCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
           </select>
           <input 
             type="text" 
             value={newTopic}
             onChange={(e) => setNewTopic(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleAddStagingTopic()}
-            placeholder="Chapter Name..."
-            className="flex-1 bg-zinc-950 border border-zinc-700/50 rounded-xl px-4 py-3 text-white font-medium focus:outline-none focus:border-white transition-colors"
+            placeholder="CHAPTER NAME..."
+            className="flex-1 bg-black border-2 border-white px-4 py-3 text-white font-black uppercase placeholder:text-zinc-600 focus:outline-none focus:bg-zinc-900 rounded-none"
           />
           <button 
             onClick={handleAddStagingTopic}
-            className="bg-zinc-800 hover:bg-zinc-700 text-white active:scale-95 px-5 rounded-xl font-bold transition-all flex items-center justify-center border border-zinc-600 shadow-md"
+            className="bg-white text-black border-2 border-white px-5 font-black hover:bg-yellow-400 active:translate-y-1 transition-all rounded-none"
           >
             <Plus size={20} className="stroke-[3]" />
           </button>
         </div>
 
-        <div className="mt-6 space-y-2">
+        <div className="mt-8 space-y-3">
           {stagingTopics.length === 0 && (
-            <div className="text-center py-10 bg-zinc-950/50 border border-dashed border-zinc-800 rounded-xl">
-              <p className="text-xs text-zinc-500 font-medium">Queue is empty. Add chapters below.</p>
+            <div className="text-center py-10 border-4 border-dashed border-zinc-800 text-zinc-600 font-black uppercase tracking-widest">
+              QUEUE EMPTY
             </div>
           )}
           {stagingTopics.map((topic, index) => (
-            <div 
-              key={topic.id}
-              draggable
-              onDragStart={() => handleDragStart(index)}
-              onDragOver={handleDragOver}
-              onDrop={() => handleDrop(index)}
-              onTouchStart={() => handlePressStart(() => deleteStagingTopic(topic.id))}
-              onTouchEnd={handlePressEnd}
-              onMouseDown={() => handlePressStart(() => deleteStagingTopic(topic.id))}
-              onMouseUp={handlePressEnd}
-              onMouseLeave={handlePressEnd}
-              title="Hold to Delete"
-              className={`bg-zinc-950 p-3 rounded-xl border flex items-center justify-between group transition-colors cursor-move 
-                ${index === 0 ? 'border-zinc-500 shadow-[0_0_10px_rgba(255,255,255,0.05)]' : 'border-zinc-800 hover:border-zinc-700'}
-                ${draggedItemIndex === index ? 'opacity-50' : 'opacity-100'}
-              `}
-            >
-              <div className="flex items-center gap-3">
-                <div className="text-zinc-600 hover:text-white transition-colors cursor-grab active:cursor-grabbing">
-                  <GripVertical size={18} />
-                </div>
-                <div>
-                  <h4 className="font-bold text-white text-sm flex items-center gap-2">
-                    {topic.title}
-                    {index === 0 && <span className="text-[8px] bg-white text-black px-1.5 py-0.5 rounded font-black uppercase tracking-widest">Next Target</span>}
-                  </h4>
-                  <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 mt-1 block">{topic.category}</span>
+            <LongPressItem key={topic.id} item={topic} onDelete={(id) => deleteStagingTopic(id)}>
+              <div 
+                draggable
+                onDragStart={() => handleDragStart(index)}
+                onDragOver={handleDragOver}
+                onDrop={() => handleDrop(index)}
+                className={`bg-black p-4 border-2 flex items-center justify-between cursor-move transition-all select-none
+                  ${index === 0 ? 'border-yellow-400 shadow-[6px_6px_0px_#facc15]' : 'border-white shadow-[4px_4px_0px_white] hover:border-yellow-400'}
+                  ${draggedItemIndex === index ? 'opacity-50' : 'opacity-100'}
+                `}
+              >
+                <div className="flex items-center gap-4">
+                  <GripVertical size={20} className={index === 0 ? "text-yellow-400" : "text-zinc-500"} />
+                  <div>
+                    <h4 className="font-black text-white text-sm uppercase flex items-center gap-2">
+                      {topic.title}
+                      {index === 0 && <span className="text-[9px] bg-yellow-400 text-black px-2 py-0.5 tracking-widest font-black">NEXT</span>}
+                    </h4>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mt-1 block">{topic.category}</span>
+                  </div>
                 </div>
               </div>
-            </div>
+            </LongPressItem>
           ))}
         </div>
+        <p className="text-[10px] font-black tracking-widest text-zinc-600 mt-6 text-center uppercase">Hold item to execute delete</p>
       </div>
     </div>
   );
 
   const renderHistory = () => (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="bg-zinc-900 border border-zinc-800/80 p-5 rounded-2xl shadow-xl">
-        <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
-          <History className="text-zinc-300" size={20} /> Ongoing 30-Day Cycles
+    <div className="space-y-8 pb-10">
+      <div className="bg-black border-4 border-white p-5 shadow-[8px_8px_0px_#facc15]">
+        <h3 className="text-yellow-400 font-black uppercase tracking-widest mb-6 flex items-center gap-2 text-sm border-b-2 border-white/20 pb-2">
+          ONGOING 30-DAY CYCLES
         </h3>
         {studyTopics.length === 0 ? (
-          <p className="text-sm font-medium text-zinc-500 text-center py-6 border border-dashed border-zinc-800 rounded-xl">No active revisions in history. Complete a topic in Syllabus first.</p>
+          <div className="text-center py-10 border-4 border-dashed border-zinc-800 text-zinc-600 font-black uppercase tracking-widest">
+            NO ACTIVE CYCLES
+          </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-6">
             {studyTopics.map(topic => (
-              <div key={topic.id} className="bg-zinc-950 p-5 rounded-xl border border-zinc-800 relative overflow-hidden transition-all hover:border-zinc-700">
-                <div className="flex justify-between items-start mb-4">
+              <div key={topic.id} className="bg-black border-2 border-white p-5 shadow-[4px_4px_0px_white]">
+                <div className="flex justify-between items-start mb-6">
                   <div>
-                    <h4 className="font-bold text-white text-lg">{topic.title}</h4>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 bg-zinc-900 px-2 py-1 rounded-sm mt-2 inline-block">{topic.category}</span>
+                    <h4 className="font-black text-white text-lg uppercase">{topic.title}</h4>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-black bg-white px-2 py-1 mt-2 inline-block">{topic.category}</span>
                   </div>
-                  <span className="text-[10px] font-bold text-zinc-600 bg-zinc-900 px-2 py-1 rounded">Init: {topic.startDate}</span>
+                  <span className="text-[10px] font-black text-yellow-400 tracking-widest border border-yellow-400 px-2 py-1">INIT: {topic.startDate}</span>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-3">
                   {topic.schedule.map((rev, i) => {
                     const isPending = !rev.completed && rev.targetDate <= todayStr;
                     return (
-                      <div key={i} className={`flex flex-col items-center justify-center py-2 px-3 rounded-xl border transition-all duration-300 ${
+                      <div key={i} className={`flex flex-col items-center justify-center py-2 px-3 border-2 transition-all ${
                         rev.completed 
-                          ? 'bg-zinc-100 border-white shadow-[0_0_15px_rgba(255,255,255,0.2)]' 
+                          ? 'bg-yellow-400 border-yellow-400 text-black' 
                           : isPending 
-                            ? 'bg-red-950/20 border-red-900/50'
-                            : 'bg-zinc-900 border-zinc-800 opacity-60'
+                            ? 'bg-black border-red-500 text-red-500 shadow-[2px_2px_0px_#ef4444]'
+                            : 'bg-black border-zinc-800 text-zinc-600'
                       }`}>
-                        <span className={`text-[10px] font-black uppercase tracking-wider ${rev.completed ? 'text-zinc-900' : isPending ? 'text-red-400' : 'text-zinc-500'}`}>
-                          D{rev.dayOffset}
-                        </span>
+                        <span className="text-[10px] font-black uppercase tracking-widest">D{rev.dayOffset}</span>
                         {rev.completed ? (
-                          <Check size={14} className="text-zinc-900 mt-1 stroke-[3]" />
+                          <Check size={16} className="mt-1 stroke-[4]" />
                         ) : (
-                          <Circle size={14} className={`mt-1 ${isPending ? 'text-red-400 animate-pulse' : 'text-zinc-700'}`} />
+                          <Circle size={16} className={`mt-1 stroke-[3] ${isPending ? 'animate-pulse' : ''}`} />
                         )}
                       </div>
                     );
@@ -810,23 +837,24 @@ export default function App() {
         )}
       </div>
 
-      <div className="bg-gradient-to-br from-[#1c1917] to-zinc-900 border border-[#44403c] p-6 rounded-2xl shadow-2xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-[#78716c] opacity-10 rounded-full blur-3xl"></div>
-        <h3 className="text-[#d6d3d1] font-black text-xl mb-6 flex items-center gap-2 tracking-tight">
-          <Trophy size={24} className="text-[#a8a29e]" /> Hall of Fame (Mastered)
+      <div className="bg-black border-4 border-white p-6 shadow-[8px_8px_0px_white]">
+        <h3 className="text-white font-black uppercase tracking-widest mb-6 flex items-center gap-2 text-sm border-b-2 border-zinc-800 pb-2">
+          HALL OF FAME (MASTERED)
         </h3>
         {masteredTopics.length === 0 ? (
-          <p className="text-sm font-medium text-[#78716c] text-center py-6 border border-dashed border-[#57534e] rounded-xl">Check off a Day 30 revision to lock knowledge here permanently.</p>
+          <div className="text-center py-10 border-4 border-dashed border-zinc-800 text-zinc-600 font-black uppercase tracking-widest">
+            EMPTY VAULT
+          </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             {masteredTopics.map(topic => (
-              <div key={topic.id} className="bg-[#292524] p-4 rounded-xl border border-[#57534e] flex items-center gap-4 transition-transform hover:scale-[1.02]">
-                <div className="w-12 h-12 rounded-full bg-[#1c1917] flex items-center justify-center border border-[#44403c] shadow-inner">
-                  <Trophy size={20} className="text-[#a8a29e]" />
+              <div key={topic.id} className="bg-black p-4 border-2 border-zinc-700 flex items-center gap-4 hover:border-yellow-400 transition-colors">
+                <div className="w-12 h-12 bg-black border-2 border-yellow-400 flex items-center justify-center">
+                   <Trophy size={20} className="text-yellow-400" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-white text-sm">{topic.title}</h4>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#78716c] mt-1">{topic.category} • {topic.masteredDate}</p>
+                  <h4 className="font-black text-white text-sm uppercase">{topic.title}</h4>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mt-1">{topic.category} • {topic.masteredDate}</p>
                 </div>
               </div>
             ))}
@@ -840,149 +868,139 @@ export default function App() {
     if (expandedWisdomCategory) {
       const filteredNotes = wisdomNotes.filter(n => n.category === expandedWisdomCategory);
       return (
-        <div className="space-y-6 animate-in fade-in duration-300">
-          <div className="flex items-center gap-4 mb-4">
-            <button onClick={() => setExpandedWisdomCategory(null)} className="p-2 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 hover:text-white rounded-lg text-zinc-400 transition-colors active:scale-95">
-              <ChevronLeft size={20} />
+        <div className="space-y-6 pb-10">
+          <div className="flex items-center gap-4 mb-6">
+            <button onClick={() => setExpandedWisdomCategory(null)} className="p-3 bg-white text-black hover:bg-yellow-400 transition-colors border-2 border-black rounded-none active:translate-y-1">
+              <ChevronLeft size={24} className="stroke-[3]"/>
             </button>
-            <h2 className="text-2xl font-black text-white flex items-center gap-2">
-              <FolderOpen size={24} className="text-zinc-400" /> {expandedWisdomCategory}
+            <h2 className="text-xl font-black text-white uppercase tracking-widest flex items-center gap-2">
+              <FolderOpen size={24} className="text-zinc-500" /> {expandedWisdomCategory}
             </h2>
           </div>
-          <div className="flex gap-2 bg-zinc-900 border border-zinc-800/80 p-3 rounded-2xl shadow-xl">
+          <div className="flex gap-2 shadow-[6px_6px_0px_#facc15] mb-8">
             <input 
               type="text" 
               value={newWisdom}
               onChange={(e) => setNewWisdom(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleAddWisdom()}
-              placeholder="Dump knowledge here..."
-              className="flex-1 bg-zinc-950 border border-zinc-700/50 rounded-xl px-4 py-3 text-white font-medium focus:outline-none focus:border-white transition-colors"
+              placeholder="DUMP KNOWLEDGE..."
+              className="flex-1 bg-black border-4 border-white px-4 py-4 text-white font-black uppercase placeholder:text-zinc-600 focus:outline-none focus:bg-zinc-900 rounded-none"
             />
             <button 
               onClick={handleAddWisdom}
-              className="bg-zinc-100 hover:bg-white text-zinc-900 px-6 rounded-xl font-black transition-all active:scale-95 flex items-center justify-center"
+              className="bg-yellow-400 text-black border-4 border-white px-6 font-black transition-all hover:bg-white rounded-none active:bg-zinc-300"
             >
-              <Plus size={20} className="stroke-[3]" />
+              <Plus size={24} className="stroke-[4]" />
             </button>
           </div>
-          <div className="grid gap-4 mt-6">
-            {filteredNotes.length === 0 && <p className="text-zinc-500 font-medium text-center py-10 border border-dashed border-zinc-800 rounded-2xl">Folder is empty.</p>}
+          <div className="grid gap-4">
+            {filteredNotes.length === 0 && <div className="text-center py-10 border-4 border-dashed border-zinc-800 text-zinc-600 font-black uppercase tracking-widest">EMPTY FOLDER</div>}
             {filteredNotes.map(note => (
-              <div 
-                key={note.id} 
-                onTouchStart={() => handlePressStart(() => deleteWisdomNote(note.id))}
-                onTouchEnd={handlePressEnd}
-                onMouseDown={() => handlePressStart(() => deleteWisdomNote(note.id))}
-                onMouseUp={handlePressEnd}
-                onMouseLeave={handlePressEnd}
-                title="Hold to Delete"
-                className="bg-zinc-900 border border-zinc-800 p-5 rounded-2xl flex flex-col gap-3 transition-colors group hover:border-zinc-600 shadow-sm cursor-pointer"
-              >
-                <div className="flex items-start gap-3">
-                  <Mic size={18} className="text-zinc-500 mt-1 flex-shrink-0" />
-                  <div className="flex-1">
-                    <p className="text-white text-sm leading-relaxed font-medium">{note.text}</p>
+              <LongPressItem key={note.id} item={note} onDelete={(id) => deleteWisdomNote(id)}>
+                <div className="bg-black border-2 border-white p-5 shadow-[4px_4px_0px_white] flex flex-col gap-4 group hover:border-yellow-400 transition-colors cursor-pointer">
+                  <div className="flex items-start gap-3">
+                     <Mic size={18} className="text-zinc-600 mt-1 flex-shrink-0" />
+                     <p className="text-white text-sm font-bold leading-relaxed">{note.text}</p>
+                  </div>
+                  <div className="flex justify-between items-center pt-4 border-t-2 border-zinc-800">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">{note.date}</span>
+                    <div className="flex items-center gap-2">
+                       <MoveRight size={14} className="text-zinc-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                       <select 
+                         onChange={(e) => handleMoveWisdomNote(note.id, e.target.value)}
+                         value={note.category}
+                         className="bg-zinc-900 border-2 border-zinc-700 text-[10px] font-black text-white uppercase px-2 py-1 outline-none cursor-pointer"
+                       >
+                         {wisdomCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                       </select>
+                    </div>
                   </div>
                 </div>
-                <div className="flex justify-between items-center mt-2 pt-3 border-t border-zinc-800/50">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">{note.date}</span>
-                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <MoveRight size={14} className="text-zinc-500" />
-                    <select 
-                      onChange={(e) => handleMoveWisdomNote(note.id, e.target.value)}
-                      value={note.category}
-                      className="bg-zinc-950 border border-zinc-700 text-[10px] font-bold text-zinc-300 rounded px-2 py-1 outline-none cursor-pointer"
-                    >
-                      {wisdomCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                    </select>
-                  </div>
-                </div>
-              </div>
+              </LongPressItem>
             ))}
           </div>
         </div>
       );
     }
     return (
-      <div className="space-y-8 animate-in fade-in duration-500">
-        <div className="bg-indigo-950/20 border border-indigo-900/50 p-5 rounded-2xl shadow-xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-600 opacity-10 rounded-full blur-3xl"></div>
-          <h3 className="text-indigo-300 font-bold text-lg mb-3 flex items-center gap-2">
-            <Sparkles size={20} className="text-indigo-400" /> Ask The Oracle
+      <div className="space-y-8 pb-10">
+        
+        {/* Ask Oracle Brutalist Box */}
+        <div className="bg-black border-4 border-white p-6 shadow-[8px_8px_0px_#facc15]">
+          <h3 className="text-yellow-400 font-black uppercase tracking-widest mb-4 flex items-center gap-2 text-sm border-b-2 border-white/20 pb-2">
+            <Sparkles size={18} /> ASK THE ORACLE
           </h3>
-          <p className="text-xs font-medium text-indigo-200/60 mb-4 leading-relaxed">
-            Chat with your Second Brain. The AI will synthesize answers using exclusively your saved Wisdom and Dump notes.
-          </p>
+          <p className="text-[10px] text-zinc-400 font-bold tracking-widest uppercase mb-4">Chat with your Second Brain. Uses your saved Wisdom.</p>
           <div className="flex gap-2">
             <input 
               type="text" 
               value={oracleQuery}
               onChange={(e) => setOracleQuery(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleAskOracle('wisdom')}
-              placeholder="E.g., What did I learn about focus?"
-              className="flex-1 bg-zinc-950/80 border border-indigo-900/50 rounded-xl px-4 py-3 text-white font-medium focus:outline-none focus:border-indigo-500 transition-colors placeholder:text-indigo-900/50"
+              placeholder="QUERY..."
+              className="flex-1 bg-black border-2 border-white px-4 py-3 text-white font-black uppercase placeholder:text-zinc-600 focus:outline-none focus:bg-zinc-900 rounded-none"
             />
             <button 
               onClick={() => handleAskOracle('wisdom')}
               disabled={isOracleThinking}
-              className="bg-indigo-600 hover:bg-indigo-500 text-white active:scale-95 px-6 rounded-xl font-black transition-all flex items-center justify-center shadow-lg shadow-indigo-900/20 disabled:opacity-50"
+              className="bg-white text-black border-2 border-white px-6 font-black uppercase hover:bg-yellow-400 active:translate-y-1 transition-all rounded-none disabled:opacity-50"
             >
-              {isOracleThinking ? <Circle size={18} className="animate-pulse" /> : <Send size={18} className="stroke-[3]" />}
+              {isOracleThinking ? <Circle size={20} className="animate-pulse stroke-[4]" /> : <Send size={20} className="stroke-[3]" />}
             </button>
           </div>
           {oracleResponse && (
-            <div className="mt-4 p-4 bg-zinc-950/80 border border-indigo-900/50 rounded-xl animate-in fade-in duration-300">
-              <p className="text-indigo-100 text-sm whitespace-pre-line leading-relaxed font-medium">{oracleResponse}</p>
+            <div className="mt-6 p-5 bg-zinc-900 border-l-4 border-yellow-400">
+              <p className="text-white text-sm font-bold leading-relaxed">{oracleResponse}</p>
             </div>
           )}
         </div>
 
-        <div className="bg-zinc-900 border border-zinc-800/80 p-5 rounded-2xl shadow-xl">
-          <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
-            <Folder className="text-zinc-300" size={20} /> Wisdom Folders
+        <div className="bg-black border-4 border-white p-6 shadow-[8px_8px_0px_white]">
+          <h3 className="text-white font-black uppercase tracking-widest mb-6 flex items-center gap-2 text-sm border-b-2 border-zinc-800 pb-2">
+            <Folder size={18} /> WISDOM FOLDERS
           </h3>
-          <div className="flex gap-2">
+          <div className="flex gap-2 mb-8">
             <input 
               type="text" 
               value={newWisdomCat}
               onChange={(e) => setNewWisdomCat(e.target.value)}
-              placeholder="Create New Folder (e.g., Podcasts)"
-              className="flex-1 bg-zinc-950 border border-zinc-700/50 rounded-xl px-4 py-2.5 text-sm font-medium text-white focus:outline-none focus:border-white transition-colors"
+              placeholder="NEW FOLDER..."
+              className="flex-1 bg-black border-2 border-zinc-600 px-4 py-3 text-white font-black uppercase placeholder:text-zinc-700 focus:outline-none focus:border-white rounded-none"
             />
             <button 
               onClick={handleAddWisdomCategory}
-              className="bg-zinc-800 hover:bg-zinc-700 text-white active:scale-95 px-5 rounded-xl text-sm font-bold transition-all shadow-md"
+              className="bg-zinc-800 text-white border-2 border-zinc-600 px-5 font-black hover:bg-white hover:text-black transition-colors rounded-none"
             >
-              <Plus size={18} className="stroke-[3]" />
+              <Plus size={20} className="stroke-[3]" />
             </button>
           </div>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {wisdomCategories.map(cat => {
-            const count = wisdomNotes.filter(n => n.category === cat).length;
-            return (
-              <div key={cat} className="group relative">
-                <button 
-                  onClick={() => setExpandedWisdomCategory(cat)}
-                  className="w-full bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-600 p-5 rounded-2xl flex flex-col items-start gap-4 transition-all duration-300 active:scale-95 shadow-sm text-left h-full"
-                >
-                  <FolderOpen size={32} className="text-zinc-400 group-hover:text-white transition-colors" />
-                  <div>
-                    <h4 className="font-bold text-white text-sm line-clamp-1">{cat}</h4>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 mt-1 block">{count} Notes</span>
-                  </div>
-                </button>
-                {cat !== "Quick Thoughts" && (
+          <div className="grid grid-cols-2 gap-4">
+            {wisdomCategories.map(cat => {
+              const count = wisdomNotes.filter(n => n.category === cat).length;
+              return (
+                <div key={cat} className="group relative">
                   <button 
-                    onClick={(e) => { e.stopPropagation(); handleDeleteWisdomCategory(cat); }}
-                    className="absolute top-3 right-3 p-1.5 bg-zinc-950 hover:bg-red-950 text-zinc-600 hover:text-red-500 rounded-lg opacity-0 group-hover:opacity-100 transition-all border border-transparent hover:border-red-900/50"
+                    onClick={() => setExpandedWisdomCategory(cat)}
+                    className="w-full bg-black border-2 border-white p-5 flex flex-col items-start gap-4 hover:border-yellow-400 hover:shadow-[4px_4px_0px_#facc15] transition-all text-left active:translate-y-1 rounded-none h-full"
                   >
-                    <Trash2 size={14} />
+                    <FolderOpen size={32} className="text-zinc-400 group-hover:text-yellow-400 transition-colors" />
+                    <div>
+                      <h4 className="font-black text-white text-sm uppercase truncate w-full">{cat}</h4>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mt-1 block">{count} NOTES</span>
+                    </div>
                   </button>
-                )}
-              </div>
-            )
-          })}
+                  {cat !== "Quick Thoughts" && (
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); handleDeleteWisdomCategory(cat); }}
+                      className="absolute top-3 right-3 p-2 bg-black text-zinc-600 hover:text-red-500 border-2 border-transparent hover:border-red-500 transition-colors"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  )}
+                </div>
+              )
+            })}
+          </div>
         </div>
       </div>
     );
@@ -992,34 +1010,27 @@ export default function App() {
     if (expandedVaultCategory) {
       const notesInCat = vaultNotes.filter(n => n.category === expandedVaultCategory);
       return (
-        <div className="space-y-6 animate-in fade-in duration-300">
-          <div className="flex items-center gap-4 mb-4">
-            <button onClick={() => setExpandedVaultCategory(null)} className="p-2 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 hover:text-white rounded-lg text-zinc-400 transition-colors active:scale-95">
-              <ChevronLeft size={20} />
+        <div className="space-y-6 pb-10">
+          <div className="flex items-center gap-4 mb-6">
+            <button onClick={() => setExpandedVaultCategory(null)} className="p-3 bg-white text-black hover:bg-yellow-400 transition-colors border-2 border-black rounded-none active:translate-y-1">
+              <ChevronLeft size={24} className="stroke-[3]"/>
             </button>
-            <h2 className="text-2xl font-black text-white flex items-center gap-2">
-              <FolderOpen size={24} className="text-zinc-400" /> {expandedVaultCategory}
+            <h2 className="text-xl font-black text-white uppercase tracking-widest flex items-center gap-2">
+               <FolderOpen size={24} className="text-zinc-500" /> {expandedVaultCategory}
             </h2>
           </div>
-          <div className="grid gap-4 mt-6">
-            {notesInCat.length === 0 && <p className="text-zinc-500 font-medium text-center py-10 border border-dashed border-zinc-800 rounded-2xl">Folder is empty.</p>}
+          <div className="grid gap-4">
+            {notesInCat.length === 0 && <div className="text-center py-10 border-4 border-dashed border-zinc-800 text-zinc-600 font-black uppercase tracking-widest">EMPTY FOLDER</div>}
             {notesInCat.map(note => (
-              <div 
-                key={note.id} 
-                onTouchStart={() => handlePressStart(() => deleteVaultNote(note.id))}
-                onTouchEnd={handlePressEnd}
-                onMouseDown={() => handlePressStart(() => deleteVaultNote(note.id))}
-                onMouseUp={handlePressEnd}
-                onMouseLeave={handlePressEnd}
-                title="Hold to Delete"
-                className="bg-zinc-950 border border-zinc-800 p-4 rounded-xl flex items-start gap-4 hover:border-zinc-700 transition-colors shadow-sm group cursor-pointer"
-              >
-                <BrainCircuit size={16} className="text-zinc-600 mt-1 flex-shrink-0 group-hover:text-zinc-400 transition-colors" />
-                <div>
-                  <p className="text-zinc-200 text-sm font-medium leading-relaxed">{note.text}</p>
-                  <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-600 mt-2 block">{note.date}</span>
+              <LongPressItem key={note.id} item={note} onDelete={(id) => deleteVaultNote(id)}>
+                <div className="bg-black border-2 border-white p-5 shadow-[4px_4px_0px_white] flex items-start gap-4 hover:border-yellow-400 transition-colors group cursor-pointer">
+                  <BrainCircuit size={20} className="text-zinc-600 mt-1 shrink-0 group-hover:text-yellow-400 transition-colors" />
+                  <div>
+                    <p className="text-white text-sm font-bold leading-relaxed">{note.text}</p>
+                    <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500 mt-3 block">{note.date}</span>
+                  </div>
                 </div>
-              </div>
+              </LongPressItem>
             ))}
           </div>
         </div>
@@ -1027,55 +1038,52 @@ export default function App() {
     }
 
     return (
-      <div className="space-y-6 animate-in fade-in duration-500">
+      <div className="space-y-8 pb-10">
         
-        {/* Ask The Oracle */}
-        <div className="bg-indigo-950/20 border border-indigo-900/50 p-5 rounded-2xl shadow-xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-600 opacity-10 rounded-full blur-3xl"></div>
-          <h3 className="text-indigo-300 font-bold text-lg mb-3 flex items-center gap-2">
-            <Sparkles size={20} className="text-indigo-400" /> Ask The Oracle
+        {/* Ask Oracle Brutalist Box */}
+        <div className="bg-black border-4 border-white p-6 shadow-[8px_8px_0px_#facc15]">
+          <h3 className="text-yellow-400 font-black uppercase tracking-widest mb-4 flex items-center gap-2 text-sm border-b-2 border-white/20 pb-2">
+            <Sparkles size={18} /> ASK THE ORACLE
           </h3>
-          <p className="text-xs font-medium text-indigo-200/60 mb-4 leading-relaxed">
-            Chat with your Second Brain. The AI will synthesize answers using exclusively your saved Wisdom and Dump notes.
-          </p>
+          <p className="text-[10px] text-zinc-400 font-bold tracking-widest uppercase mb-4">Chat with your Second Brain. Uses your saved Dump notes.</p>
           <div className="flex gap-2">
             <input 
               type="text" 
               value={oracleQuery}
               onChange={(e) => setOracleQuery(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleAskOracle('wisdom')}
-              placeholder="E.g., What did I learn about focus?"
-              className="flex-1 bg-zinc-950/80 border border-indigo-900/50 rounded-xl px-4 py-3 text-white font-medium focus:outline-none focus:border-indigo-500 transition-colors placeholder:text-indigo-900/50"
+              onKeyPress={(e) => e.key === 'Enter' && handleAskOracle('vault')}
+              placeholder="QUERY..."
+              className="flex-1 bg-black border-2 border-white px-4 py-3 text-white font-black uppercase placeholder:text-zinc-600 focus:outline-none focus:bg-zinc-900 rounded-none"
             />
             <button 
-              onClick={() => handleAskOracle('wisdom')}
+              onClick={() => handleAskOracle('vault')}
               disabled={isOracleThinking}
-              className="bg-indigo-600 hover:bg-indigo-500 text-white active:scale-95 px-6 rounded-xl font-black transition-all flex items-center justify-center shadow-lg shadow-indigo-900/20 disabled:opacity-50"
+              className="bg-white text-black border-2 border-white px-6 font-black uppercase hover:bg-yellow-400 active:translate-y-1 transition-all rounded-none disabled:opacity-50"
             >
-              {isOracleThinking ? <Circle size={18} className="animate-pulse" /> : <Send size={18} className="stroke-[3]" />}
+              {isOracleThinking ? <Circle size={20} className="animate-pulse stroke-[4]" /> : <Send size={20} className="stroke-[3]" />}
             </button>
           </div>
           {oracleResponse && (
-            <div className="mt-4 p-4 bg-zinc-950/80 border border-indigo-900/50 rounded-xl animate-in fade-in duration-300">
-              <p className="text-indigo-100 text-sm whitespace-pre-line leading-relaxed font-medium">{oracleResponse}</p>
+            <div className="mt-6 p-5 bg-zinc-900 border-l-4 border-yellow-400">
+              <p className="text-white text-sm font-bold leading-relaxed">{oracleResponse}</p>
             </div>
           )}
         </div>
 
-        {/* AI Inbox Input */}
-        <div className="bg-zinc-900 border border-zinc-800/80 p-5 rounded-2xl shadow-xl">
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="text-white font-bold text-lg flex items-center gap-2">
-              <BrainCircuit className="text-zinc-400" size={20} /> Brain Dump (Inbox)
+        {/* AI Inbox Input (Brain Dump) */}
+        <div className="bg-black border-4 border-white p-6 shadow-[8px_8px_0px_white]">
+          <div className="flex justify-between items-center mb-4 border-b-2 border-zinc-800 pb-2">
+            <h3 className="text-white font-black uppercase tracking-widest text-sm flex items-center gap-2">
+               <BrainCircuit size={18} /> BRAIN DUMP (INBOX)
             </h3>
             {isVaultSorting && (
-              <span className="text-[10px] bg-blue-950 text-blue-400 px-3 py-1 rounded-full font-black uppercase tracking-widest animate-pulse border border-blue-900/50 flex items-center gap-1 shadow-lg">
-                <Sparkles size={12}/> AI Sorting
+              <span className="text-[9px] bg-yellow-400 text-black px-2 py-1 font-black uppercase tracking-widest animate-pulse border-2 border-white">
+                <Sparkles size={10} className="inline mr-1" /> AI SORTING
               </span>
             )}
           </div>
-          <p className="text-xs font-medium text-zinc-500 mb-5 leading-relaxed">
-            Fast-capture raw ideas. Add 3 similar thoughts, and AI will automatically build a new folder for them below.
+          <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-5 leading-relaxed">
+             Fast-capture raw ideas. Add 3 similar thoughts, and AI will automatically build a new folder for them below.
           </p>
           
           <div className="flex gap-2 relative">
@@ -1097,55 +1105,53 @@ export default function App() {
                 recognition.onend = () => setIsListening(false);
                 recognition.start();
               }}
-              className={`p-3 rounded-xl flex items-center justify-center transition-all shadow-md ${isListening ? 'bg-red-950 text-red-500 border border-red-900 animate-pulse' : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700'}`}
-              title="Speak your thought"
+              className={`p-3 border-2 transition-all rounded-none ${isListening ? 'bg-red-500 text-white border-red-500 animate-pulse' : 'bg-zinc-900 text-white border-zinc-700 hover:border-white'}`}
             >
-              <Mic size={20} />
+              <Mic size={24} />
             </button>
             <input 
               type="text" 
               value={newNote}
               onChange={(e) => setNewNote(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleAddNote()}
-              placeholder={isListening ? "Listening (Speak now)..." : "Type your raw thought..."}
-              className="flex-1 bg-zinc-950 border border-zinc-700/50 rounded-xl px-4 py-3 text-white font-medium focus:outline-none focus:border-white transition-colors"
+              placeholder={isListening ? "SPEAKING..." : "RAW THOUGHT..."}
+              className="flex-1 bg-black border-2 border-white px-4 py-3 text-white font-black uppercase placeholder:text-zinc-600 focus:outline-none focus:bg-zinc-900 rounded-none"
             />
             <button 
               onClick={handleAddNote}
               disabled={isVaultSorting}
-              className="bg-zinc-100 hover:bg-white text-zinc-900 active:scale-95 px-6 rounded-xl font-black transition-all flex items-center justify-center shadow-lg disabled:opacity-50 disabled:active:scale-100"
+              className="bg-yellow-400 text-black border-2 border-white px-5 font-black uppercase hover:bg-white active:translate-y-1 transition-all rounded-none disabled:opacity-50"
             >
-              <Send size={18} className="stroke-[3]" />
+              <Send size={20} className="stroke-[3]" />
             </button>
           </div>
         </div>
 
-        {/* VAULT FOLDER GRID */}
         <div className="space-y-6">
-          <h3 className="text-white font-bold text-lg mb-1 flex items-center gap-2">
-             <Folder className="text-zinc-300" size={20} /> Vault Folders
+          <h3 className="text-white font-black uppercase tracking-widest text-sm flex items-center gap-2 px-1">
+             <Folder size={18} /> VAULT FOLDERS
           </h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             {vaultCategories.map(cat => {
               const count = vaultNotes.filter(n => n.category === cat).length;
               return (
                 <div key={cat} className="group relative">
                   <button 
                     onClick={() => setExpandedVaultCategory(cat)}
-                    className="w-full bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-600 p-5 rounded-2xl flex flex-col items-start gap-4 transition-all duration-300 active:scale-95 shadow-sm text-left h-full"
+                    className="w-full bg-black border-2 border-white p-5 flex flex-col items-start gap-4 hover:border-yellow-400 hover:shadow-[4px_4px_0px_#facc15] transition-all text-left active:translate-y-1 rounded-none h-full"
                   >
-                    <FolderOpen size={32} className="text-zinc-400 group-hover:text-white transition-colors" />
+                    <FolderOpen size={32} className="text-zinc-400 group-hover:text-yellow-400 transition-colors" />
                     <div>
-                      <h4 className="font-bold text-white text-sm line-clamp-1">{cat}</h4>
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 mt-1 block">{count} Notes</span>
+                      <h4 className="font-black text-white text-sm uppercase truncate w-full">{cat}</h4>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mt-1 block">{count} NOTES</span>
                     </div>
                   </button>
                   {cat !== "Others" && (
                     <button 
                       onClick={(e) => { e.stopPropagation(); handleDeleteVaultCategory(cat); }}
-                      className="absolute top-3 right-3 p-1.5 bg-zinc-950 hover:bg-red-950 text-zinc-600 hover:text-red-500 rounded-lg opacity-0 group-hover:opacity-100 transition-all border border-transparent hover:border-red-900/50"
+                      className="absolute top-3 right-3 p-2 bg-black text-zinc-600 hover:text-red-500 border-2 border-transparent hover:border-red-500 transition-colors"
                     >
-                      <Trash2 size={14} />
+                      <Trash2 size={16} />
                     </button>
                   )}
                 </div>
@@ -1153,9 +1159,8 @@ export default function App() {
             })}
           </div>
           {vaultNotes.length === 0 && (
-            <div className="text-center py-12 border border-dashed border-zinc-800 rounded-2xl bg-zinc-950/30">
-              <p className="font-bold text-zinc-500">Inbox Zero.</p>
-              <p className="text-xs text-zinc-600 mt-1">Dump your messy thoughts here.</p>
+            <div className="text-center py-12 border-4 border-dashed border-zinc-800 text-zinc-600 font-black uppercase tracking-widest">
+              INBOX ZERO
             </div>
           )}
         </div>
@@ -1164,37 +1169,35 @@ export default function App() {
   };
 
   const renderUrgeKiller = () => (
-    <div className="space-y-6 animate-in fade-in duration-500 max-w-md mx-auto text-center pt-10">
-      <h2 className="text-2xl font-black text-white flex justify-center items-center gap-2 mb-2 tracking-tight">
-        <ShieldAlert className="text-zinc-400" size={28} /> Trigger Interceptor
+    <div className="space-y-10 pb-10 pt-4 text-center max-w-md mx-auto">
+      <h2 className="text-2xl font-black text-white uppercase tracking-widest flex justify-center items-center gap-3">
+        <ShieldAlert className="text-yellow-400 stroke-[3]" size={32} /> INTERCEPTOR
       </h2>
-      <p className="text-zinc-500 font-medium text-sm mb-10 leading-relaxed">About to break your streak? Want to scroll? Hit this button first to activate the friction zone.</p>
+      <p className="text-zinc-500 font-black uppercase tracking-widest text-[10px] px-8">Trigger this protocol if you are about to break discipline.</p>
 
       {!isUrgeActive ? (
         <button 
           onClick={triggerUrgeInterceptor}
-          className="w-56 h-56 rounded-full bg-[#111111] hover:bg-zinc-900 border-2 border-zinc-800 flex items-center justify-center shadow-[0_0_40px_rgba(255,255,255,0.05)] hover:shadow-[0_0_50px_rgba(255,255,255,0.1)] mx-auto transition-all duration-300 hover:scale-105 active:scale-95 relative overflow-hidden group"
+          className="w-full aspect-square max-w-[280px] mx-auto bg-yellow-400 hover:bg-white text-black border-8 border-black outline outline-4 outline-yellow-400 shadow-[12px_12px_0px_white] active:translate-y-2 active:shadow-none transition-all flex flex-col items-center justify-center gap-6 group rounded-none"
         >
-          <span className="text-white font-black text-2xl uppercase tracking-widest flex flex-col items-center relative z-10 gap-3">
-            <Skull size={48} className="text-zinc-400 group-hover:text-white transition-colors" />
-            I Have an Urge
-          </span>
+          <Skull size={80} className="stroke-[2] group-hover:scale-110 transition-transform" />
+          <span className="font-black text-3xl uppercase tracking-widest text-center px-4">I HAVE AN URGE</span>
         </button>
       ) : (
-        <div className="bg-zinc-950 border border-zinc-800 p-8 rounded-3xl shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-1 bg-zinc-800">
+        <div className="bg-black border-4 border-yellow-400 p-8 shadow-[12px_12px_0px_#facc15] relative">
+          <div className="absolute top-0 left-0 w-full h-2 bg-zinc-900">
             <div 
-              className="bg-white h-full transition-all duration-1000 ease-linear shadow-[0_0_10px_rgba(255,255,255,0.5)]"
+              className="bg-yellow-400 h-full transition-all duration-1000 ease-linear"
               style={{ width: `${(urgeTimer / 90) * 100}%` }}
             ></div>
           </div>
-          <h3 className="text-zinc-400 font-black mb-6 uppercase tracking-[0.2em] text-xs">Friction Zone Active</h3>
+          <h3 className="text-yellow-400 font-black mt-4 mb-6 uppercase tracking-[0.2em] text-xs">FRICTION ZONE ACTIVE</h3>
           <div className="text-8xl font-black text-white mb-8 tabular-nums tracking-tighter">
             {urgeTimer}s
           </div>
-          <div className="min-h-[80px] flex items-center justify-center">
-            <p className="text-zinc-300 font-medium italic text-lg px-4 leading-relaxed animate-in fade-in zoom-in duration-500" key={currentQuoteIndex}>
-              "{urgeQuotes[currentQuoteIndex] || 'Stay strong. Do not give in.'}"
+          <div className="min-h-[100px] flex items-center justify-center border-t-2 border-zinc-800 pt-6">
+            <p className="text-white font-bold text-lg uppercase tracking-wider leading-relaxed px-2" key={currentQuoteIndex}>
+              "{urgeQuotes[currentQuoteIndex] || 'STAY STRONG. DO NOT GIVE IN.'}"
             </p>
           </div>
         </div>
@@ -1203,100 +1206,86 @@ export default function App() {
   );
 
   const renderSettings = () => (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <div className="space-y-8 pb-10">
       
       {/* Profile Section */}
-      <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-2xl shadow-xl">
-        <h3 className="text-white font-bold text-lg mb-6 flex items-center gap-2">
-          <User size={20} className="text-zinc-400"/> Profile Settings
+      <div className="bg-black border-4 border-white p-6 shadow-[8px_8px_0px_white]">
+        <h3 className="text-white font-black uppercase tracking-widest mb-6 flex items-center gap-2 text-sm border-b-2 border-zinc-800 pb-2">
+           <User size={18} /> PROFILE COMMAND
         </h3>
-        
-        <div className="flex items-center gap-5 mb-6">
-          <div className="relative w-24 h-24 rounded-full bg-zinc-950 border-2 border-zinc-800 flex items-center justify-center overflow-hidden shadow-inner">
+        <div className="flex flex-col items-center gap-6 mb-8">
+          <div className="w-32 h-32 bg-black border-4 border-yellow-400 flex items-center justify-center overflow-hidden shadow-[6px_6px_0px_#facc15] relative">
             {profilePic ? (
-              <img src={profilePic} alt="Profile" className="w-full h-full object-cover" />
+              <img src={profilePic} alt="Profile" className="w-full h-full object-cover grayscale contrast-125" />
             ) : (
-              <span className="text-4xl">🦊</span>
+              <span className="text-5xl">🦊</span>
             )}
-          </div>
-          <div>
+            {/* Direct Hidden Input */}
             <input 
               type="file" 
-              id="picUpload" 
               accept="image/*" 
-              className="hidden" 
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" 
               onChange={handleImageUpload} 
             />
-            <label 
-              htmlFor="picUpload" 
-              className="bg-zinc-800 hover:bg-zinc-700 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center gap-2 shadow-sm"
-            >
-              <ImageIcon size={14}/> Upload Picture
-            </label>
-            <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-2">1:1 Ratio Recommended</p>
           </div>
+          <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">TAP AVATAR TO UPLOAD</p>
         </div>
-
         <div>
-          <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2 block">Display Name</label>
+          <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2 block">DISPLAY NAME</label>
           <input 
             type="text" 
             value={userName} 
             onChange={(e) => setUserName(e.target.value)} 
-            placeholder="e.g., Apex Hunter" 
-            className="w-full bg-zinc-950 border border-zinc-700/50 rounded-xl px-4 py-3 text-white font-medium focus:outline-none focus:border-white transition-colors" 
+            placeholder="e.g., APEX HUNTER" 
+            className="w-full bg-black border-2 border-white px-4 py-4 text-white font-black uppercase placeholder:text-zinc-700 focus:outline-none focus:border-yellow-400 transition-colors rounded-none" 
           />
         </div>
       </div>
 
       {/* AI Key Section */}
-      <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-2xl shadow-xl">
-        <h3 className="text-white font-bold text-lg mb-2 flex items-center gap-2">
-          <Lock size={20} className="text-zinc-400"/> AI Brain Engine API
+      <div className="bg-black border-4 border-white p-6 shadow-[8px_8px_0px_#facc15]">
+        <h3 className="text-yellow-400 font-black uppercase tracking-widest mb-4 flex items-center gap-2 text-sm border-b-2 border-white/20 pb-2">
+           <Lock size={18} /> AI ENGINE CORE
         </h3>
-        <p className="text-xs text-zinc-500 font-medium leading-relaxed mb-5">
-          Paste your Groq API Key here. This key powers your Oracle, Auto-Sorter, and dynamic Urge Quotes. It is stored securely on your local device.
+        <p className="text-[10px] text-zinc-400 font-black uppercase tracking-widest leading-relaxed mb-6">
+          Paste Groq API Key. Required for Oracle, Sorter, and dynamic Urges. Stored locally.
         </p>
         <input 
           type="password" 
           value={groqKey} 
           onChange={(e) => setGroqKey(e.target.value)} 
-          placeholder="gsk_xxxxxxxxxxxxxxxxxxxxxxxxxx" 
-          className="w-full bg-zinc-950 border border-zinc-700/50 rounded-xl px-4 py-3 text-white font-medium focus:outline-none focus:border-white transition-colors" 
+          placeholder="GSK_XXXX..." 
+          className="w-full bg-black border-2 border-white px-4 py-4 text-white font-bold tracking-widest focus:outline-none focus:border-yellow-400 transition-colors rounded-none" 
         />
       </div>
-
     </div>
   );
 
-  const showNightShift = new Date().getHours() >= 21;
-
   return (
-    <div className="min-h-screen bg-black text-zinc-200 font-sans pb-28 relative selection:bg-zinc-800 overflow-x-hidden">
+    <div className="min-h-screen bg-black text-white font-sans pb-28 selection:bg-yellow-400 selection:text-black overflow-x-hidden relative">
       
       <div className="max-w-2xl mx-auto p-4 md:p-6 relative z-10 pt-8">
-        {/* Header Updated with User Profile */}
-        <div className="flex justify-between items-center mb-10">
+        
+        {/* Header */}
+        <div className="flex justify-between items-center mb-10 border-b-4 border-white pb-6">
           <div>
-            <h1 className="text-3xl font-black text-white tracking-tighter flex items-center gap-2">
-              Apex Mind <span className="text-[10px] bg-white text-black px-2 py-1 rounded-sm font-black uppercase tracking-widest align-middle">V2.1</span>
+            <h1 className="text-3xl font-black text-white tracking-tighter flex items-center gap-3 uppercase">
+              Apex Mind <span className="text-[10px] bg-yellow-400 text-black px-2 py-1 font-black uppercase tracking-widest align-middle border-2 border-white">V3.0</span>
             </h1>
-            <p className="text-[10px] text-zinc-500 font-black uppercase tracking-[0.2em] mt-2">Second Brain OS</p>
+            <p className="text-[10px] text-zinc-500 font-black uppercase tracking-[0.2em] mt-2">SECOND BRAIN OS</p>
           </div>
-          
           <div 
-            className="flex items-center gap-3 cursor-pointer group" 
+            className="flex items-center gap-4 cursor-pointer group" 
             onClick={() => setActiveTab('settings')}
-            title="Open Settings"
           >
             {userName && (
-              <span className="font-bold text-white text-sm hidden sm:block group-hover:text-zinc-300 transition-colors">
+              <span className="font-black uppercase tracking-widest text-white text-xs hidden sm:block group-hover:text-yellow-400 transition-colors">
                 {userName}
               </span>
             )}
-            <div className="w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center shadow-lg overflow-hidden relative group-hover:border-zinc-600 transition-colors">
+            <div className="w-14 h-14 bg-black border-2 border-white flex items-center justify-center shadow-[4px_4px_0px_#facc15] overflow-hidden group-hover:shadow-[6px_6px_0px_white] transition-all">
               {profilePic ? (
-                <img src={profilePic} alt="Profile" className="w-full h-full object-cover" />
+                <img src={profilePic} alt="Profile" className="w-full h-full object-cover grayscale contrast-125" />
               ) : (
                 <span className="text-xl">🦊</span>
               )}
@@ -1314,30 +1303,30 @@ export default function App() {
         {activeTab === 'settings' && renderSettings()}
       </div>
 
-      {/* Floating Night Shift Widget (Active strictly 9PM - 12AM) */}
-      {showNightShift && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 w-[90%] max-w-sm z-40 flex flex-col items-end">
+      {/* Floating Night Shift Widget */}
+      {isNightTime && (
+        <div className="fixed bottom-28 right-4 z-40 flex flex-col items-end">
           {!isNightShiftOpen ? (
             <button 
               onClick={() => setIsNightShiftOpen(true)}
-              className="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-3 rounded-full font-black text-sm uppercase tracking-widest shadow-[0_0_20px_rgba(79,70,229,0.4)] flex items-center gap-2 animate-in slide-in-from-bottom-10 fade-in duration-500 hover:scale-105 active:scale-95 transition-all"
+              className="bg-yellow-400 text-black border-4 border-white px-6 py-4 font-black shadow-[6px_6px_0px_white] flex items-center gap-3 uppercase tracking-widest hover:translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_white] transition-all rounded-none"
             >
-              <Moon size={18} /> Plan Tomorrow
+              <Moon size={20} className="stroke-[3]" /> PLAN TOMORROW
             </button>
           ) : (
-            <div className="w-full bg-[#1a1a2e] border border-indigo-900/50 p-5 rounded-2xl shadow-[0_0_40px_rgba(49,46,129,0.3)] animate-in zoom-in-95 duration-300 relative">
-               <button 
-                 onClick={() => setIsNightShiftOpen(false)} 
-                 className="absolute top-3 right-3 text-indigo-400/50 hover:text-indigo-300 transition-colors"
-               >
-                 <X size={16} />
-               </button>
-               <h3 className="text-indigo-300 font-black text-sm uppercase tracking-widest mb-1 flex items-center gap-2">
-                 <Moon size={16}/> Night Shift Inbox
-               </h3>
-               <p className="text-xs text-indigo-200/60 font-medium mb-4">Add tasks for tomorrow, or pin a queue target.</p>
+            <div className="bg-black border-4 border-white p-6 w-[320px] shadow-[8px_8px_0px_#facc15] rounded-none">
+               <div className="flex justify-between items-center mb-6 border-b-2 border-white/20 pb-3">
+                 <h3 className="font-black text-yellow-400 text-xs uppercase tracking-widest flex items-center gap-2">
+                   <Moon size={16} className="stroke-[3]"/> NIGHT SHIFT INBOX
+                 </h3>
+                 <button onClick={() => setIsNightShiftOpen(false)} className="text-white hover:text-yellow-400 transition-colors">
+                   <X size={20} className="stroke-[3]"/>
+                 </button>
+               </div>
                
-               <div className="flex gap-2 mb-4">
+               <p className="text-[10px] text-zinc-400 font-bold mb-4">Add tasks for tomorrow, or pin a queue target.</p>
+
+               <div className="flex gap-2 mb-6">
                  <input 
                    type="text"
                    value={newCustomMission}
@@ -1348,8 +1337,8 @@ export default function App() {
                          setNewCustomMission("");
                       }
                    }}
-                   placeholder="Type custom task..."
-                   className="flex-1 bg-indigo-950/30 border border-indigo-900/40 rounded-xl px-3 py-2 text-sm text-white font-medium focus:outline-none focus:border-indigo-500"
+                   placeholder="CUSTOM TASK..."
+                   className="flex-1 bg-black border-2 border-white px-3 py-3 text-xs text-white font-black uppercase placeholder:text-zinc-600 focus:outline-none focus:border-yellow-400"
                  />
                  <button 
                    onClick={() => {
@@ -1358,18 +1347,20 @@ export default function App() {
                          setNewCustomMission("");
                       }
                    }}
-                   className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 rounded-xl flex items-center justify-center transition-all active:scale-95"
+                   className="bg-white hover:bg-yellow-400 text-black border-2 border-black px-4 transition-colors active:translate-y-1"
                  >
                    <Send size={16} className="stroke-[3]" />
                  </button>
                </div>
 
                {customMissions.filter(m => m.targetDate === addDays(todayStr, 1)).length > 0 && (
-                  <div className="mb-4 space-y-1.5">
+                  <div className="mb-6 space-y-2">
                     {customMissions.filter(m => m.targetDate === addDays(todayStr, 1)).map(m => (
-                       <div key={m.id} className="text-xs font-medium text-indigo-200 bg-indigo-950/50 px-3 py-2 rounded-lg flex justify-between items-center border border-indigo-900/30">
-                         <span>• {m.text}</span>
-                         <button onClick={() => setCustomMissions(prev => prev.filter(task => task.id !== m.id))} className="text-indigo-400 hover:text-red-400 transition-colors p-1"><Trash2 size={12}/></button>
+                       <div key={m.id} className="text-xs font-black uppercase tracking-wider text-white bg-zinc-900 border-2 border-zinc-700 px-3 py-2 flex justify-between items-center">
+                         <span className="truncate pr-2">• {m.text}</span>
+                         <button onClick={() => setCustomMissions(prev => prev.filter(task => task.id !== m.id))} className="text-zinc-500 hover:text-red-500 transition-colors shrink-0">
+                           <Trash2 size={14} className="stroke-[3]" />
+                         </button>
                        </div>
                     ))}
                   </div>
@@ -1377,8 +1368,8 @@ export default function App() {
 
                {stagingTopics.length > 0 && (
                  <>
-                   <div className="text-[10px] font-black text-indigo-400/50 uppercase tracking-widest mb-2 border-t border-indigo-900/50 pt-3">Pin Syllabus Target</div>
-                   <div className="space-y-2 max-h-32 overflow-y-auto hide-scrollbar">
+                   <div className="text-[10px] font-black text-yellow-400 uppercase tracking-widest mb-3 border-t-2 border-white/20 pt-4">PIN SYLLABUS TARGET</div>
+                   <div className="space-y-2 max-h-32 overflow-y-auto hide-scrollbar pr-1">
                      {stagingTopics.slice(0, 3).map((topic, idx) => (
                        <button 
                          key={topic.id}
@@ -1388,10 +1379,10 @@ export default function App() {
                            items.unshift(clickedItem);
                            setStagingTopics(items);
                          }}
-                         className="w-full text-left bg-indigo-950/30 hover:bg-indigo-900/50 border border-indigo-900/40 p-2.5 rounded-xl transition-all active:scale-95 flex items-center justify-between group"
+                         className="w-full text-left bg-black hover:bg-white border-2 border-white p-3 transition-colors flex items-center justify-between group"
                        >
-                         <span className="font-bold text-indigo-100 text-xs truncate pr-2">{topic.title}</span>
-                         <span className="text-[9px] font-black uppercase tracking-widest text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity">Pin</span>
+                         <span className="font-black text-white group-hover:text-black text-[10px] uppercase truncate pr-2 tracking-widest">{topic.title}</span>
+                         <span className="text-[9px] font-black uppercase tracking-widest text-black bg-yellow-400 px-2 py-0.5 opacity-0 group-hover:opacity-100 transition-opacity">PIN</span>
                        </button>
                      ))}
                    </div>
@@ -1402,37 +1393,27 @@ export default function App() {
         </div>
       )}
 
-      {/* Bottom Navigation with Settings Added */}
-      <div className="fixed bottom-0 left-0 w-full bg-black/90 backdrop-blur-xl border-t border-zinc-900 z-50 pb-safe overflow-x-auto hide-scrollbar">
-        <div className="max-w-2xl mx-auto flex justify-between px-2 py-4 min-w-[320px]">
-          <button onClick={() => setActiveTab('dashboard')} className={`flex-1 flex flex-col items-center gap-1.5 p-2 transition-all duration-300 active:scale-95 ${activeTab === 'dashboard' ? 'text-white' : 'text-zinc-600 hover:text-zinc-400'}`}>
-            <Calendar size={22} className={activeTab === 'dashboard' ? 'stroke-[2.5]' : 'stroke-2'} />
-            <span className="text-[9px] font-black uppercase tracking-widest">Mission</span>
-          </button>
-          <button onClick={() => setActiveTab('study')} className={`flex-1 flex flex-col items-center gap-1.5 p-2 transition-all duration-300 active:scale-95 ${activeTab === 'study' ? 'text-white' : 'text-zinc-600 hover:text-zinc-400'}`}>
-            <Activity size={22} className={activeTab === 'study' ? 'stroke-[2.5]' : 'stroke-2'} />
-            <span className="text-[9px] font-black uppercase tracking-widest">Queue</span>
-          </button>
-          <button onClick={() => setActiveTab('history')} className={`flex-1 flex flex-col items-center gap-1.5 p-2 transition-all duration-300 active:scale-95 ${activeTab === 'history' ? 'text-white' : 'text-zinc-600 hover:text-zinc-400'}`}>
-            <History size={22} className={activeTab === 'history' ? 'stroke-[2.5]' : 'stroke-2'} />
-            <span className="text-[9px] font-black uppercase tracking-widest">History</span>
-          </button>
-          <button onClick={() => setActiveTab('wisdom')} className={`flex-1 flex flex-col items-center gap-1.5 p-2 transition-all duration-300 active:scale-95 ${activeTab === 'wisdom' ? 'text-white' : 'text-zinc-600 hover:text-zinc-400'}`}>
-            <Folder size={22} className={activeTab === 'wisdom' ? 'stroke-[2.5]' : 'stroke-2'} />
-            <span className="text-[9px] font-black uppercase tracking-widest">Wisdom</span>
-          </button>
-          <button onClick={() => setActiveTab('vault')} className={`flex-1 flex flex-col items-center gap-1.5 p-2 transition-all duration-300 active:scale-95 ${activeTab === 'vault' ? 'text-white' : 'text-zinc-600 hover:text-zinc-400'}`}>
-            <BrainCircuit size={22} className={activeTab === 'vault' ? 'stroke-[2.5]' : 'stroke-2'} />
-            <span className="text-[9px] font-black uppercase tracking-widest">Dump</span>
-          </button>
-          <button onClick={() => setActiveTab('urge')} className={`flex-1 flex flex-col items-center gap-1.5 p-2 transition-all duration-300 active:scale-95 ${activeTab === 'urge' ? 'text-white' : 'text-zinc-600 hover:text-zinc-400'}`}>
-            <ShieldAlert size={22} className={activeTab === 'urge' ? 'stroke-[2.5]' : 'stroke-2'} />
-            <span className="text-[9px] font-black uppercase tracking-widest">Urge</span>
-          </button>
-          <button onClick={() => setActiveTab('settings')} className={`flex-1 flex flex-col items-center gap-1.5 p-2 transition-all duration-300 active:scale-95 ${activeTab === 'settings' ? 'text-white' : 'text-zinc-600 hover:text-zinc-400'}`}>
-            <Settings size={22} className={activeTab === 'settings' ? 'stroke-[2.5]' : 'stroke-2'} />
-            <span className="text-[9px] font-black uppercase tracking-widest">Settings</span>
-          </button>
+      {/* Brutalist Bottom Navigation */}
+      <div className="fixed bottom-0 left-0 w-full bg-black border-t-4 border-white z-50 overflow-x-auto hide-scrollbar">
+        <div className="max-w-2xl mx-auto flex justify-between px-2 py-3 min-w-[360px]">
+          {[
+            { id: 'dashboard', icon: Calendar, label: 'MISSION' },
+            { id: 'study', icon: Activity, label: 'QUEUE' },
+            { id: 'history', icon: History, label: 'HISTORY' },
+            { id: 'wisdom', icon: Folder, label: 'WISDOM' },
+            { id: 'vault', icon: BrainCircuit, label: 'DUMP' },
+            { id: 'urge', icon: ShieldAlert, label: 'URGE' },
+            { id: 'settings', icon: Settings, label: 'CONFIG' },
+          ].map(tab => (
+            <button 
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)} 
+              className={`flex-1 flex flex-col items-center justify-center gap-1.5 p-2 transition-colors border-b-4 ${activeTab === tab.id ? 'text-yellow-400 border-yellow-400' : 'text-zinc-600 border-transparent hover:text-white'}`}
+            >
+              <tab.icon size={22} className={activeTab === tab.id ? 'stroke-[2.5]' : 'stroke-2'} />
+              <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest">{tab.label}</span>
+            </button>
+          ))}
         </div>
       </div>
     </div>
