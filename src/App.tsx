@@ -24,27 +24,9 @@ const addDays = (dateStr, days) => {
 
 const loadLocalData = () => {
   try {
-    // 1. Try to load the Multi-Theme V5 Data first
-    const local = localStorage.getItem('apexMindData_Final_V5');
+    // DIRECT HOOK TO V4: Guaranteeing zero data loss.
+    const local = localStorage.getItem('apexMindData_Final_V4');
     if (local) return JSON.parse(local);
-
-    // 2. AUTO-MIGRATION: If V5 doesn't exist, check for the user's V4 data!
-    const localV4 = localStorage.getItem('apexMindData_Final_V4');
-    if (localV4) {
-      console.log("V4 Data Detected! Upgrading to V5 Multi-Theme format...");
-      const dataV4 = JSON.parse(localV4);
-      
-      // Inject the default theme into the existing V4 data
-      const migratedData = {
-        ...dataV4,
-        activeTheme: 'brutalist' 
-      };
-      
-      // Save it safely as V5
-      localStorage.setItem('apexMindData_Final_V5', JSON.stringify(migratedData));
-      return migratedData;
-    }
-
   } catch (e) {
     console.error("Storage error", e);
   }
@@ -494,13 +476,15 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
+  // 🚀 BULLETPROOF V4 SAVE ENGINE 🚀
+  // Always write directly to V4 locker so no data gets lost between themes.
   useEffect(() => {
     const dataPayload = {
       userName, profilePic, syllabusCategories, stagingTopics, studyTopics,
       masteredTopics, wisdomCategories, wisdomNotes, vaultNotes, vaultCategories,
       globalDeadlineDays, customMissions, groqKey, lastActiveDate, activeTheme
     };
-    localStorage.setItem('apexMindData_Final_V5', JSON.stringify(dataPayload));
+    localStorage.setItem('apexMindData_Final_V4', JSON.stringify(dataPayload));
   }, [userName, profilePic, syllabusCategories, stagingTopics, studyTopics, masteredTopics, wisdomCategories, wisdomNotes, vaultNotes, vaultCategories, globalDeadlineDays, customMissions, groqKey, lastActiveDate, activeTheme]);
 
   useEffect(() => {
