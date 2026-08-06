@@ -3,7 +3,6 @@ import {
   BrainCircuit, BookOpen, Mic, ShieldAlert, Calendar, CheckCircle2, Circle, Plus, Zap, Send, Skull, Trophy, FolderOpen, MoveRight, History, Sparkles, Activity, GripVertical, Moon, Flame, X, Settings, User, Image as ImageIcon, Lock, Search, Trash2, ChevronLeft, Check, Folder, Palette
 } from "lucide-react";
 
-// Revision Intervals: Tomorrow, Day 3, 7, 14, 21, 28, 30
 const REVISION_INTERVALS = [1, 3, 7, 14, 21, 28, 30];
 
 const MORNING_QUOTES = [
@@ -25,50 +24,23 @@ const addDays = (dateStr, days) => {
 
 const loadLocalData = () => {
   try {
+    // 1. Try to load the Multi-Theme V5 Data first
     const local = localStorage.getItem('apexMindData_Final_V5');
     if (local) return JSON.parse(local);
 
-    // --- AUTO-MIGRATION ENGINE (From Old Code to Multi-Theme) ---
-    const oldSettings = localStorage.getItem('apexSettings');
-    if (oldSettings) {
-      console.log("Old Data Detected! Migrating to V5...");
-      const settings = JSON.parse(oldSettings);
-      const queue = JSON.parse(localStorage.getItem('apexQueue')) || [];
-      const revisions = JSON.parse(localStorage.getItem('apexRevisions')) || [];
-      const dump = JSON.parse(localStorage.getItem('apexDump')) || [];
-      const wisdom = JSON.parse(localStorage.getItem('apexWisdom')) || [];
-      const targets = JSON.parse(localStorage.getItem('apexTargets')) || [];
-
-      const todayStr = formatDate(new Date());
-
-      // Extract unique categories from old data
-      const vaultCats = ["Others", ...new Set(dump.map(n => n.folder).filter(Boolean))];
-      const wisdomCats = ["Quick Thoughts", ...new Set(wisdom.map(n => n.folder).filter(Boolean))];
-
+    // 2. AUTO-MIGRATION: If V5 doesn't exist, check for the user's V4 data!
+    const localV4 = localStorage.getItem('apexMindData_Final_V4');
+    if (localV4) {
+      console.log("V4 Data Detected! Upgrading to V5 Multi-Theme format...");
+      const dataV4 = JSON.parse(localV4);
+      
+      // Inject the default theme into the existing V4 data
       const migratedData = {
-        userName: settings.name || "Apex Hunter",
-        profilePic: settings.profilePic || null,
-        groqKey: settings.groqKey || "",
-        globalDeadlineDays: settings.globalDeadline || 30,
-        lastActiveDate: todayStr,
-        activeTheme: 'brutalist', // Default starting theme
-        stagingTopics: queue.map(q => ({ id: q.id.toString(), title: q.text, category: "Raw Backlog" })),
-        studyTopics: revisions.map(r => ({
-           id: r.id.toString(),
-           title: r.text,
-           category: "Raw Backlog",
-           startDate: todayStr,
-           schedule: REVISION_INTERVALS.map(interval => ({ dayOffset: interval, targetDate: addDays(todayStr, interval), completed: false }))
-        })),
-        masteredTopics: [],
-        vaultNotes: dump.map(n => ({ id: n.id.toString(), text: n.text, category: n.folder || "Others", date: todayStr })),
-        vaultCategories: vaultCats,
-        wisdomNotes: wisdom.map(n => ({ id: n.id.toString(), text: n.text, category: n.folder || "Quick Thoughts", date: todayStr })),
-        wisdomCategories: wisdomCats,
-        customMissions: targets.map(t => ({ id: t.id.toString(), text: t.text, targetDate: todayStr, completed: false }))
+        ...dataV4,
+        activeTheme: 'brutalist' 
       };
       
-      // Save the migrated data into the new vault
+      // Save it safely as V5
       localStorage.setItem('apexMindData_Final_V5', JSON.stringify(migratedData));
       return migratedData;
     }
@@ -81,7 +53,6 @@ const loadLocalData = () => {
 
 const savedData = loadLocalData();
 
-// --- THEME DICTIONARY (12 Ultimate Themes) ---
 const THEMES = {
   brutalist: {
     id: 'brutalist',
@@ -89,25 +60,25 @@ const THEMES = {
     appBg: 'bg-black text-white font-mono uppercase tracking-wider selection:bg-yellow-400 selection:text-black',
     devBar: 'bg-yellow-400 text-black border-b-4 border-white font-black',
     header: 'bg-black text-white border-b-4 border-white rounded-none',
-    alertCard: 'bg-yellow-400 text-black border-4 border-white shadow-[8px_8px_0px_white] rounded-none transform rotate-1 hover:rotate-0 transition-transform',
-    primaryCard: 'bg-black text-white border-4 border-white shadow-[8px_8px_0px_white] rounded-none',
-    card: 'bg-black border-4 border-white shadow-[8px_8px_0px_white] rounded-none',
-    cardInner: 'bg-black border-2 border-white shadow-[4px_4px_0px_white] hover:border-yellow-400 hover:shadow-[4px_4px_0px_#facc15] transition-all rounded-none',
+    alertCard: 'bg-yellow-400 text-black border-4 border-white shadow-[4px_4px_0px_white] sm:shadow-[8px_8px_0px_white] rounded-none transform rotate-1 hover:rotate-0 transition-transform',
+    primaryCard: 'bg-black text-white border-4 border-white shadow-[4px_4px_0px_white] sm:shadow-[8px_8px_0px_white] rounded-none',
+    card: 'bg-black border-4 border-white shadow-[4px_4px_0px_white] sm:shadow-[8px_8px_0px_white] rounded-none',
+    cardInner: 'bg-black border-2 border-white shadow-[2px_2px_0px_white] sm:shadow-[4px_4px_0px_white] hover:border-yellow-400 hover:shadow-[2px_2px_0px_#facc15] sm:hover:shadow-[4px_4px_0px_#facc15] transition-all rounded-none',
     textMain: 'text-white',
     textMuted: 'text-zinc-500',
     textAccent: 'text-yellow-400',
     textWarning: 'text-yellow-400',
     borderAccent: 'border-yellow-400',
-    borderDanger: 'border-red-500 shadow-[4px_4px_0px_#ef4444]',
-    input: 'bg-black border-4 border-white text-white placeholder:text-zinc-600 focus:border-yellow-400 rounded-none',
-    btnPrimary: 'bg-white text-black border-2 border-black hover:bg-yellow-400 shadow-[4px_4px_0px_white] hover:shadow-[4px_4px_0px_#facc15] active:translate-y-1 rounded-none disabled:opacity-50',
-    btnWarning: 'bg-yellow-400 text-black border-4 border-white hover:bg-white active:translate-y-1 shadow-[4px_4px_0px_white] rounded-none disabled:opacity-50',
-    btnDanger: 'bg-red-500 text-white border-4 border-white hover:bg-red-600 shadow-[4px_4px_0px_white] active:translate-y-1 rounded-none',
+    borderDanger: 'border-red-500 shadow-[2px_2px_0px_#ef4444] sm:shadow-[4px_4px_0px_#ef4444]',
+    input: 'bg-black border-2 sm:border-4 border-white text-white placeholder:text-zinc-600 focus:border-yellow-400 rounded-none',
+    btnPrimary: 'bg-white text-black border-2 border-black hover:bg-yellow-400 shadow-[2px_2px_0px_white] sm:shadow-[4px_4px_0px_white] hover:shadow-[2px_2px_0px_#facc15] sm:hover:shadow-[4px_4px_0px_#facc15] active:translate-y-1 rounded-none disabled:opacity-50',
+    btnWarning: 'bg-yellow-400 text-black border-2 sm:border-4 border-white hover:bg-white active:translate-y-1 shadow-[2px_2px_0px_white] sm:shadow-[4px_4px_0px_white] rounded-none disabled:opacity-50',
+    btnDanger: 'bg-red-500 text-white border-2 sm:border-4 border-white hover:bg-red-600 shadow-[2px_2px_0px_white] sm:shadow-[4px_4px_0px_white] active:translate-y-1 rounded-none',
     navBg: 'bg-black border-t-4 border-white rounded-none',
     navItemActive: 'text-yellow-400 border-b-4 border-yellow-400 rounded-none',
     navItemInactive: 'text-zinc-600 border-b-4 border-transparent hover:text-white rounded-none',
     badge: 'bg-white text-black font-black border-2 border-black rounded-none',
-    urgeBtn: 'bg-yellow-400 hover:bg-white text-black border-8 border-black outline outline-4 outline-yellow-400 shadow-[12px_12px_0px_white] active:translate-y-2 active:shadow-none rounded-none',
+    urgeBtn: 'bg-yellow-400 hover:bg-white text-black border-[6px] sm:border-8 border-black outline outline-2 sm:outline-4 outline-yellow-400 shadow-[8px_8px_0px_white] sm:shadow-[12px_12px_0px_white] active:translate-y-2 active:shadow-none rounded-none',
     fontHeading: 'font-black tracking-widest uppercase',
     iconBase: 'stroke-[2]',
     iconActive: 'stroke-[3]'
@@ -121,7 +92,7 @@ const THEMES = {
     alertCard: 'bg-gradient-to-r from-[#FFD900] to-[#E6C300] text-slate-900 rounded-3xl shadow-[0_0_25px_rgba(255,217,0,0.15)]',
     primaryCard: 'bg-gradient-to-br from-[#0096FE] to-[#0077CC] text-white rounded-3xl shadow-lg',
     card: 'bg-[#152238] border border-[#1E3A5F] shadow-[0_4px_30px_rgba(0,0,0,0.5)] rounded-3xl',
-    cardInner: 'bg-[#0B132B] border border-[#1E3A5F] hover:border-[#0096FE]/40 rounded-2xl transition-all',
+    cardInner: 'bg-[#0B132B] border border-[#1E3A5F] hover:border-[#0096FE]/40 rounded-xl sm:rounded-2xl transition-all',
     textMain: 'text-slate-200',
     textMuted: 'text-slate-400',
     textAccent: 'text-[#0096FE]',
@@ -132,11 +103,11 @@ const THEMES = {
     btnPrimary: 'bg-[#0096FE] text-white hover:bg-blue-500 shadow-[0_0_15px_rgba(0,150,254,0.3)] rounded-full disabled:opacity-50',
     btnWarning: 'bg-[#FFD900] text-slate-900 hover:bg-yellow-400 shadow-[0_4px_15px_rgba(255,217,0,0.3)] rounded-full disabled:opacity-50',
     btnDanger: 'bg-[#E50020] text-white hover:bg-red-500 shadow-[0_0_15px_rgba(229,0,32,0.3)] rounded-full',
-    navBg: 'bg-[#111827]/90 border-t border-[#0096FE]/30 shadow-[0_-10px_40px_rgba(0,150,254,0.15)] rounded-t-3xl backdrop-blur-md',
+    navBg: 'bg-[#111827]/90 border-t border-[#0096FE]/30 shadow-[0_-10px_40px_rgba(0,150,254,0.15)] rounded-t-2xl sm:rounded-t-3xl backdrop-blur-md',
     navItemActive: 'bg-[#0096FE] text-white shadow-[0_0_15px_rgba(0,150,254,0.4)] rounded-full',
     navItemInactive: 'text-slate-400 hover:bg-[#1E293B] hover:text-[#33AAFF] rounded-full',
     badge: 'bg-[#0B132B] text-slate-400 border border-[#1E3A5F] rounded-full',
-    urgeBtn: 'bg-gradient-to-br from-[#E50020] to-[#B30019] hover:from-[#FF1A38] hover:to-[#E50020] text-white border-8 border-[#09111e] outline outline-4 outline-[#E50020]/50 shadow-[0_0_40px_rgba(229,0,32,0.5)] rounded-full',
+    urgeBtn: 'bg-gradient-to-br from-[#E50020] to-[#B30019] hover:from-[#FF1A38] hover:to-[#E50020] text-white border-[6px] sm:border-8 border-[#09111e] outline outline-2 sm:outline-4 outline-[#E50020]/50 shadow-[0_0_40px_rgba(229,0,32,0.5)] rounded-full',
     fontHeading: 'font-bold tracking-normal uppercase sm:capitalize',
     iconBase: 'stroke-[2]',
     iconActive: 'stroke-[2.5]'
@@ -150,7 +121,7 @@ const THEMES = {
     alertCard: 'bg-gradient-to-r from-[#FFD900] to-[#FFEA75] text-slate-900 rounded-3xl shadow-md',
     primaryCard: 'bg-gradient-to-br from-[#0096FE] to-[#33AAFF] text-white rounded-3xl shadow-lg',
     card: 'bg-white border border-[#E2E8F0] shadow-xl rounded-3xl',
-    cardInner: 'bg-slate-50 border border-[#E2E8F0] hover:border-[#0096FE]/40 rounded-2xl transition-all',
+    cardInner: 'bg-slate-50 border border-[#E2E8F0] hover:border-[#0096FE]/40 rounded-xl sm:rounded-2xl transition-all',
     textMain: 'text-slate-800',
     textMuted: 'text-slate-500',
     textAccent: 'text-[#0096FE]',
@@ -161,11 +132,11 @@ const THEMES = {
     btnPrimary: 'bg-[#0096FE] text-white hover:bg-blue-600 shadow-md rounded-full disabled:opacity-50',
     btnWarning: 'bg-[#FFD900] text-slate-900 hover:bg-yellow-500 shadow-md rounded-full disabled:opacity-50',
     btnDanger: 'bg-[#E50020] text-white hover:bg-red-600 shadow-md rounded-full',
-    navBg: 'bg-white/90 border-t border-slate-200 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] rounded-t-3xl backdrop-blur-md',
+    navBg: 'bg-white/90 border-t border-slate-200 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] rounded-t-2xl sm:rounded-t-3xl backdrop-blur-md',
     navItemActive: 'bg-[#0096FE] text-white shadow-md rounded-full',
     navItemInactive: 'text-slate-500 hover:bg-slate-100 hover:text-[#0096FE] rounded-full',
     badge: 'bg-slate-100 text-slate-600 border border-slate-200 rounded-full',
-    urgeBtn: 'bg-gradient-to-br from-[#E50020] to-[#B30019] text-white border-8 border-white outline outline-4 outline-[#E50020]/50 shadow-xl hover:scale-105 active:scale-95 transition-all rounded-full',
+    urgeBtn: 'bg-gradient-to-br from-[#E50020] to-[#B30019] text-white border-[6px] sm:border-8 border-white outline outline-2 sm:outline-4 outline-[#E50020]/50 shadow-xl hover:scale-105 active:scale-95 transition-all rounded-full',
     fontHeading: 'font-bold text-slate-900 tracking-normal uppercase sm:capitalize',
     iconBase: 'stroke-[2]',
     iconActive: 'stroke-[2.5]'
@@ -179,7 +150,7 @@ const THEMES = {
     alertCard: 'bg-[#0a192f] border border-teal-500/50 text-teal-300 shadow-[0_0_15px_rgba(20,184,166,0.2)] rounded-3xl',
     primaryCard: 'bg-cyan-950/50 border border-cyan-500/50 text-cyan-100 rounded-3xl shadow-lg',
     card: 'bg-[#0a192f]/60 backdrop-blur-lg border border-cyan-500/20 shadow-[0_8px_32px_rgba(0,0,0,0.4)] rounded-3xl',
-    cardInner: 'bg-[#050b14]/50 border border-cyan-500/10 hover:border-cyan-500/40 rounded-2xl transition-all',
+    cardInner: 'bg-[#050b14]/50 border border-cyan-500/10 hover:border-cyan-500/40 rounded-xl sm:rounded-2xl transition-all',
     textMain: 'text-cyan-50',
     textMuted: 'text-cyan-600/80',
     textAccent: 'text-cyan-400',
@@ -190,11 +161,11 @@ const THEMES = {
     btnPrimary: 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 hover:bg-cyan-500/40 shadow-[0_0_15px_rgba(6,182,212,0.4)] rounded-xl disabled:opacity-50',
     btnWarning: 'bg-teal-500/20 text-teal-300 border border-teal-500/50 hover:bg-teal-500/40 rounded-xl disabled:opacity-50',
     btnDanger: 'bg-red-500/20 text-red-300 border border-red-500/50 hover:bg-red-500/40 rounded-xl',
-    navBg: 'bg-[#0a192f]/90 backdrop-blur-xl border-t border-cyan-500/30 rounded-t-3xl',
+    navBg: 'bg-[#0a192f]/90 backdrop-blur-xl border-t border-cyan-500/30 rounded-t-2xl sm:rounded-t-3xl',
     navItemActive: 'text-cyan-300 bg-cyan-500/20 border border-cyan-500/30 rounded-xl',
     navItemInactive: 'text-cyan-800 hover:text-cyan-500',
     badge: 'bg-cyan-950 text-cyan-400 border border-cyan-800 rounded-md',
-    urgeBtn: 'bg-[#050b14] text-red-400 border-4 border-red-500/50 shadow-[0_0_30px_rgba(239,68,68,0.3)] hover:shadow-[0_0_50px_rgba(239,68,68,0.6)] rounded-3xl',
+    urgeBtn: 'bg-[#050b14] text-red-400 border-[6px] sm:border-4 border-red-500/50 shadow-[0_0_30px_rgba(239,68,68,0.3)] hover:shadow-[0_0_50px_rgba(239,68,68,0.6)] rounded-3xl',
     fontHeading: 'font-sans tracking-wide uppercase',
     iconBase: 'stroke-[1.5]',
     iconActive: 'stroke-[2]'
@@ -204,25 +175,25 @@ const THEMES = {
     name: 'Aurora Bento',
     appBg: 'bg-[#0b0914] text-fuchsia-50 font-sans selection:bg-fuchsia-500 selection:text-white',
     devBar: 'bg-fuchsia-900 text-fuchsia-100 border-b border-fuchsia-500/50 font-bold',
-    header: 'bg-gradient-to-r from-violet-900/40 to-fuchsia-900/40 backdrop-blur-xl border border-white/10 text-white rounded-[2rem] shadow-xl',
-    alertCard: 'bg-white/5 backdrop-blur-md border border-fuchsia-500/30 text-fuchsia-200 rounded-[2rem]',
-    primaryCard: 'bg-gradient-to-br from-violet-600/80 to-fuchsia-600/80 border border-white/20 text-white rounded-[2rem] shadow-lg',
-    card: 'bg-white/[0.02] backdrop-blur-3xl border border-white/[0.05] shadow-[0_8px_32px_rgba(0,0,0,0.4)] rounded-[2rem]',
-    cardInner: 'bg-white/[0.03] border border-white/[0.05] hover:bg-white/[0.08] hover:border-white/10 rounded-2xl transition-all',
+    header: 'bg-gradient-to-r from-violet-900/40 to-fuchsia-900/40 backdrop-blur-xl border border-white/10 text-white rounded-2xl sm:rounded-[2rem] shadow-xl',
+    alertCard: 'bg-white/5 backdrop-blur-md border border-fuchsia-500/30 text-fuchsia-200 rounded-2xl sm:rounded-[2rem]',
+    primaryCard: 'bg-gradient-to-br from-violet-600/80 to-fuchsia-600/80 border border-white/20 text-white rounded-2xl sm:rounded-[2rem] shadow-lg',
+    card: 'bg-white/[0.02] backdrop-blur-3xl border border-white/[0.05] shadow-[0_8px_32px_rgba(0,0,0,0.4)] rounded-2xl sm:rounded-[2rem]',
+    cardInner: 'bg-white/[0.03] border border-white/[0.05] hover:bg-white/[0.08] hover:border-white/10 rounded-xl sm:rounded-2xl transition-all',
     textMain: 'text-fuchsia-50',
     textMuted: 'text-fuchsia-200/40',
     textAccent: 'text-fuchsia-400',
     textWarning: 'text-violet-300',
     borderAccent: 'border-fuchsia-500/50',
     borderDanger: 'border-rose-500/50',
-    input: 'bg-black/20 border border-white/10 text-white placeholder:text-white/20 focus:border-fuchsia-400 rounded-2xl',
-    btnPrimary: 'bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white hover:opacity-90 shadow-[0_4px_20px_rgba(192,38,211,0.3)] rounded-2xl disabled:opacity-50',
-    btnWarning: 'bg-gradient-to-r from-indigo-500/80 to-purple-500/80 text-white hover:opacity-90 rounded-2xl disabled:opacity-50',
-    btnDanger: 'bg-gradient-to-r from-rose-600/80 to-pink-600/80 text-white hover:opacity-90 rounded-2xl',
-    navBg: 'bg-[#0b0914]/80 backdrop-blur-3xl border-t border-white/10 rounded-t-[2.5rem]',
-    navItemActive: 'text-fuchsia-300 bg-white/10 rounded-2xl',
+    input: 'bg-black/20 border border-white/10 text-white placeholder:text-white/20 focus:border-fuchsia-400 rounded-xl sm:rounded-2xl',
+    btnPrimary: 'bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white hover:opacity-90 shadow-[0_4px_20px_rgba(192,38,211,0.3)] rounded-xl sm:rounded-2xl disabled:opacity-50',
+    btnWarning: 'bg-gradient-to-r from-indigo-500/80 to-purple-500/80 text-white hover:opacity-90 rounded-xl sm:rounded-2xl disabled:opacity-50',
+    btnDanger: 'bg-gradient-to-r from-rose-600/80 to-pink-600/80 text-white hover:opacity-90 rounded-xl sm:rounded-2xl',
+    navBg: 'bg-[#0b0914]/80 backdrop-blur-3xl border-t border-white/10 rounded-t-2xl sm:rounded-t-[2.5rem]',
+    navItemActive: 'text-fuchsia-300 bg-white/10 rounded-xl sm:rounded-2xl',
     navItemInactive: 'text-white/30 hover:text-white/60',
-    badge: 'bg-fuchsia-900/30 text-fuchsia-300 border border-fuchsia-700/50 rounded-xl',
+    badge: 'bg-fuchsia-900/30 text-fuchsia-300 border border-fuchsia-700/50 rounded-lg sm:rounded-xl',
     urgeBtn: 'bg-gradient-to-br from-rose-600 to-purple-900 text-white rounded-full shadow-[0_0_40px_rgba(225,29,72,0.4)] hover:scale-105 active:scale-95 transition-all',
     fontHeading: 'font-sans font-medium tracking-normal',
     iconBase: 'stroke-[2]',
@@ -251,7 +222,7 @@ const THEMES = {
     navBg: 'bg-white/95 backdrop-blur border-t border-zinc-200',
     navItemActive: 'text-zinc-900 border-b-2 border-zinc-900',
     navItemInactive: 'text-zinc-400 hover:text-zinc-600',
-    badge: 'bg-zinc-100 text-zinc-600 rounded-none px-2 py-0.5 text-xs',
+    badge: 'bg-zinc-100 text-zinc-600 rounded-none px-2 py-0.5 text-[10px] sm:text-xs',
     urgeBtn: 'bg-white text-zinc-900 border border-zinc-300 shadow-sm hover:shadow-md active:scale-95 transition-all rounded-full',
     fontHeading: 'font-serif tracking-tight',
     iconBase: 'stroke-[1.5]',
@@ -266,7 +237,7 @@ const THEMES = {
     alertCard: 'bg-amber-500/5 border border-amber-500/20 text-amber-400 rounded-xl',
     primaryCard: 'bg-[#111] border border-amber-500/30 text-zinc-200 rounded-xl shadow-[0_0_30px_rgba(245,158,11,0.05)]',
     card: 'bg-[#111] border border-white/5 shadow-2xl rounded-xl',
-    cardInner: 'bg-[#161616] border border-white/5 hover:border-amber-500/30 rounded-lg transition-colors',
+    cardInner: 'bg-[#161616] border border-white/5 hover:border-amber-500/30 rounded-lg sm:rounded-xl transition-colors',
     textMain: 'text-zinc-300',
     textMuted: 'text-zinc-600',
     textAccent: 'text-amber-500',
@@ -291,26 +262,26 @@ const THEMES = {
     name: 'Action Kamen (Shinchan)',
     appBg: 'bg-[#ffeb3b] text-[#111] font-sans selection:bg-[#ff0000] selection:text-white',
     devBar: 'bg-[#ff0000] text-white border-b-4 border-black font-black',
-    header: 'bg-[#00a8ff] text-white border-4 border-black rounded-full m-2 shadow-[4px_4px_0px_#111]',
-    alertCard: 'bg-[#ff0000] text-white border-4 border-black shadow-[6px_6px_0px_#111] rounded-3xl transform -rotate-1',
-    primaryCard: 'bg-[#00a8ff] text-white border-4 border-black shadow-[6px_6px_0px_#111] rounded-3xl',
-    card: 'bg-white border-4 border-black shadow-[6px_6px_0px_#111] rounded-3xl',
-    cardInner: 'bg-[#fff9c4] border-2 border-black hover:bg-[#ffeb3b] transition-all rounded-2xl',
+    header: 'bg-[#00a8ff] text-white border-[3px] sm:border-4 border-black rounded-full m-2 shadow-[2px_2px_0px_#111] sm:shadow-[4px_4px_0px_#111]',
+    alertCard: 'bg-[#ff0000] text-white border-[3px] sm:border-4 border-black shadow-[4px_4px_0px_#111] sm:shadow-[6px_6px_0px_#111] rounded-2xl sm:rounded-3xl transform -rotate-1',
+    primaryCard: 'bg-[#00a8ff] text-white border-[3px] sm:border-4 border-black shadow-[4px_4px_0px_#111] sm:shadow-[6px_6px_0px_#111] rounded-2xl sm:rounded-3xl',
+    card: 'bg-white border-[3px] sm:border-4 border-black shadow-[4px_4px_0px_#111] sm:shadow-[6px_6px_0px_#111] rounded-2xl sm:rounded-3xl',
+    cardInner: 'bg-[#fff9c4] border-2 border-black hover:bg-[#ffeb3b] transition-all rounded-xl sm:rounded-2xl',
     textMain: 'text-black',
     textMuted: 'text-zinc-600',
     textAccent: 'text-[#ff0000]',
     textWarning: 'text-[#00a8ff]',
     borderAccent: 'border-[#ff0000]',
-    borderDanger: 'border-[#ff0000] shadow-[4px_4px_0px_#ff0000]',
-    input: 'bg-white border-4 border-black text-black placeholder:text-zinc-500 focus:border-[#ff0000] focus:ring-4 focus:ring-[#ff0000]/20 rounded-full',
-    btnPrimary: 'bg-[#00a8ff] text-white font-black border-4 border-black hover:bg-[#008bcb] shadow-[4px_4px_0px_#111] active:translate-y-1 active:shadow-none rounded-full',
-    btnWarning: 'bg-[#ffeb3b] text-black font-black border-4 border-black hover:bg-[#fbc02d] shadow-[4px_4px_0px_#111] active:translate-y-1 active:shadow-none rounded-full',
-    btnDanger: 'bg-[#ff0000] text-white font-black border-4 border-black hover:bg-[#cc0000] shadow-[4px_4px_0px_#111] rounded-full',
-    navBg: 'bg-white/90 border-t-4 border-black rounded-t-3xl backdrop-blur-md',
-    navItemActive: 'bg-[#ff0000] text-white shadow-[4px_4px_0px_#111] rounded-full',
+    borderDanger: 'border-[#ff0000] shadow-[2px_2px_0px_#ff0000] sm:shadow-[4px_4px_0px_#ff0000]',
+    input: 'bg-white border-[3px] sm:border-4 border-black text-black placeholder:text-zinc-500 focus:border-[#ff0000] focus:ring-2 sm:focus:ring-4 focus:ring-[#ff0000]/20 rounded-full',
+    btnPrimary: 'bg-[#00a8ff] text-white font-black border-[3px] sm:border-4 border-black hover:bg-[#008bcb] shadow-[2px_2px_0px_#111] sm:shadow-[4px_4px_0px_#111] active:translate-y-1 active:shadow-none rounded-full',
+    btnWarning: 'bg-[#ffeb3b] text-black font-black border-[3px] sm:border-4 border-black hover:bg-[#fbc02d] shadow-[2px_2px_0px_#111] sm:shadow-[4px_4px_0px_#111] active:translate-y-1 active:shadow-none rounded-full',
+    btnDanger: 'bg-[#ff0000] text-white font-black border-[3px] sm:border-4 border-black hover:bg-[#cc0000] shadow-[2px_2px_0px_#111] sm:shadow-[4px_4px_0px_#111] rounded-full',
+    navBg: 'bg-white/90 border-t-[3px] sm:border-t-4 border-black rounded-t-2xl sm:rounded-t-3xl backdrop-blur-md',
+    navItemActive: 'bg-[#ff0000] text-white shadow-[2px_2px_0px_#111] sm:shadow-[4px_4px_0px_#111] rounded-full',
     navItemInactive: 'text-zinc-500 hover:text-black',
     badge: 'bg-[#ffeb3b] text-black border-2 border-black font-black rounded-full',
-    urgeBtn: 'bg-[#ff0000] text-white border-8 border-black outline outline-4 outline-[#00a8ff] shadow-[12px_12px_0px_#111] active:translate-y-2 active:shadow-none rounded-3xl',
+    urgeBtn: 'bg-[#ff0000] text-white border-[6px] sm:border-8 border-black outline outline-2 sm:outline-4 outline-[#00a8ff] shadow-[8px_8px_0px_#111] sm:shadow-[12px_12px_0px_#111] active:translate-y-2 active:shadow-none rounded-2xl sm:rounded-3xl',
     fontHeading: 'font-black tracking-wide uppercase',
     iconBase: 'stroke-[2.5]',
     iconActive: 'stroke-[3]'
@@ -336,10 +307,10 @@ const THEMES = {
     btnWarning: 'bg-[#111] text-[#00c896] border-2 border-[#00c896] hover:bg-[#00c896] hover:text-black rounded-none',
     btnDanger: 'bg-[#ff0055] text-white font-black hover:bg-[#cc0044] rounded-none',
     navBg: 'bg-[#111]/95 border-t-2 border-[#333] backdrop-blur-md rounded-none',
-    navItemActive: 'text-[#ff0055] border-t-4 border-[#ff0055]',
+    navItemActive: 'text-[#ff0055] border-t-2 sm:border-t-4 border-[#ff0055]',
     navItemInactive: 'text-[#666] hover:text-[#00c896]',
     badge: 'bg-[#ff0055] text-white font-bold rounded-sm px-2',
-    urgeBtn: 'bg-[#1a1a1a] text-[#ff0055] border-4 border-[#ff0055] shadow-[0_0_40px_rgba(255,0,85,0.6)] hover:bg-[#ff0055] hover:text-white transition-colors rounded-full',
+    urgeBtn: 'bg-[#1a1a1a] text-[#ff0055] border-4 border-[#ff0055] shadow-[0_0_20px_rgba(255,0,85,0.4)] sm:shadow-[0_0_40px_rgba(255,0,85,0.6)] hover:bg-[#ff0055] hover:text-white transition-colors rounded-full',
     fontHeading: 'font-bold tracking-widest uppercase',
     iconBase: 'stroke-[2]',
     iconActive: 'stroke-[2.5]'
@@ -368,7 +339,7 @@ const THEMES = {
     navItemActive: 'bg-[#00ff00] text-black',
     navItemInactive: 'text-[#008800] hover:text-[#00ff00]',
     badge: 'bg-[#00ff00] text-black rounded-none',
-    urgeBtn: 'bg-[#000] text-[#00ff00] border border-[#00ff00] shadow-[0_0_20px_#00ff00] animate-pulse rounded-none',
+    urgeBtn: 'bg-[#000] text-[#00ff00] border border-[#00ff00] shadow-[0_0_10px_#00ff00] sm:shadow-[0_0_20px_#00ff00] animate-pulse rounded-none',
     fontHeading: 'font-mono tracking-widest uppercase',
     iconBase: 'stroke-[1]',
     iconActive: 'stroke-[2]'
@@ -378,26 +349,26 @@ const THEMES = {
     name: 'Deep Space',
     appBg: 'bg-[#02000a] text-[#e0e7ff] font-sans bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#1e004a] via-[#02000a] to-[#000000] selection:bg-cyan-500 selection:text-white',
     devBar: 'bg-cyan-950 text-cyan-200 border-b border-cyan-800 font-bold',
-    header: 'bg-black/40 backdrop-blur-md border border-white/10 text-cyan-100 rounded-3xl m-2 shadow-[0_0_30px_rgba(6,182,212,0.2)]',
-    alertCard: 'bg-gradient-to-r from-violet-900/50 to-fuchsia-900/50 border border-fuchsia-500/30 text-fuchsia-100 rounded-3xl',
-    primaryCard: 'bg-gradient-to-br from-cyan-900/40 to-blue-900/40 border border-cyan-500/30 text-cyan-50 rounded-3xl',
-    card: 'bg-[#0a0514]/60 backdrop-blur-lg border border-white/5 shadow-2xl rounded-3xl',
-    cardInner: 'bg-[#130b24]/50 border border-white/5 hover:border-cyan-500/30 hover:bg-[#1a0f30]/80 transition-all rounded-2xl',
+    header: 'bg-black/40 backdrop-blur-md border border-white/10 text-cyan-100 rounded-2xl sm:rounded-3xl m-2 shadow-[0_0_20px_rgba(6,182,212,0.2)]',
+    alertCard: 'bg-gradient-to-r from-violet-900/50 to-fuchsia-900/50 border border-fuchsia-500/30 text-fuchsia-100 rounded-2xl sm:rounded-3xl',
+    primaryCard: 'bg-gradient-to-br from-cyan-900/40 to-blue-900/40 border border-cyan-500/30 text-cyan-50 rounded-2xl sm:rounded-3xl',
+    card: 'bg-[#0a0514]/60 backdrop-blur-lg border border-white/5 shadow-2xl rounded-2xl sm:rounded-3xl',
+    cardInner: 'bg-[#130b24]/50 border border-white/5 hover:border-cyan-500/30 hover:bg-[#1a0f30]/80 transition-all rounded-xl sm:rounded-2xl',
     textMain: 'text-[#e0e7ff]',
     textMuted: 'text-[#6366f1]',
     textAccent: 'text-cyan-400',
     textWarning: 'text-fuchsia-400',
     borderAccent: 'border-cyan-500/50',
     borderDanger: 'border-rose-500/50',
-    input: 'bg-[#000]/50 border border-white/10 text-cyan-100 placeholder:text-indigo-800 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 rounded-2xl',
-    btnPrimary: 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white border-none shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:shadow-[0_0_30px_rgba(6,182,212,0.6)] rounded-2xl',
-    btnWarning: 'bg-indigo-900/50 text-cyan-300 border border-cyan-800 hover:bg-cyan-900/50 rounded-2xl',
-    btnDanger: 'bg-rose-900/50 text-rose-200 border border-rose-800 rounded-2xl',
-    navBg: 'bg-[#02000a]/80 border-t border-white/10 backdrop-blur-xl rounded-t-3xl',
-    navItemActive: 'text-cyan-300 bg-cyan-950/50 shadow-[inset_0_0_10px_rgba(6,182,212,0.2)] rounded-xl',
+    input: 'bg-[#000]/50 border border-white/10 text-cyan-100 placeholder:text-indigo-800 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 rounded-xl sm:rounded-2xl',
+    btnPrimary: 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white border-none shadow-[0_0_15px_rgba(6,182,212,0.4)] sm:shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:shadow-[0_0_30px_rgba(6,182,212,0.6)] rounded-xl sm:rounded-2xl',
+    btnWarning: 'bg-indigo-900/50 text-cyan-300 border border-cyan-800 hover:bg-cyan-900/50 rounded-xl sm:rounded-2xl',
+    btnDanger: 'bg-rose-900/50 text-rose-200 border border-rose-800 rounded-xl sm:rounded-2xl',
+    navBg: 'bg-[#02000a]/80 border-t border-white/10 backdrop-blur-xl rounded-t-2xl sm:rounded-t-3xl',
+    navItemActive: 'text-cyan-300 bg-cyan-950/50 shadow-[inset_0_0_10px_rgba(6,182,212,0.2)] rounded-lg sm:rounded-xl',
     navItemInactive: 'text-indigo-500 hover:text-cyan-400',
-    badge: 'bg-cyan-950/80 text-cyan-300 border border-cyan-800 rounded-lg',
-    urgeBtn: 'bg-[#000] text-fuchsia-500 border-2 border-fuchsia-500 shadow-[0_0_50px_rgba(217,70,239,0.5)] hover:shadow-[0_0_80px_rgba(217,70,239,0.8)] rounded-full transition-all',
+    badge: 'bg-cyan-950/80 text-cyan-300 border border-cyan-800 rounded-md sm:rounded-lg',
+    urgeBtn: 'bg-[#000] text-fuchsia-500 border-2 border-fuchsia-500 shadow-[0_0_30px_rgba(217,70,239,0.5)] sm:shadow-[0_0_50px_rgba(217,70,239,0.5)] hover:shadow-[0_0_80px_rgba(217,70,239,0.8)] rounded-full transition-all',
     fontHeading: 'font-medium tracking-widest uppercase',
     iconBase: 'stroke-[1.5]',
     iconActive: 'stroke-[2]'
@@ -433,7 +404,6 @@ const THEMES = {
   }
 };
 
-// 2. Press and Hold Hook
 function useLongPress(callback = () => {}, ms = 800) {
   const [startLongPress, setStartLongPress] = useState(false);
   const timerRef = useRef();
@@ -458,27 +428,20 @@ function useLongPress(callback = () => {}, ms = 800) {
 
 export default function App() {
   const [activeTab, setActiveTab] = useState("dashboard");
-  const [activeTheme, setActiveTheme] = useState(savedData.activeTheme ?? 'brutalist');
-  const t = THEMES[activeTheme]; // Active Theme Mapper
   
-  // ==========================================
-  // 🔥 TIME MACHINE (TEST MODE OFFSET)
-  // ==========================================
-  const [devDateOffset, setDevDateOffset] = useState(0);
-
-  // Dynamic Date Initialization (Reacts to Offset)
   const baseDate = new Date();
-  baseDate.setDate(baseDate.getDate() + devDateOffset);
   const todayStr = formatDate(baseDate);
 
-  // User Profile States
+  const [activeTheme, setActiveTheme] = useState(savedData.activeTheme ?? 'brutalist');
+  const t = THEMES[activeTheme] || THEMES['brutalist'];
+
   const [userName, setUserName] = useState(savedData.userName ?? "Prateek Maurya");
   const [profilePic, setProfilePic] = useState(savedData.profilePic ?? null);
 
   const [syllabusCategories, setSyllabusCategories] = useState(savedData.syllabusCategories ?? ["Raw Backlog"]);
-  const [stagingTopics, setStagingTopics] = useState(savedData.stagingTopics ?? []); 
-  const [studyTopics, setStudyTopics] = useState(savedData.studyTopics ?? []); 
-  const [masteredTopics, setMasteredTopics] = useState(savedData.masteredTopics ?? []); 
+  const [stagingTopics, setStagingTopics] = useState(savedData.stagingTopics ?? []);
+  const [studyTopics, setStudyTopics] = useState(savedData.studyTopics ?? []);
+  const [masteredTopics, setMasteredTopics] = useState(savedData.masteredTopics ?? []);
 
   const [wisdomCategories, setWisdomCategories] = useState(savedData.wisdomCategories ?? ["Quick Thoughts"]);
   const [wisdomNotes, setWisdomNotes] = useState(savedData.wisdomNotes ?? []);
@@ -489,7 +452,6 @@ export default function App() {
   const [expandedVaultCategory, setExpandedVaultCategory] = useState(null);
   const [isVaultSorting, setIsVaultSorting] = useState(false);
   
-  // Input States
   const [newSyllabusCat, setNewSyllabusCat] = useState("");
   const [selectedSyllabusCat, setSelectedSyllabusCat] = useState("Raw Backlog");
   const [newTopic, setNewTopic] = useState("");
@@ -499,17 +461,14 @@ export default function App() {
   const [newWisdom, setNewWisdom] = useState("");
   const [newNote, setNewNote] = useState("");
   
-  // AI Keys and State
   const [groqKey, setGroqKey] = useState(savedData.groqKey ?? "");
 
-  // Urge Interceptor State
   const [urgeTimer, setUrgeTimer] = useState(null);
   const [isUrgeActive, setIsUrgeActive] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [urgeQuotes, setUrgeQuotes] = useState([]);
   const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0);
 
-  // ORACLE STATE
   const [oracleQuery, setOracleQuery] = useState("");
   const [oracleResponse, setOracleResponse] = useState("");
   const [isOracleThinking, setIsOracleThinking] = useState(false);
@@ -517,11 +476,15 @@ export default function App() {
   const [globalDeadlineDays, setGlobalDeadlineDays] = useState(savedData.globalDeadlineDays ?? 30);
   const [lastActiveDate, setLastActiveDate] = useState(savedData.lastActiveDate ?? todayStr);
   
-  // Automatic Night Shift Checker (Overridable in Test Mode)
-  const [forceNightMode, setForceNightMode] = useState(false);
   const [isNightTime, setIsNightTime] = useState(
     new Date().getHours() >= 21 || new Date().getHours() < 4
   );
+
+  const [draggedItemIndex, setDraggedItemIndex] = useState(null);
+  
+  const [customMissions, setCustomMissions] = useState(savedData.customMissions ?? []);
+  const [isNightShiftOpen, setIsNightShiftOpen] = useState(false);
+  const [newCustomMission, setNewCustomMission] = useState("");
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -531,16 +494,6 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
-  const [draggedItemIndex, setDraggedItemIndex] = useState(null);
-  
-  // NIGHT SHIFT INBOX STATES
-  const [customMissions, setCustomMissions] = useState(savedData.customMissions ?? []);
-  const [isNightShiftOpen, setIsNightShiftOpen] = useState(false);
-  const [newCustomMission, setNewCustomMission] = useState("");
-
-  // ==========================================
-  // 🚀 BULLETPROOF LOCAL SAVE ENGINE
-  // ==========================================
   useEffect(() => {
     const dataPayload = {
       userName, profilePic, syllabusCategories, stagingTopics, studyTopics,
@@ -550,9 +503,6 @@ export default function App() {
     localStorage.setItem('apexMindData_Final_V5', JSON.stringify(dataPayload));
   }, [userName, profilePic, syllabusCategories, stagingTopics, studyTopics, masteredTopics, wisdomCategories, wisdomNotes, vaultNotes, vaultCategories, globalDeadlineDays, customMissions, groqKey, lastActiveDate, activeTheme]);
 
-  // ==========================================
-  // BULLETPROOF AUTO-DECREMENT LOGIC (TIME TRAVEL AWARE)
-  // ==========================================
   useEffect(() => {
     if (lastActiveDate !== todayStr) {
       const partsOld = lastActiveDate.split('-');
@@ -563,14 +513,13 @@ export default function App() {
       const diffTime = dNow.getTime() - dOld.getTime();
       const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
       
-      if (diffDays !== 0) {
+      if (diffDays > 0) {
         setGlobalDeadlineDays((prev) => Math.max(1, prev - diffDays));
         setLastActiveDate(todayStr);
       }
     }
   }, [lastActiveDate, todayStr]);
 
-  // LONG PRESS DELETE HANDLER
   const LongPressItem = ({ item, onDelete, children, duration = 800 }) => {
     const [showConfirm, setShowConfirm] = useState(false);
     
@@ -579,21 +528,21 @@ export default function App() {
     }, duration);
 
     return (
-      <div {...longPressEvent} className="relative group cursor-pointer w-full">
+      <div {...longPressEvent} className="relative group cursor-pointer w-full h-full">
         {children}
         {showConfirm && (
-          <div className={`absolute inset-0 flex flex-col items-center justify-center z-10 p-4 ${t.alertCard}`}>
-            <span className={`text-[10px] sm:text-xs mb-3 ${t.fontHeading}`}>Delete this item?</span>
-            <div className="flex gap-4">
+          <div className={`absolute inset-0 p-4 flex flex-col items-center justify-center z-10 ${t.alertCard}`}>
+            <span className={`text-[10px] sm:text-xs mb-3 text-center ${t.fontHeading}`}>Delete this item?</span>
+            <div className="flex gap-2 sm:gap-4">
               <button 
                 onClick={(e) => { e.stopPropagation(); onDelete(item.id); setShowConfirm(false); }} 
-                className={`px-6 py-2 text-xs transition-colors ${t.fontHeading} ${t.btnDanger}`}
+                className={`px-4 sm:px-6 py-2 text-xs sm:text-base ${t.btnDanger} ${t.fontHeading}`}
               >
                 Yes
               </button>
               <button 
                 onClick={(e) => { e.stopPropagation(); setShowConfirm(false); }} 
-                className={`px-6 py-2 text-xs transition-colors ${t.fontHeading} ${t.btnPrimary}`}
+                className={`px-4 sm:px-6 py-2 text-xs sm:text-base ${t.btnPrimary} ${t.fontHeading}`}
               >
                 No
               </button>
@@ -604,11 +553,10 @@ export default function App() {
     );
   };
 
-  // DELETE ACTIONS
   const deleteStagingTopic = (id) => setStagingTopics(prev => prev.filter(t => t.id !== id));
-  const deleteStudyTopic = (id) => setStudyTopics(prev => prev.filter(t => t.id !== id));
   const deleteWisdomNote = (id) => setWisdomNotes(prev => prev.filter(n => n.id !== id));
   const deleteVaultNote = (id) => setVaultNotes(prev => prev.filter(n => n.id !== id));
+  const deleteStudyTopic = (id) => setStudyTopics(prev => prev.filter(t => t.id !== id));
 
   useEffect(() => {
     let timerInterval;
@@ -872,7 +820,7 @@ export default function App() {
 
         RULES:
         1. Categorize the New Idea into one of the Existing Categories. If it doesn't fit, use "Others".
-        2. EXCEPTION: Look at the "Other unclassified ideas". If the New Idea PLUS at least 2 of those unclassified ideas share a strong common theme (meaning 3 or more ideas total), you MUST invent a new category name (1-2 words max) for them.
+        2. EXCEPTION: Look at the "Other unclassified ideas". If the New Idea PLUS at least 2 of list ideas share a strong common theme (meaning 3 or more ideas total), you MUST invent a new category name (1-2 words max) for them.
         3. Output ONLY a valid JSON object.
 
         FORMAT:
@@ -960,50 +908,48 @@ export default function App() {
     return (
       <div className="space-y-6 sm:space-y-8 pb-10">
         
-        {/* Morning Injection Card */}
-        <div className={`p-5 sm:p-6 ${t.alertCard}`}>
-          <h3 className={`text-xs tracking-widest mb-4 flex items-center gap-2 border-b-2 border-black/20 pb-2 ${t.fontHeading}`}>
+        <div className={`p-4 sm:p-6 ${t.alertCard}`}>
+          <h3 className={`text-[10px] sm:text-xs tracking-widest mb-3 sm:mb-4 flex items-center gap-2 border-b-2 border-black/20 pb-2 ${t.fontHeading}`}>
             <Zap size={16} /> PROTOCOL INITIATED
           </h3>
-          <p className="text-2xl font-black uppercase tracking-tight leading-snug">
+          <p className="text-xl sm:text-2xl font-black uppercase tracking-tight leading-snug">
             "{quoteOfTheDay}"
           </p>
         </div>
 
-        {/* Pace-Maker Engine */}
-        <div className={`p-5 sm:p-6 relative overflow-hidden ${t.card}`}>
-          <h2 className={`text-[10px] tracking-widest mb-4 border-b-2 border-white/20 pb-2 ${t.fontHeading} ${t.textAccent}`}>GLOBAL DEADLINE</h2>
+        <div className={`p-4 sm:p-6 relative overflow-hidden ${t.card}`}>
+          <h2 className={`text-[9px] sm:text-[10px] tracking-widest mb-4 border-b-2 border-white/20 pb-2 ${t.fontHeading} ${t.textAccent}`}>GLOBAL DEADLINE</h2>
           <div className="flex justify-between items-end">
             
-            <div className="flex items-baseline gap-2 border-b-4 border-transparent hover:border-white/20 transition-colors focus-within:border-yellow-400">
+            <div className="flex items-baseline gap-1 sm:gap-2 border-b-4 border-transparent hover:border-white/20 transition-colors focus-within:border-yellow-400">
               <input 
                 type="number" 
                 value={globalDeadlineDays}
                 onChange={(e) => setGlobalDeadlineDays(Math.max(1, parseInt(e.target.value) || 1))}
                 className={`w-16 sm:w-24 text-4xl sm:text-6xl tracking-tighter outline-none p-0 m-0 bg-transparent ${t.textMain} ${t.fontHeading}`}
               />
-              <span className={`text-lg sm:text-xl ${t.textAccent} ${t.fontHeading}`}>DAYS</span>
+              <span className={`text-base sm:text-xl ${t.textAccent} ${t.fontHeading}`}>DAYS</span>
             </div>
 
             <div className="text-right">
-              <p className={`text-[10px] tracking-widest mb-1 ${t.textMuted} ${t.fontHeading}`}>PACE DETECTOR</p>
-              <p className={`text-xl sm:text-2xl ${t.fontHeading} ${paceStatus.color}`}>
-                {pace} <span className="text-[10px] sm:text-xs">CH/DAY</span>
+              <p className={`text-[8px] sm:text-[10px] tracking-widest mb-1 ${t.textMuted} ${t.fontHeading}`}>PACE DETECTOR</p>
+              <p className={`text-lg sm:text-2xl ${t.fontHeading} ${paceStatus.color}`}>
+                {pace} <span className="text-[9px] sm:text-xs">CH/DAY</span>
               </p>
-              <p className={`text-[9px] sm:text-[10px] tracking-widest mt-1 ${t.fontHeading} ${paceStatus.color}`}>{paceStatus.text}</p>
+              <p className={`text-[8px] sm:text-[10px] tracking-widest mt-1 ${t.fontHeading} ${paceStatus.color}`}>{paceStatus.text}</p>
             </div>
           </div>
           
           {stagingTopics.length > 0 && (
-            <div className={`mt-6 sm:mt-8 p-4 sm:p-5 relative ${t.primaryCard}`}>
-              <h3 className={`text-[10px] tracking-widest mb-2 ${t.fontHeading}`}>CURRENT STRIKE TARGET</h3>
-              <h2 className={`text-lg sm:text-xl truncate ${t.fontHeading}`}>{stagingTopics[0].title}</h2>
-              <span className={`text-[9px] sm:text-[10px] px-2 py-1 mt-2 inline-block ${t.badge} ${t.fontHeading}`}>
+            <div className={`mt-5 sm:mt-8 p-3 sm:p-5 relative ${t.primaryCard}`}>
+              <h3 className={`text-[9px] sm:text-[10px] tracking-widest mb-2 ${t.fontHeading}`}>CURRENT STRIKE TARGET</h3>
+              <h2 className={`text-base sm:text-xl truncate ${t.fontHeading}`}>{stagingTopics[0].title}</h2>
+              <span className={`text-[8px] sm:text-[10px] px-2 py-1 mt-2 inline-block ${t.badge} ${t.fontHeading}`}>
                 {stagingTopics[0].category}
               </span>
               <button 
                 onClick={() => handleStartRevision(stagingTopics[0].id)}
-                className={`w-full mt-4 py-3 transition-all active:scale-95 flex justify-center items-center gap-2 ${t.btnWarning} ${t.fontHeading}`}
+                className={`w-full mt-4 py-2.5 sm:py-3 text-xs sm:text-sm transition-all active:scale-95 flex justify-center items-center gap-2 ${t.btnWarning} ${t.fontHeading}`}
               >
                 TARGET DESTROYED
               </button>
@@ -1013,15 +959,15 @@ export default function App() {
 
         {todaysCustomMissions.length > 0 && (
           <div className="pt-2">
-            <h3 className={`text-[10px] sm:text-xs tracking-widest mb-4 ${t.textAccent} ${t.fontHeading}`}>TODAY'S MISSIONS</h3>
+            <h3 className={`text-[9px] sm:text-[10px] tracking-widest mb-3 sm:mb-4 ${t.textAccent} ${t.fontHeading}`}>TODAY'S MISSIONS</h3>
             {todaysCustomMissions.map((mission) => (
-              <div key={mission.id} className={`p-4 mb-3 flex items-center justify-between ${t.cardInner}`}>
-                <span className={`text-sm sm:text-base ${t.fontHeading} ${t.textMain}`}>{mission.text}</span>
+              <div key={mission.id} className={`p-3 sm:p-4 mb-2 sm:mb-3 flex items-center justify-between ${t.cardInner}`}>
+                <span className={`text-xs sm:text-sm ${t.fontHeading} ${t.textMain}`}>{mission.text}</span>
                 <button 
                   onClick={() => setCustomMissions(prev => prev.filter(m => m.id !== mission.id))}
                   className={`${t.textMain} opacity-60 hover:opacity-100 transition-opacity`}
                 >
-                  <CheckCircle2 size={24} className={t.iconActive} />
+                  <CheckCircle2 className={`w-5 h-5 sm:w-6 sm:h-6 ${t.iconActive}`} />
                 </button>
               </div>
             ))}
@@ -1029,30 +975,30 @@ export default function App() {
         )}
 
         <div className="pt-2">
-          <h3 className={`text-[10px] sm:text-xs tracking-widest mb-4 ${t.textAccent} ${t.fontHeading}`}>MANDATORY REVISIONS (TODAY)</h3>
+          <h3 className={`text-[9px] sm:text-[10px] tracking-widest mb-3 sm:mb-4 ${t.textAccent} ${t.fontHeading}`}>MANDATORY REVISIONS (TODAY)</h3>
           {todaysRevisions.length === 0 ? (
-            <div className={`p-8 text-center border-dashed ${t.card} ${t.textMuted} ${t.fontHeading}`}>
+            <div className={`p-6 sm:p-8 text-center border-dashed text-xs sm:text-sm ${t.card} ${t.textMuted} ${t.fontHeading}`}>
               SYSTEM CLEAR
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {todaysRevisions.map((rev, idx) => (
-                <div key={idx} className={`p-4 flex items-center justify-between transition-all hover:-translate-y-1 ${t.cardInner} ${rev.isOverdue ? t.borderDanger : ''}`}>
+                <div key={idx} className={`p-3 sm:p-4 flex items-center justify-between transition-all hover:-translate-y-1 ${t.cardInner} ${rev.isOverdue ? t.borderDanger : ''}`}>
                   <div>
-                    <h4 className={`text-sm sm:text-base flex items-center gap-2 ${t.fontHeading} ${t.textMain}`}>
+                    <h4 className={`text-xs sm:text-sm flex items-center gap-2 ${t.fontHeading} ${t.textMain}`}>
                       {rev.title} 
-                      {rev.isOverdue && <span className={`text-[8px] sm:text-[9px] px-2 py-0.5 tracking-widest ${t.btnDanger}`}>OVERDUE</span>}
+                      {rev.isOverdue && <span className={`text-[7px] sm:text-[9px] px-1.5 sm:px-2 py-0.5 tracking-widest ${t.btnDanger}`}>OVERDUE</span>}
                     </h4>
                     <div className="flex gap-2 mt-2">
-                      <span className={`text-[8px] sm:text-[9px] px-2 py-0.5 ${t.badge} ${t.fontHeading}`}>{rev.category}</span>
-                      <span className={`text-[8px] sm:text-[9px] px-2 py-0.5 ${t.badge} ${t.fontHeading}`}>DAY {rev.dayOffset}</span>
+                      <span className={`text-[7px] sm:text-[9px] px-1.5 sm:px-2 py-0.5 ${t.badge} ${t.fontHeading}`}>{rev.category}</span>
+                      <span className={`text-[7px] sm:text-[9px] px-1.5 sm:px-2 py-0.5 ${t.badge} ${t.fontHeading}`}>DAY {rev.dayOffset}</span>
                     </div>
                   </div>
                   <button 
                     onClick={() => markRevisionComplete(rev.topicId, rev.targetDate, rev.dayOffset)}
-                    className={`w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center transition-all active:scale-90 ${t.btnPrimary}`}
+                    className={`w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center transition-all active:scale-90 shrink-0 ${t.btnPrimary}`}
                   >
-                    <Check size={20} className={t.iconActive} />
+                    <Check className={`w-5 h-5 sm:w-6 sm:h-6 ${t.iconActive}`} />
                   </button>
                 </div>
               ))}
@@ -1065,38 +1011,38 @@ export default function App() {
 
   const renderStudyEngine = () => (
     <div className="space-y-6 sm:space-y-8 pb-10">
-      <div className={`p-5 sm:p-6 ${t.card}`}>
-        <div className="flex justify-between items-center mb-6 border-b-2 border-white/10 pb-2">
-           <h3 className={`${t.textAccent} ${t.fontHeading} flex items-center gap-2 text-sm sm:text-base`}>
-             <Activity size={20} /> LIQUID STRIKE QUEUE
+      <div className={`p-4 sm:p-6 ${t.card}`}>
+        <div className="flex justify-between items-center mb-4 sm:mb-6 border-b-2 border-white/10 pb-2">
+           <h3 className={`${t.textAccent} ${t.fontHeading} flex items-center gap-2 text-xs sm:text-base`}>
+             <Activity size={20} className="w-4 h-4 sm:w-5 sm:h-5" /> LIQUID STRIKE QUEUE
            </h3>
-           <span className={`text-[9px] sm:text-[10px] ${t.textMuted} ${t.fontHeading}`}>Hold to drag</span>
+           <span className={`text-[8px] sm:text-[10px] ${t.textMuted} ${t.fontHeading}`}>Hold to drag</span>
         </div>
         
-        <div className="flex gap-2 mb-6">
+        <div className="flex gap-2 mb-4 sm:mb-6">
           <input 
             type="text" 
             value={newSyllabusCat}
             onChange={(e) => setNewSyllabusCat(e.target.value)}
             placeholder="NEW TAG..."
-            className={`flex-1 px-4 py-3 text-sm sm:text-base focus:outline-none transition-all ${t.input} ${t.fontHeading}`}
+            className={`flex-1 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-base focus:outline-none transition-all ${t.input} ${t.fontHeading}`}
           />
           <button 
             onClick={handleAddSyllabusCategory}
-            className={`px-4 sm:px-5 transition-all flex items-center justify-center active:scale-95 ${t.btnPrimary}`}
+            className={`px-3 sm:px-5 transition-all flex items-center justify-center active:scale-95 ${t.btnPrimary}`}
           >
-            <Plus size={20} className={t.iconActive} />
+            <Plus className={`w-4 h-4 sm:w-5 sm:h-5 ${t.iconActive}`} />
           </button>
         </div>
 
         {syllabusCategories.length > 1 && (
-           <div className="flex flex-wrap gap-2 mb-6">
+           <div className="flex flex-wrap gap-2 mb-4 sm:mb-6">
              {syllabusCategories.map(cat => (
-               <div key={cat} className={`group flex items-center gap-2 px-3 py-1.5 sm:py-2 text-[10px] sm:text-xs cursor-pointer transition-all ${t.cardInner} ${t.fontHeading} ${t.textMain}`}>
+               <div key={cat} className={`group flex items-center gap-2 px-2 sm:px-3 py-1 sm:py-1.5 text-[9px] sm:text-xs cursor-pointer transition-all ${t.cardInner} ${t.fontHeading} ${t.textMain}`}>
                  {cat}
                  {cat !== "Raw Backlog" && (
                    <button onClick={() => handleDeleteSyllabusCategory(cat)} className={`${t.textMuted} hover:text-red-500 transition-colors`}>
-                     <Trash2 size={14} />
+                     <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
                    </button>
                  )}
                </div>
@@ -1104,11 +1050,11 @@ export default function App() {
            </div>
         )}
 
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           <select 
             value={selectedSyllabusCat}
             onChange={(e) => setSelectedSyllabusCat(e.target.value)}
-            className={`w-full sm:w-1/3 px-3 py-3 text-xs sm:text-sm focus:outline-none cursor-pointer transition-all ${t.input} ${t.textAccent} ${t.fontHeading}`}
+            className={`w-full sm:w-1/3 px-2 sm:px-3 py-2 sm:py-3 text-[10px] sm:text-sm focus:outline-none cursor-pointer transition-all ${t.input} ${t.textAccent} ${t.fontHeading}`}
           >
             {syllabusCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
           </select>
@@ -1119,20 +1065,20 @@ export default function App() {
               onChange={(e) => setNewTopic(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleAddStagingTopic()}
               placeholder="CHAPTER NAME..."
-              className={`flex-1 px-4 py-3 text-sm sm:text-base focus:outline-none transition-all ${t.input} ${t.fontHeading}`}
+              className={`flex-1 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-base focus:outline-none transition-all ${t.input} ${t.fontHeading}`}
             />
             <button 
               onClick={handleAddStagingTopic}
-              className={`px-5 transition-all flex items-center justify-center active:scale-95 ${t.btnWarning}`}
+              className={`px-4 sm:px-5 transition-all flex items-center justify-center active:scale-95 ${t.btnWarning}`}
             >
-              <Plus size={20} className={t.iconActive} />
+              <Plus className={`w-4 h-4 sm:w-5 sm:h-5 ${t.iconActive}`} />
             </button>
           </div>
         </div>
 
-        <div className="mt-8 space-y-3">
+        <div className="mt-6 sm:mt-8 space-y-2 sm:space-y-3">
           {stagingTopics.length === 0 && (
-            <div className={`text-center py-10 border-dashed ${t.cardInner} ${t.textMuted} ${t.fontHeading}`}>
+            <div className={`text-center py-8 sm:py-10 border-dashed text-xs sm:text-sm ${t.cardInner} ${t.textMuted} ${t.fontHeading}`}>
               QUEUE EMPTY
             </div>
           )}
@@ -1143,70 +1089,70 @@ export default function App() {
                 onDragStart={() => handleDragStart(index)}
                 onDragOver={handleDragOver}
                 onDrop={() => handleDrop(index)}
-                className={`p-4 flex items-center justify-between cursor-move transition-all select-none
+                className={`p-3 sm:p-4 flex items-center justify-between cursor-move transition-all select-none
                   ${t.cardInner}
                   ${index === 0 ? t.borderAccent : ''}
                   ${draggedItemIndex === index ? 'opacity-50' : 'opacity-100'}
                 `}
               >
                 <div className="flex items-center gap-3 sm:gap-4">
-                  <GripVertical size={20} className={index === 0 ? t.textAccent : t.textMuted} />
+                  <GripVertical className={`w-4 h-4 sm:w-5 sm:h-5 ${index === 0 ? t.textAccent : t.textMuted}`} />
                   <div>
-                    <h4 className={`text-sm sm:text-base flex items-center gap-2 ${t.fontHeading} ${t.textMain}`}>
+                    <h4 className={`text-xs sm:text-base flex items-center gap-2 ${t.fontHeading} ${t.textMain}`}>
                       {topic.title}
-                      {index === 0 && <span className={`text-[8px] sm:text-[9px] px-2 py-0.5 tracking-widest ${t.badge} ${t.textAccent} ${t.fontHeading}`}>NEXT</span>}
+                      {index === 0 && <span className={`text-[7px] sm:text-[9px] px-1.5 sm:px-2 py-0.5 tracking-widest ${t.badge} ${t.textAccent} ${t.fontHeading}`}>NEXT</span>}
                     </h4>
-                    <span className={`text-[9px] sm:text-[10px] tracking-widest mt-1 block ${t.textMuted} ${t.fontHeading}`}>{topic.category}</span>
+                    <span className={`text-[8px] sm:text-[10px] tracking-widest mt-1 block ${t.textMuted} ${t.fontHeading}`}>{topic.category}</span>
                   </div>
                 </div>
               </div>
             </LongPressItem>
           ))}
         </div>
-        <p className={`text-[9px] sm:text-[10px] mt-6 text-center ${t.textMuted} ${t.fontHeading}`}>Hold item to execute delete</p>
+        <p className={`text-[8px] sm:text-[10px] mt-4 sm:mt-6 text-center ${t.textMuted} ${t.fontHeading}`}>Hold item to execute delete</p>
       </div>
     </div>
   );
 
   const renderHistory = () => (
     <div className="space-y-6 sm:space-y-8 pb-10">
-      <div className={`p-5 sm:p-6 ${t.card}`}>
-        <h3 className={`${t.textAccent} ${t.fontHeading} mb-6 flex items-center gap-2 text-sm sm:text-base border-b-2 border-white/10 pb-2`}>
-          <History size={20} /> ONGOING 30-DAY CYCLES
+      <div className={`p-4 sm:p-6 ${t.card}`}>
+        <h3 className={`${t.textAccent} ${t.fontHeading} mb-4 sm:mb-6 flex items-center gap-2 text-xs sm:text-base border-b-2 border-white/10 pb-2`}>
+          <History className="w-4 h-4 sm:w-5 sm:h-5" /> ONGOING 30-DAY CYCLES
         </h3>
         {studyTopics.length === 0 ? (
-          <div className={`text-center py-10 border-dashed ${t.cardInner} ${t.textMuted} ${t.fontHeading}`}>
+          <div className={`text-center py-8 sm:py-10 border-dashed text-xs sm:text-sm ${t.cardInner} ${t.textMuted} ${t.fontHeading}`}>
             NO ACTIVE CYCLES
           </div>
         ) : (
           <div className="space-y-4 sm:space-y-6">
-            <p className={`text-[9px] sm:text-[10px] text-center mb-2 ${t.textMuted} ${t.fontHeading}`}>Hold item for 5 seconds to delete</p>
+            <p className={`text-[8px] sm:text-[10px] text-center mb-2 ${t.textMuted} ${t.fontHeading}`}>Hold item for 5 seconds to delete</p>
             {studyTopics.map(topic => (
               <LongPressItem key={topic.id} item={topic} onDelete={(id) => deleteStudyTopic(id)} duration={5000}>
-                <div className={`p-5 ${t.cardInner}`}>
+                <div className={`p-4 sm:p-5 ${t.cardInner}`}>
                   <div className="flex justify-between items-start mb-4 sm:mb-6">
                     <div>
-                      <h4 className={`text-base sm:text-lg ${t.fontHeading} ${t.textMain}`}>{topic.title}</h4>
-                      <span className={`text-[9px] sm:text-[10px] px-2 py-1 mt-2 inline-block ${t.badge} ${t.fontHeading}`}>{topic.category}</span>
+                      <h4 className={`text-sm sm:text-lg ${t.fontHeading} ${t.textMain}`}>{topic.title}</h4>
+                      <span className={`text-[8px] sm:text-[10px] px-1.5 sm:px-2 py-1 mt-2 inline-block ${t.badge} ${t.fontHeading}`}>{topic.category}</span>
                     </div>
-                    <span className={`text-[9px] sm:text-[10px] px-2 py-1 ${t.badge} ${t.fontHeading}`}>INIT: {topic.startDate}</span>
+                    <span className={`text-[8px] sm:text-[10px] px-1.5 sm:px-2 py-1 ${t.badge} ${t.fontHeading}`}>INIT: {topic.startDate}</span>
                   </div>
                   <div className="flex flex-wrap gap-2 sm:gap-3">
                     {topic.schedule.map((rev, i) => {
                       const isPending = !rev.completed && rev.targetDate <= todayStr;
                       return (
-                        <div key={i} className={`flex flex-col items-center justify-center py-2 px-3 transition-all ${t.badge} ${
+                        <div key={i} className={`flex flex-col items-center justify-center py-1.5 sm:py-2 px-2 sm:px-3 transition-all ${t.badge} ${
                           rev.completed 
                             ? t.btnPrimary.split('hover')[0]
                             : isPending 
                               ? t.borderDanger + ' text-red-500'
                               : 'opacity-70'
                         }`}>
-                          <span className={`text-[9px] sm:text-[10px] ${t.fontHeading}`}>D{rev.dayOffset}</span>
+                          <span className={`text-[8px] sm:text-[10px] ${t.fontHeading}`}>D{rev.dayOffset}</span>
                           {rev.completed ? (
-                            <Check size={16} className={`mt-1 ${t.iconActive}`} />
+                            <Check className={`w-3 h-3 sm:w-4 sm:h-4 mt-1 ${t.iconActive}`} />
                           ) : (
-                            <Circle size={16} className={`mt-1 ${t.iconBase} ${isPending ? 'animate-pulse' : ''}`} />
+                            <Circle className={`w-3 h-3 sm:w-4 sm:h-4 mt-1 ${t.iconBase} ${isPending ? 'animate-pulse' : ''}`} />
                           )}
                         </div>
                       );
@@ -1219,24 +1165,24 @@ export default function App() {
         )}
       </div>
 
-      <div className={`p-5 sm:p-6 ${t.card}`}>
-        <h3 className={`${t.textMain} ${t.fontHeading} mb-6 flex items-center gap-2 text-sm sm:text-base border-b-2 border-white/10 pb-2`}>
-          <Trophy size={20} /> HALL OF FAME (MASTERED)
+      <div className={`p-4 sm:p-6 ${t.card}`}>
+        <h3 className={`${t.textMain} ${t.fontHeading} mb-4 sm:mb-6 flex items-center gap-2 text-xs sm:text-base border-b-2 border-white/10 pb-2`}>
+          <Trophy className="w-4 h-4 sm:w-5 sm:h-5" /> HALL OF FAME (MASTERED)
         </h3>
         {masteredTopics.length === 0 ? (
-          <div className={`text-center py-10 border-dashed ${t.cardInner} ${t.textMuted} ${t.fontHeading}`}>
+          <div className={`text-center py-8 sm:py-10 border-dashed text-xs sm:text-sm ${t.cardInner} ${t.textMuted} ${t.fontHeading}`}>
             EMPTY VAULT
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             {masteredTopics.map(topic => (
-              <div key={topic.id} className={`p-4 flex items-center gap-4 transition-colors ${t.cardInner}`}>
-                <div className={`w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center ${t.badge}`}>
-                   <Trophy size={18} className={t.textAccent} />
+              <div key={topic.id} className={`p-3 sm:p-4 flex items-center gap-3 sm:gap-4 transition-colors ${t.cardInner}`}>
+                <div className={`w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center shrink-0 ${t.badge}`}>
+                   <Trophy className={`w-4 h-4 sm:w-5 sm:h-5 ${t.textAccent}`} />
                 </div>
                 <div>
-                  <h4 className={`text-sm ${t.fontHeading} ${t.textMain}`}>{topic.title}</h4>
-                  <p className={`text-[9px] sm:text-[10px] mt-1 ${t.textMuted} ${t.fontHeading}`}>{topic.category} • {topic.masteredDate}</p>
+                  <h4 className={`text-xs sm:text-sm ${t.fontHeading} ${t.textMain}`}>{topic.title}</h4>
+                  <p className={`text-[8px] sm:text-[10px] mt-1 ${t.textMuted} ${t.fontHeading}`}>{topic.category} • {topic.masteredDate}</p>
                 </div>
               </div>
             ))}
@@ -1250,48 +1196,48 @@ export default function App() {
     if (expandedWisdomCategory) {
       const filteredNotes = wisdomNotes.filter(n => n.category === expandedWisdomCategory);
       return (
-        <div className="space-y-6 pb-10">
-          <div className="flex items-center gap-3 sm:gap-4 mb-6">
-            <button onClick={() => setExpandedWisdomCategory(null)} className={`p-3 transition-colors active:scale-95 ${t.cardInner} ${t.textMain}`}>
-              <ChevronLeft size={24} className={t.iconActive}/>
+        <div className="space-y-4 sm:space-y-6 pb-10">
+          <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+            <button onClick={() => setExpandedWisdomCategory(null)} className={`p-2 sm:p-3 transition-colors active:scale-95 ${t.cardInner} ${t.textMain}`}>
+              <ChevronLeft className={`w-5 h-5 sm:w-6 sm:h-6 ${t.iconActive}`}/>
             </button>
-            <h2 className={`text-lg sm:text-xl flex items-center gap-2 ${t.fontHeading} ${t.textMain}`}>
-              <FolderOpen size={24} className={t.textMuted} /> {expandedWisdomCategory}
+            <h2 className={`text-base sm:text-xl flex items-center gap-2 ${t.fontHeading} ${t.textMain}`}>
+              <FolderOpen className={`w-5 h-5 sm:w-6 sm:h-6 ${t.textMuted}`} /> {expandedWisdomCategory}
             </h2>
           </div>
-          <div className="flex gap-2 mb-6 sm:mb-8">
+          <div className="flex gap-2 mb-4 sm:mb-8">
             <input 
               type="text" 
               value={newWisdom}
               onChange={(e) => setNewWisdom(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleAddWisdom()}
               placeholder="DUMP KNOWLEDGE..."
-              className={`flex-1 px-4 py-3 sm:py-4 text-sm sm:text-base focus:outline-none transition-all ${t.input} ${t.fontHeading}`}
+              className={`flex-1 px-3 sm:px-4 py-2 sm:py-4 text-xs sm:text-base focus:outline-none transition-all ${t.input} ${t.fontHeading}`}
             />
             <button 
               onClick={handleAddWisdom}
-              className={`px-5 sm:px-6 transition-all active:scale-95 flex items-center justify-center ${t.btnPrimary}`}
+              className={`px-4 sm:px-6 transition-all active:scale-95 flex items-center justify-center ${t.btnPrimary}`}
             >
-              <Plus size={24} className={t.iconActive} />
+              <Plus className={`w-5 h-5 sm:w-6 sm:h-6 ${t.iconActive}`} />
             </button>
           </div>
           <div className="grid gap-3 sm:gap-4">
-            {filteredNotes.length === 0 && <div className={`text-center py-10 border-dashed ${t.cardInner} ${t.textMuted} ${t.fontHeading}`}>EMPTY FOLDER</div>}
+            {filteredNotes.length === 0 && <div className={`text-center py-8 sm:py-10 border-dashed text-xs sm:text-sm ${t.cardInner} ${t.textMuted} ${t.fontHeading}`}>EMPTY FOLDER</div>}
             {filteredNotes.map(note => (
               <LongPressItem key={note.id} item={note} onDelete={(id) => deleteWisdomNote(id)}>
-                <div className={`p-4 sm:p-5 flex flex-col gap-3 sm:gap-4 transition-colors cursor-pointer ${t.cardInner}`}>
-                  <div className="flex items-start gap-3">
-                     <Mic size={18} className={`${t.textMuted} mt-1 flex-shrink-0`} />
-                     <p className={`text-sm sm:text-base leading-relaxed ${t.textMain}`}>{note.text}</p>
+                <div className={`p-3 sm:p-5 flex flex-col gap-3 sm:gap-4 transition-colors cursor-pointer ${t.cardInner}`}>
+                  <div className="flex items-start gap-2 sm:gap-3">
+                     <Mic className={`w-4 h-4 sm:w-5 sm:h-5 ${t.textMuted} mt-0.5 sm:mt-1 flex-shrink-0`} />
+                     <p className={`text-xs sm:text-base leading-relaxed ${t.textMain}`}>{note.text}</p>
                   </div>
-                  <div className="flex justify-between items-center pt-3 sm:pt-4 border-t border-white/10">
-                    <span className={`text-[9px] sm:text-[10px] ${t.textMuted} ${t.fontHeading}`}>{note.date}</span>
-                    <div className="flex items-center gap-2">
-                       <MoveRight size={14} className={t.textMuted} />
+                  <div className="flex justify-between items-center pt-2 sm:pt-4 border-t border-white/10">
+                    <span className={`text-[8px] sm:text-[10px] ${t.textMuted} ${t.fontHeading}`}>{note.date}</span>
+                    <div className="flex items-center gap-1 sm:gap-2">
+                       <MoveRight className={`w-3 h-3 sm:w-4 sm:h-4 ${t.textMuted}`} />
                        <select 
                          onChange={(e) => handleMoveWisdomNote(note.id, e.target.value)}
                          value={note.category}
-                         className={`px-2 py-1 text-[9px] sm:text-[10px] outline-none cursor-pointer ${t.input} ${t.fontHeading}`}
+                         className={`px-1 sm:px-2 py-0.5 sm:py-1 text-[8px] sm:text-[10px] outline-none cursor-pointer ${t.input} ${t.fontHeading}`}
                        >
                          {wisdomCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                        </select>
@@ -1307,12 +1253,11 @@ export default function App() {
     return (
       <div className="space-y-6 sm:space-y-8 pb-10">
         
-        {/* Ask Oracle */}
-        <div className={`p-5 sm:p-6 relative overflow-hidden ${t.card}`}>
-          <h3 className={`${t.textAccent} ${t.fontHeading} mb-4 flex items-center gap-2 text-sm sm:text-base border-b-2 border-white/10 pb-2`}>
-            <Sparkles size={18} /> ASK THE ORACLE
+        <div className={`p-4 sm:p-6 relative overflow-hidden ${t.card}`}>
+          <h3 className={`${t.textAccent} ${t.fontHeading} mb-3 sm:mb-4 flex items-center gap-2 text-xs sm:text-base border-b-2 border-white/10 pb-2`}>
+            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" /> ASK THE ORACLE
           </h3>
-          <p className={`text-[9px] sm:text-[10px] mb-4 ${t.textMuted} ${t.fontHeading}`}>Chat with your Second Brain. Uses your saved Wisdom.</p>
+          <p className={`text-[9px] sm:text-[10px] mb-3 sm:mb-4 ${t.textMuted} ${t.fontHeading}`}>Chat with your Second Brain. Uses your saved Wisdom.</p>
           <div className="flex gap-2">
             <input 
               type="text" 
@@ -1320,40 +1265,40 @@ export default function App() {
               onChange={(e) => setOracleQuery(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleAskOracle('wisdom')}
               placeholder="QUERY..."
-              className={`flex-1 px-4 py-3 text-sm focus:outline-none transition-all ${t.input} ${t.fontHeading}`}
+              className={`flex-1 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm focus:outline-none transition-all ${t.input} ${t.fontHeading}`}
             />
             <button 
               onClick={() => handleAskOracle('wisdom')}
               disabled={isOracleThinking}
-              className={`px-5 sm:px-6 transition-all active:scale-95 flex items-center justify-center ${t.btnPrimary}`}
+              className={`px-4 sm:px-6 transition-all active:scale-95 flex items-center justify-center ${t.btnPrimary}`}
             >
-              {isOracleThinking ? <Circle size={20} className="animate-pulse" /> : <Send size={20} className={t.iconActive} />}
+              {isOracleThinking ? <Circle className={`w-4 h-4 sm:w-5 sm:h-5 animate-pulse`} /> : <Send className={`w-4 h-4 sm:w-5 sm:h-5 ${t.iconActive}`} />}
             </button>
           </div>
           {oracleResponse && (
-            <div className={`mt-5 sm:mt-6 p-4 sm:p-5 border-l-4 ${t.cardInner} ${t.borderAccent}`}>
-              <p className={`text-sm sm:text-base leading-relaxed ${t.textMain}`}>{oracleResponse}</p>
+            <div className={`mt-4 sm:mt-6 p-3 sm:p-5 border-l-4 ${t.cardInner} ${t.borderAccent}`}>
+              <p className={`text-xs sm:text-base leading-relaxed ${t.textMain}`}>{oracleResponse}</p>
             </div>
           )}
         </div>
 
-        <div className={`p-5 sm:p-6 ${t.card}`}>
-          <h3 className={`${t.textMain} ${t.fontHeading} mb-6 flex items-center gap-2 text-sm sm:text-base border-b-2 border-white/10 pb-2`}>
-            <Folder size={18} /> WISDOM FOLDERS
+        <div className={`p-4 sm:p-6 ${t.card}`}>
+          <h3 className={`${t.textMain} ${t.fontHeading} mb-4 sm:mb-6 flex items-center gap-2 text-xs sm:text-base border-b-2 border-white/10 pb-2`}>
+            <Folder className="w-4 h-4 sm:w-5 sm:h-5" /> WISDOM FOLDERS
           </h3>
-          <div className="flex gap-2 mb-6 sm:mb-8">
+          <div className="flex gap-2 mb-4 sm:mb-8">
             <input 
               type="text" 
               value={newWisdomCat}
               onChange={(e) => setNewWisdomCat(e.target.value)}
               placeholder="NEW FOLDER..."
-              className={`flex-1 px-4 py-3 text-sm focus:outline-none transition-all ${t.input} ${t.fontHeading}`}
+              className={`flex-1 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm focus:outline-none transition-all ${t.input} ${t.fontHeading}`}
             />
             <button 
               onClick={handleAddWisdomCategory}
-              className={`px-4 sm:px-5 transition-all active:scale-95 flex items-center justify-center ${t.btnWarning}`}
+              className={`px-3 sm:px-5 transition-all active:scale-95 flex items-center justify-center ${t.btnWarning}`}
             >
-              <Plus size={20} className={t.iconActive} />
+              <Plus className={`w-4 h-4 sm:w-5 sm:h-5 ${t.iconActive}`} />
             </button>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
@@ -1363,20 +1308,20 @@ export default function App() {
                 <div key={cat} className="group relative">
                   <button 
                     onClick={() => setExpandedWisdomCategory(cat)}
-                    className={`w-full p-4 sm:p-5 flex flex-col items-center sm:items-start gap-3 sm:gap-4 transition-all text-center sm:text-left h-full active:scale-95 ${t.cardInner}`}
+                    className={`w-full p-3 sm:p-5 flex flex-col items-center sm:items-start gap-2 sm:gap-4 transition-all text-center sm:text-left h-full active:scale-95 ${t.cardInner}`}
                   >
-                    <FolderOpen size={28} className={t.textMuted} />
-                    <div className="w-full">
-                      <h4 className={`text-xs sm:text-sm truncate w-full ${t.textMain} ${t.fontHeading}`}>{cat}</h4>
-                      <span className={`text-[9px] sm:text-[10px] mt-1 block ${t.textMuted} ${t.fontHeading}`}>{count} NOTES</span>
+                    <FolderOpen className={`w-6 h-6 sm:w-8 sm:h-8 ${t.textMuted}`} />
+                    <div className="w-full mt-1 sm:mt-0">
+                      <h4 className={`text-[10px] sm:text-sm truncate w-full ${t.textMain} ${t.fontHeading}`}>{cat}</h4>
+                      <span className={`text-[8px] sm:text-[10px] mt-0.5 sm:mt-1 block ${t.textMuted} ${t.fontHeading}`}>{count} NOTES</span>
                     </div>
                   </button>
                   {cat !== "Quick Thoughts" && (
                     <button 
                       onClick={(e) => { e.stopPropagation(); handleDeleteWisdomCategory(cat); }}
-                      className={`absolute top-2 right-2 p-1.5 sm:p-2 transition-colors hover:text-red-500 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 ${t.textMuted}`}
+                      className={`absolute top-1 right-1 sm:top-2 sm:right-2 p-1.5 sm:p-2 transition-colors hover:text-red-500 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 ${t.textMuted}`}
                     >
-                      <Trash2 size={14} />
+                      <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
                     </button>
                   )}
                 </div>
@@ -1392,24 +1337,24 @@ export default function App() {
     if (expandedVaultCategory) {
       const notesInCat = vaultNotes.filter(n => n.category === expandedVaultCategory);
       return (
-        <div className="space-y-6 pb-10">
-          <div className="flex items-center gap-3 sm:gap-4 mb-6">
-            <button onClick={() => setExpandedVaultCategory(null)} className={`p-3 transition-colors active:scale-95 ${t.cardInner} ${t.textMain}`}>
-              <ChevronLeft size={24} className={t.iconActive}/>
+        <div className="space-y-4 sm:space-y-6 pb-10">
+          <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+            <button onClick={() => setExpandedVaultCategory(null)} className={`p-2 sm:p-3 transition-colors active:scale-95 ${t.cardInner} ${t.textMain}`}>
+              <ChevronLeft className={`w-5 h-5 sm:w-6 sm:h-6 ${t.iconActive}`}/>
             </button>
-            <h2 className={`text-lg sm:text-xl flex items-center gap-2 ${t.fontHeading} ${t.textMain}`}>
-               <FolderOpen size={24} className={t.textMuted} /> {expandedVaultCategory}
+            <h2 className={`text-base sm:text-xl flex items-center gap-2 ${t.fontHeading} ${t.textMain}`}>
+               <FolderOpen className={`w-5 h-5 sm:w-6 sm:h-6 ${t.textMuted}`} /> {expandedVaultCategory}
             </h2>
           </div>
           <div className="grid gap-3 sm:gap-4">
-            {notesInCat.length === 0 && <div className={`text-center py-10 border-dashed ${t.cardInner} ${t.textMuted} ${t.fontHeading}`}>EMPTY FOLDER</div>}
+            {notesInCat.length === 0 && <div className={`text-center py-8 sm:py-10 border-dashed text-xs sm:text-sm ${t.cardInner} ${t.textMuted} ${t.fontHeading}`}>EMPTY FOLDER</div>}
             {notesInCat.map(note => (
               <LongPressItem key={note.id} item={note} onDelete={(id) => deleteVaultNote(id)}>
-                <div className={`p-4 sm:p-5 flex items-start gap-3 sm:gap-4 transition-colors cursor-pointer ${t.cardInner}`}>
-                  <BrainCircuit size={20} className={`${t.textMuted} mt-1 shrink-0`} />
+                <div className={`p-3 sm:p-5 flex items-start gap-2 sm:gap-4 transition-colors cursor-pointer ${t.cardInner}`}>
+                  <BrainCircuit className={`w-4 h-4 sm:w-5 sm:h-5 ${t.textMuted} mt-0.5 sm:mt-1 shrink-0`} />
                   <div>
-                    <p className={`text-sm sm:text-base leading-relaxed ${t.textMain}`}>{note.text}</p>
-                    <span className={`text-[9px] sm:text-[10px] mt-2 block ${t.textMuted} ${t.fontHeading}`}>{note.date}</span>
+                    <p className={`text-xs sm:text-base leading-relaxed ${t.textMain}`}>{note.text}</p>
+                    <span className={`text-[8px] sm:text-[10px] mt-1 sm:mt-2 block ${t.textMuted} ${t.fontHeading}`}>{note.date}</span>
                   </div>
                 </div>
               </LongPressItem>
@@ -1422,12 +1367,11 @@ export default function App() {
     return (
       <div className="space-y-6 sm:space-y-8 pb-10">
         
-        {/* Ask Oracle */}
-        <div className={`p-5 sm:p-6 relative overflow-hidden ${t.card}`}>
-          <h3 className={`${t.textAccent} ${t.fontHeading} mb-4 flex items-center gap-2 text-sm sm:text-base border-b-2 border-white/10 pb-2`}>
-            <Sparkles size={18} /> ASK THE ORACLE
+        <div className={`p-4 sm:p-6 relative overflow-hidden ${t.card}`}>
+          <h3 className={`${t.textAccent} ${t.fontHeading} mb-3 sm:mb-4 flex items-center gap-2 text-xs sm:text-base border-b-2 border-white/10 pb-2`}>
+            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" /> ASK THE ORACLE
           </h3>
-          <p className={`text-[9px] sm:text-[10px] mb-4 ${t.textMuted} ${t.fontHeading}`}>Chat with your Second Brain. Uses your saved Dump notes.</p>
+          <p className={`text-[9px] sm:text-[10px] mb-3 sm:mb-4 ${t.textMuted} ${t.fontHeading}`}>Chat with your Second Brain. Uses your saved Dump notes.</p>
           <div className="flex gap-2">
             <input 
               type="text" 
@@ -1435,40 +1379,39 @@ export default function App() {
               onChange={(e) => setOracleQuery(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleAskOracle('vault')}
               placeholder="QUERY..."
-              className={`flex-1 px-4 py-3 text-sm focus:outline-none transition-all ${t.input} ${t.fontHeading}`}
+              className={`flex-1 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm focus:outline-none transition-all ${t.input} ${t.fontHeading}`}
             />
             <button 
               onClick={() => handleAskOracle('vault')}
               disabled={isOracleThinking}
-              className={`px-5 sm:px-6 transition-all active:scale-95 flex items-center justify-center ${t.btnPrimary}`}
+              className={`px-4 sm:px-6 transition-all active:scale-95 flex items-center justify-center ${t.btnPrimary}`}
             >
-              {isOracleThinking ? <Circle size={20} className="animate-pulse" /> : <Send size={20} className={t.iconActive} />}
+              {isOracleThinking ? <Circle className={`w-4 h-4 sm:w-5 sm:h-5 animate-pulse`} /> : <Send className={`w-4 h-4 sm:w-5 sm:h-5 ${t.iconActive}`} />}
             </button>
           </div>
           {oracleResponse && (
-            <div className={`mt-5 sm:mt-6 p-4 sm:p-5 border-l-4 ${t.cardInner} ${t.borderAccent}`}>
-              <p className={`text-sm sm:text-base leading-relaxed ${t.textMain}`}>{oracleResponse}</p>
+            <div className={`mt-4 sm:mt-6 p-3 sm:p-5 border-l-4 ${t.cardInner} ${t.borderAccent}`}>
+              <p className={`text-xs sm:text-base leading-relaxed ${t.textMain}`}>{oracleResponse}</p>
             </div>
           )}
         </div>
 
-        {/* AI Inbox Input (Brain Dump) */}
-        <div className={`p-5 sm:p-6 ${t.card}`}>
-          <div className="flex justify-between items-center mb-4 border-b-2 border-white/10 pb-2">
-            <h3 className={`${t.textMain} ${t.fontHeading} text-sm sm:text-base flex items-center gap-2`}>
-               <BrainCircuit size={18} /> BRAIN DUMP (INBOX)
+        <div className={`p-4 sm:p-6 ${t.card}`}>
+          <div className="flex justify-between items-center mb-3 sm:mb-4 border-b-2 border-white/10 pb-2">
+            <h3 className={`${t.textMain} ${t.fontHeading} text-xs sm:text-base flex items-center gap-2`}>
+               <BrainCircuit className="w-4 h-4 sm:w-5 sm:h-5" /> BRAIN DUMP (INBOX)
             </h3>
             {isVaultSorting && (
-              <span className={`text-[8px] sm:text-[9px] px-2 py-1 flex items-center gap-1 animate-pulse ${t.badge} ${t.textAccent} ${t.fontHeading}`}>
-                <Sparkles size={10} /> AI SORTING
+              <span className={`text-[7px] sm:text-[9px] px-1.5 sm:px-2 py-0.5 sm:py-1 flex items-center gap-1 animate-pulse ${t.badge} ${t.textAccent} ${t.fontHeading}`}>
+                <Sparkles className="w-2 h-2 sm:w-3 sm:h-3" /> AI SORTING
               </span>
             )}
           </div>
-          <p className={`text-[9px] sm:text-[10px] mb-5 leading-relaxed ${t.textMuted} ${t.fontHeading}`}>
+          <p className={`text-[8px] sm:text-[10px] mb-4 sm:mb-5 leading-relaxed ${t.textMuted} ${t.fontHeading}`}>
              Fast-capture raw ideas. Add 3 similar thoughts, and AI will automatically build a new folder for them below.
           </p>
           
-          <div className="flex flex-wrap sm:flex-nowrap gap-2 relative">
+          <div className="flex gap-2 relative">
             <button 
               onClick={() => {
                 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -1487,9 +1430,9 @@ export default function App() {
                 recognition.onend = () => setIsListening(false);
                 recognition.start();
               }}
-              className={`p-3 transition-all flex items-center justify-center ${isListening ? t.btnDanger + ' animate-pulse' : t.cardInner + ' ' + t.textMuted}`}
+              className={`p-2 sm:p-3 transition-all flex items-center justify-center shrink-0 ${isListening ? t.btnDanger + ' animate-pulse' : t.cardInner + ' ' + t.textMuted}`}
             >
-              <Mic size={20} />
+              <Mic className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
             <input 
               type="text" 
@@ -1497,21 +1440,21 @@ export default function App() {
               onChange={(e) => setNewNote(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleAddNote()}
               placeholder={isListening ? "SPEAKING..." : "RAW THOUGHT..."}
-              className={`flex-1 px-4 py-3 text-sm focus:outline-none transition-all min-w-[200px] ${t.input} ${t.fontHeading}`}
+              className={`flex-1 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm focus:outline-none transition-all ${t.input} ${t.fontHeading}`}
             />
             <button 
               onClick={handleAddNote}
               disabled={isVaultSorting}
-              className={`px-5 transition-all active:scale-95 flex items-center justify-center w-full sm:w-auto ${t.btnWarning}`}
+              className={`px-4 sm:px-5 transition-all active:scale-95 flex items-center justify-center shrink-0 ${t.btnWarning}`}
             >
-              <Send size={18} className={t.iconActive} />
+              <Send className={`w-4 h-4 sm:w-5 sm:h-5 ${t.iconActive}`} />
             </button>
           </div>
         </div>
 
         <div className="space-y-4 sm:space-y-6">
-          <h3 className={`${t.textMain} ${t.fontHeading} text-sm sm:text-base flex items-center gap-2 px-1`}>
-             <Folder size={18} /> VAULT FOLDERS
+          <h3 className={`${t.textMain} ${t.fontHeading} text-xs sm:text-base flex items-center gap-2 px-1`}>
+             <Folder className="w-4 h-4 sm:w-5 sm:h-5" /> VAULT FOLDERS
           </h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
             {vaultCategories.map(cat => {
@@ -1520,20 +1463,20 @@ export default function App() {
                 <div key={cat} className="group relative">
                   <button 
                     onClick={() => setExpandedVaultCategory(cat)}
-                    className={`w-full p-4 sm:p-5 flex flex-col items-center sm:items-start gap-3 sm:gap-4 transition-all text-center sm:text-left h-full active:scale-95 ${t.cardInner}`}
+                    className={`w-full p-3 sm:p-5 flex flex-col items-center sm:items-start gap-2 sm:gap-4 transition-all text-center sm:text-left h-full active:scale-95 ${t.cardInner}`}
                   >
-                    <FolderOpen size={28} className={t.textMuted} />
-                    <div className="w-full">
-                      <h4 className={`text-xs sm:text-sm truncate w-full ${t.textMain} ${t.fontHeading}`}>{cat}</h4>
-                      <span className={`text-[9px] sm:text-[10px] mt-1 block ${t.textMuted} ${t.fontHeading}`}>{count} NOTES</span>
+                    <FolderOpen className={`w-6 h-6 sm:w-8 sm:h-8 ${t.textMuted}`} />
+                    <div className="w-full mt-1 sm:mt-0">
+                      <h4 className={`text-[10px] sm:text-sm truncate w-full ${t.textMain} ${t.fontHeading}`}>{cat}</h4>
+                      <span className={`text-[8px] sm:text-[10px] mt-0.5 sm:mt-1 block ${t.textMuted} ${t.fontHeading}`}>{count} NOTES</span>
                     </div>
                   </button>
                   {cat !== "Others" && (
                     <button 
                       onClick={(e) => { e.stopPropagation(); handleDeleteVaultCategory(cat); }}
-                      className={`absolute top-2 right-2 p-1.5 sm:p-2 transition-colors hover:text-red-500 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 ${t.textMuted}`}
+                      className={`absolute top-1 right-1 sm:top-2 sm:right-2 p-1.5 sm:p-2 transition-colors hover:text-red-500 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 ${t.textMuted}`}
                     >
-                      <Trash2 size={14} />
+                      <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
                     </button>
                   )}
                 </div>
@@ -1541,7 +1484,7 @@ export default function App() {
             })}
           </div>
           {vaultNotes.length === 0 && (
-            <div className={`text-center py-10 border-dashed ${t.cardInner} ${t.textMuted} ${t.fontHeading}`}>
+            <div className={`text-center py-8 sm:py-10 border-dashed text-xs sm:text-sm ${t.cardInner} ${t.textMuted} ${t.fontHeading}`}>
               INBOX ZERO
             </div>
           )}
@@ -1551,34 +1494,34 @@ export default function App() {
   };
 
   const renderUrgeKiller = () => (
-    <div className="space-y-8 sm:space-y-10 pb-10 pt-4 text-center max-w-md mx-auto">
-      <h2 className={`text-xl sm:text-2xl flex justify-center items-center gap-2 sm:gap-3 ${t.textMain} ${t.fontHeading}`}>
-        <ShieldAlert className={t.textWarning} size={28} /> INTERCEPTOR
+    <div className="space-y-6 sm:space-y-8 pb-10 pt-4 text-center max-w-md mx-auto">
+      <h2 className={`text-lg sm:text-2xl flex justify-center items-center gap-2 sm:gap-3 ${t.textMain} ${t.fontHeading}`}>
+        <ShieldAlert className={`w-6 h-6 sm:w-8 sm:h-8 ${t.textWarning}`} /> INTERCEPTOR
       </h2>
-      <p className={`text-[9px] sm:text-[10px] px-4 sm:px-8 ${t.textMuted} ${t.fontHeading}`}>Trigger this protocol if you are about to break discipline.</p>
+      <p className={`text-[8px] sm:text-[10px] px-4 sm:px-8 ${t.textMuted} ${t.fontHeading}`}>Trigger this protocol if you are about to break discipline.</p>
 
       {!isUrgeActive ? (
         <button 
           onClick={triggerUrgeInterceptor}
-          className={`w-[220px] h-[220px] sm:w-[280px] sm:h-[280px] mx-auto flex flex-col items-center justify-center gap-4 sm:gap-6 group transition-all ${t.urgeBtn}`}
+          className={`w-[200px] h-[200px] sm:w-[280px] sm:h-[280px] mx-auto flex flex-col items-center justify-center gap-4 sm:gap-6 group transition-all mt-6 sm:mt-8 ${t.urgeBtn}`}
         >
-          <Skull size={64} className="group-hover:scale-110 transition-transform" />
-          <span className={`text-xl sm:text-2xl text-center px-4 ${t.fontHeading}`}>I HAVE AN URGE</span>
+          <Skull className="w-16 h-16 sm:w-20 sm:h-20 group-hover:scale-110 transition-transform" />
+          <span className={`text-lg sm:text-2xl text-center px-4 ${t.fontHeading}`}>I HAVE AN URGE</span>
         </button>
       ) : (
-        <div className={`p-6 sm:p-8 relative ${t.card}`}>
-          <div className="absolute top-0 left-0 w-full h-2 bg-white/10">
+        <div className={`p-5 sm:p-8 relative mt-6 sm:mt-8 ${t.card}`}>
+          <div className="absolute top-0 left-0 w-full h-1.5 sm:h-2 bg-white/10">
             <div 
               className="bg-red-500 h-full transition-all duration-1000 ease-linear"
               style={{ width: `${(urgeTimer / 90) * 100}%` }}
             ></div>
           </div>
-          <h3 className={`mt-4 mb-4 sm:mb-6 text-[10px] sm:text-xs ${t.textWarning} ${t.fontHeading}`}>FRICTION ZONE ACTIVE</h3>
-          <div className={`text-6xl sm:text-8xl mb-6 sm:mb-8 tabular-nums tracking-tighter ${t.textMain} ${t.fontHeading}`}>
+          <h3 className={`mt-3 sm:mt-4 mb-3 sm:mb-6 text-[9px] sm:text-xs ${t.textWarning} ${t.fontHeading}`}>FRICTION ZONE ACTIVE</h3>
+          <div className={`text-5xl sm:text-8xl mb-5 sm:mb-8 tabular-nums tracking-tighter ${t.textMain} ${t.fontHeading}`}>
             {urgeTimer}s
           </div>
-          <div className="min-h-[80px] sm:min-h-[100px] flex items-center justify-center border-t border-white/10 pt-4 sm:pt-6">
-            <p className={`text-sm sm:text-lg leading-relaxed px-2 ${t.textMain} ${t.fontHeading}`} key={currentQuoteIndex}>
+          <div className="min-h-[70px] sm:min-h-[100px] flex items-center justify-center border-t border-white/10 pt-4 sm:pt-6">
+            <p className={`text-xs sm:text-lg leading-relaxed px-2 ${t.textMain} ${t.fontHeading}`} key={currentQuoteIndex}>
               "{urgeQuotes[currentQuoteIndex] || 'STAY STRONG. DO NOT GIVE IN.'}"
             </p>
           </div>
@@ -1590,41 +1533,39 @@ export default function App() {
   const renderSettings = () => (
     <div className="space-y-6 sm:space-y-8 pb-10">
       
-      {/* THEME ENGINE SECTION */}
-      <div className={`p-5 sm:p-6 mb-6 sm:mb-8 ${t.card}`}>
-        <h3 className={`${t.textAccent} ${t.fontHeading} mb-4 sm:mb-6 flex items-center gap-2 text-sm sm:text-base border-b-2 border-white/10 pb-2`}>
-          <Palette size={20} /> APP THEME ENGINE
+      <div className={`p-4 sm:p-6 mb-4 sm:mb-6 ${t.card}`}>
+        <h3 className={`${t.textAccent} ${t.fontHeading} mb-3 sm:mb-5 flex items-center gap-2 text-xs sm:text-sm border-b-2 border-white/10 pb-2`}>
+          <Palette className="w-4 h-4 sm:w-5 sm:h-5" /> APP THEME ENGINE
         </h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
           {Object.values(THEMES).map(themeOption => (
             <button
               key={themeOption.id}
               onClick={() => setActiveTheme(themeOption.id)}
-              className={`p-4 transition-all flex flex-col items-center gap-3 cursor-pointer 
+              className={`p-3 sm:p-4 transition-all flex flex-col items-center gap-2 sm:gap-3 cursor-pointer 
                 ${t.cardInner} 
                 ${activeTheme === themeOption.id ? t.borderAccent + ' opacity-100 scale-105' : 'opacity-70 hover:opacity-100 border-transparent'}
               `}
             >
-              <div className={`w-10 h-10 rounded-full shadow-md flex items-center justify-center border border-white/20 ${themeOption.appBg.split(' ')[0]}`}>
-                 {activeTheme === themeOption.id && <CheckCircle2 size={18} className={themeOption.textAccent} />}
+              <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full shadow-md flex items-center justify-center border border-white/20 ${themeOption.appBg.split(' ')[0]}`}>
+                 {activeTheme === themeOption.id && <CheckCircle2 className={`w-4 h-4 sm:w-5 sm:h-5 ${themeOption.textAccent}`} />}
               </div>
-              <span className={`text-[10px] text-center ${t.textMain} ${t.fontHeading}`}>{themeOption.name}</span>
+              <span className={`text-[8px] sm:text-[10px] text-center ${t.textMain} ${t.fontHeading}`}>{themeOption.name}</span>
             </button>
           ))}
         </div>
       </div>
 
-      {/* Profile Section */}
-      <div className={`p-5 sm:p-6 ${t.card}`}>
-        <h3 className={`${t.textMain} ${t.fontHeading} mb-4 sm:mb-6 flex items-center gap-2 text-sm sm:text-base border-b-2 border-white/10 pb-2`}>
-           <User size={18} /> PROFILE COMMAND
+      <div className={`p-4 sm:p-6 ${t.card}`}>
+        <h3 className={`${t.textMain} ${t.fontHeading} mb-4 sm:mb-6 flex items-center gap-2 text-xs sm:text-sm border-b-2 border-white/10 pb-2`}>
+           <User className="w-4 h-4 sm:w-5 sm:h-5" /> PROFILE COMMAND
         </h3>
-        <div className="flex flex-col items-center gap-4 sm:gap-6 mb-6 sm:mb-8">
-          <div className={`w-24 h-24 sm:w-32 sm:h-32 flex items-center justify-center overflow-hidden relative ${t.cardInner} border-2 ${t.borderAccent}`}>
+        <div className="flex flex-col items-center gap-3 sm:gap-5 mb-5 sm:mb-8">
+          <div className={`w-20 h-20 sm:w-28 sm:h-28 flex items-center justify-center overflow-hidden relative ${t.cardInner} border-2 ${t.borderAccent}`}>
             {profilePic ? (
               <img src={profilePic} alt="Profile" className="w-full h-full object-cover" />
             ) : (
-              <span className="text-4xl sm:text-5xl">🦊</span>
+              <span className="text-3xl sm:text-5xl">🦊</span>
             )}
             <input 
               type="file" 
@@ -1633,26 +1574,25 @@ export default function App() {
               onChange={handleImageUpload} 
             />
           </div>
-          <p className={`text-[9px] sm:text-[10px] ${t.textMuted} ${t.fontHeading}`}>TAP AVATAR TO UPLOAD</p>
+          <p className={`text-[8px] sm:text-[10px] ${t.textMuted} ${t.fontHeading}`}>TAP AVATAR TO UPLOAD</p>
         </div>
         <div>
-          <label className={`text-[9px] sm:text-[10px] mb-2 block ${t.textMuted} ${t.fontHeading}`}>DISPLAY NAME</label>
+          <label className={`text-[8px] sm:text-[10px] mb-1.5 sm:mb-2 block ${t.textMuted} ${t.fontHeading}`}>DISPLAY NAME</label>
           <input 
             type="text" 
             value={userName} 
             onChange={(e) => setUserName(e.target.value)} 
             placeholder="e.g., APEX HUNTER" 
-            className={`w-full px-4 py-3 sm:py-4 text-center focus:outline-none transition-all ${t.input} ${t.fontHeading}`} 
+            className={`w-full px-3 sm:px-4 py-2.5 sm:py-3.5 text-center focus:outline-none transition-all text-xs sm:text-sm ${t.input} ${t.fontHeading}`} 
           />
         </div>
       </div>
 
-      {/* AI Key Section */}
-      <div className={`p-5 sm:p-6 ${t.card}`}>
-        <h3 className={`${t.textAccent} ${t.fontHeading} mb-4 flex items-center gap-2 text-sm sm:text-base border-b-2 border-white/10 pb-2`}>
-           <Lock size={18} /> AI ENGINE CORE
+      <div className={`p-4 sm:p-6 ${t.card}`}>
+        <h3 className={`${t.textAccent} ${t.fontHeading} mb-3 sm:mb-4 flex items-center gap-2 text-xs sm:text-sm border-b-2 border-white/10 pb-2`}>
+           <Lock className="w-4 h-4 sm:w-5 sm:h-5" /> AI ENGINE CORE
         </h3>
-        <p className={`text-[9px] sm:text-[10px] leading-relaxed mb-4 sm:mb-6 ${t.textMuted} ${t.fontHeading}`}>
+        <p className={`text-[8px] sm:text-[10px] leading-relaxed mb-4 sm:mb-5 ${t.textMuted} ${t.fontHeading}`}>
           Paste Groq API Key. Required for Oracle, Sorter, and dynamic Urges. Stored locally.
         </p>
         <input 
@@ -1660,35 +1600,34 @@ export default function App() {
           value={groqKey} 
           onChange={(e) => setGroqKey(e.target.value)} 
           placeholder="GSK_XXXX..." 
-          className={`w-full px-4 py-3 sm:py-4 tracking-widest focus:outline-none transition-all ${t.input} ${t.fontHeading}`} 
+          className={`w-full px-3 sm:px-4 py-2.5 sm:py-3.5 tracking-widest focus:outline-none transition-all text-xs sm:text-sm ${t.input} ${t.fontHeading}`} 
         />
       </div>
     </div>
   );
 
   return (
-    <div className={`min-h-screen pb-28 relative overflow-x-hidden transition-colors duration-500 ${t.appBg}`}>
+    <div className={`min-h-screen pb-24 sm:pb-28 relative overflow-x-hidden transition-colors duration-500 ${t.appBg}`}>
       
-      <div className="max-w-2xl mx-auto p-4 md:p-6 relative z-10 pt-6 sm:pt-8">
+      <div className="max-w-2xl mx-auto p-3 sm:p-6 relative z-10 pt-4 sm:pt-8">
         
-        {/* Header */}
-        <div className={`flex justify-between items-center mb-8 p-4 sm:p-5 relative overflow-hidden transition-colors duration-500 ${t.header}`}>
+        <div className={`flex justify-between items-center mb-6 sm:mb-8 p-3 sm:p-5 relative overflow-hidden transition-colors duration-500 ${t.header}`}>
           <div>
-            <h1 className={`text-xl sm:text-3xl flex items-center gap-2 sm:gap-3 ${t.fontHeading}`}>
-              Apex Mind <span className={`text-[9px] sm:text-[10px] px-2 py-1 align-middle ${t.badge} ${t.fontHeading}`}>V5.0</span>
+            <h1 className={`text-lg sm:text-3xl flex items-center gap-1.5 sm:gap-3 ${t.fontHeading}`}>
+              Apex Mind <span className={`text-[7px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 sm:py-1 align-middle ${t.badge} ${t.fontHeading}`}>V5.0</span>
             </h1>
-            <p className={`text-[9px] sm:text-[10px] mt-1 sm:mt-2 opacity-80 ${t.fontHeading}`}>SECOND BRAIN OS</p>
+            <p className={`text-[8px] sm:text-[10px] mt-1 sm:mt-2 opacity-80 ${t.fontHeading}`}>SECOND BRAIN OS</p>
           </div>
           <div 
-            className="flex items-center gap-3 sm:gap-4 cursor-pointer group" 
+            className="flex items-center gap-2 sm:gap-4 cursor-pointer group" 
             onClick={() => setActiveTab('settings')}
           >
             {userName && (
-              <span className={`text-[10px] sm:text-xs hidden sm:block opacity-90 group-hover:opacity-100 transition-opacity ${t.fontHeading}`}>
+              <span className={`text-[9px] sm:text-xs hidden sm:block opacity-90 group-hover:opacity-100 transition-opacity ${t.fontHeading}`}>
                 {userName}
               </span>
             )}
-            <div className={`w-10 h-10 sm:w-14 sm:h-14 flex items-center justify-center overflow-hidden transition-all ${t.cardInner}`}>
+            <div className={`w-9 h-9 sm:w-14 sm:h-14 flex items-center justify-center overflow-hidden transition-all shrink-0 ${t.cardInner}`}>
               {profilePic ? (
                 <img src={profilePic} alt="DP" className="w-full h-full object-cover" />
               ) : (
@@ -1698,7 +1637,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* Dynamic Content */}
         {activeTab === 'dashboard' && renderDashboard()}
         {activeTab === 'study' && renderStudyEngine()}
         {activeTab === 'history' && renderHistory()}
@@ -1708,30 +1646,29 @@ export default function App() {
         {activeTab === 'settings' && renderSettings()}
       </div>
 
-      {/* Floating Night Shift Widget */}
-      {(isNightTime || forceNightMode) && (
-        <div className="fixed bottom-24 sm:bottom-28 right-4 sm:right-6 z-40 flex flex-col items-end">
+      {isNightTime && (
+        <div className="fixed bottom-20 sm:bottom-28 right-3 sm:right-6 z-40 flex flex-col items-end">
           {!isNightShiftOpen ? (
             <button 
               onClick={() => setIsNightShiftOpen(true)}
-              className={`px-5 sm:px-6 py-3 sm:py-4 flex items-center gap-2 sm:gap-3 hover:-translate-y-1 transition-all ${t.btnPrimary} ${t.fontHeading} text-[10px] sm:text-xs`}
+              className={`px-4 sm:px-6 py-2.5 sm:py-4 flex items-center gap-2 sm:gap-3 hover:-translate-y-1 transition-all ${t.btnPrimary} ${t.fontHeading} text-[9px] sm:text-xs`}
             >
-              <Moon size={18} className={t.iconActive} /> PLAN TOMORROW
+              <Moon className={`w-4 h-4 sm:w-5 sm:h-5 ${t.iconActive}`} /> PLAN TOMORROW
             </button>
           ) : (
-            <div className={`p-5 sm:p-6 w-[280px] sm:w-[320px] transition-all duration-500 ${t.card}`}>
-               <div className="flex justify-between items-center mb-5 sm:mb-6 border-b-2 border-white/10 pb-2 sm:pb-3">
-                 <h3 className={`text-[10px] sm:text-xs flex items-center gap-2 ${t.textAccent} ${t.fontHeading}`}>
-                   <Moon size={16} className={t.iconActive}/> NIGHT SHIFT INBOX
+            <div className={`p-4 sm:p-6 w-[260px] sm:w-[320px] transition-all duration-500 ${t.card}`}>
+               <div className="flex justify-between items-center mb-4 sm:mb-6 border-b-2 border-white/10 pb-2 sm:pb-3">
+                 <h3 className={`text-[9px] sm:text-xs flex items-center gap-2 ${t.textAccent} ${t.fontHeading}`}>
+                   <Moon className={`w-3 h-3 sm:w-4 sm:h-4 ${t.iconActive}`}/> NIGHT SHIFT INBOX
                  </h3>
                  <button onClick={() => setIsNightShiftOpen(false)} className={`${t.textMain} hover:text-red-500 transition-colors`}>
-                   <X size={18} className={t.iconActive}/>
+                   <X className={`w-4 h-4 sm:w-5 sm:h-5 ${t.iconActive}`}/>
                  </button>
                </div>
                
-               <p className={`text-[9px] sm:text-[10px] mb-4 ${t.textMuted} ${t.fontHeading}`}>Add tasks for tomorrow, or pin a queue target.</p>
+               <p className={`text-[8px] sm:text-[10px] mb-3 sm:mb-4 ${t.textMuted} ${t.fontHeading}`}>Add tasks for tomorrow, or pin a queue target.</p>
 
-               <div className="flex gap-2 mb-5 sm:mb-6">
+               <div className="flex gap-2 mb-4 sm:mb-6">
                  <input 
                    type="text"
                    value={newCustomMission}
@@ -1743,7 +1680,7 @@ export default function App() {
                       }
                    }}
                    placeholder="CUSTOM TASK..."
-                   className={`flex-1 px-3 py-2 sm:py-3 text-[10px] sm:text-xs focus:outline-none ${t.input} ${t.fontHeading}`}
+                   className={`flex-1 px-2 sm:px-3 py-1.5 sm:py-2.5 text-[9px] sm:text-xs focus:outline-none ${t.input} ${t.fontHeading}`}
                  />
                  <button 
                    onClick={() => {
@@ -1752,19 +1689,19 @@ export default function App() {
                          setNewCustomMission("");
                       }
                    }}
-                   className={`px-3 sm:px-4 flex items-center justify-center transition-colors active:scale-95 ${t.btnWarning}`}
+                   className={`px-2.5 sm:px-4 flex items-center justify-center transition-colors active:scale-95 ${t.btnWarning}`}
                  >
-                   <Send size={16} className={t.iconActive} />
+                   <Send className={`w-3 h-3 sm:w-4 sm:h-4 ${t.iconActive}`} />
                  </button>
                </div>
 
                {customMissions.filter(m => m.targetDate === addDays(todayStr, 1)).length > 0 && (
-                  <div className="mb-5 sm:mb-6 space-y-2">
+                  <div className="mb-4 sm:mb-6 space-y-1.5 sm:space-y-2">
                     {customMissions.filter(m => m.targetDate === addDays(todayStr, 1)).map(m => (
-                       <div key={m.id} className={`px-3 py-2 flex justify-between items-center ${t.cardInner}`}>
-                         <span className={`text-[9px] sm:text-[10px] truncate pr-2 ${t.textMain} ${t.fontHeading}`}>• {m.text}</span>
+                       <div key={m.id} className={`px-2 sm:px-3 py-1.5 sm:py-2 flex justify-between items-center ${t.cardInner}`}>
+                         <span className={`text-[8px] sm:text-[10px] truncate pr-2 ${t.textMain} ${t.fontHeading}`}>• {m.text}</span>
                          <button onClick={() => setCustomMissions(prev => prev.filter(task => task.id !== m.id))} className={`${t.textMuted} hover:text-red-500 transition-colors shrink-0`}>
-                           <Trash2 size={14} />
+                           <Trash2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                          </button>
                        </div>
                     ))}
@@ -1773,8 +1710,8 @@ export default function App() {
 
                {stagingTopics.length > 0 && (
                  <>
-                   <div className={`text-[9px] sm:text-[10px] mb-2 sm:mb-3 border-t border-white/10 pt-3 sm:pt-4 ${t.textAccent} ${t.fontHeading}`}>PIN SYLLABUS TARGET</div>
-                   <div className="space-y-2 max-h-32 overflow-y-auto hide-scrollbar pr-1">
+                   <div className={`text-[8px] sm:text-[10px] mb-2 sm:mb-3 border-t border-white/10 pt-2 sm:pt-4 ${t.textAccent} ${t.fontHeading}`}>PIN SYLLABUS TARGET</div>
+                   <div className="space-y-1.5 sm:space-y-2 max-h-24 sm:max-h-32 overflow-y-auto hide-scrollbar pr-1">
                      {stagingTopics.slice(0, 3).map((topic, idx) => (
                        <button 
                          key={topic.id}
@@ -1784,10 +1721,10 @@ export default function App() {
                            items.unshift(clickedItem);
                            setStagingTopics(items);
                          }}
-                         className={`w-full text-left p-2.5 sm:p-3 flex items-center justify-between group ${t.cardInner}`}
+                         className={`w-full text-left p-2 sm:p-3 flex items-center justify-between group ${t.cardInner}`}
                        >
-                         <span className={`text-[9px] sm:text-[10px] truncate pr-2 ${t.textMain} ${t.fontHeading}`}>{topic.title}</span>
-                         <span className={`text-[8px] sm:text-[9px] px-2 py-0.5 opacity-0 group-hover:opacity-100 transition-opacity ${t.badge} ${t.textAccent} ${t.fontHeading}`}>PIN</span>
+                         <span className={`text-[8px] sm:text-[10px] truncate pr-2 ${t.textMain} ${t.fontHeading}`}>{topic.title}</span>
+                         <span className={`text-[7px] sm:text-[9px] px-1.5 sm:px-2 py-0.5 opacity-0 group-hover:opacity-100 transition-opacity ${t.badge} ${t.textAccent} ${t.fontHeading}`}>PIN</span>
                        </button>
                      ))}
                    </div>
@@ -1798,9 +1735,8 @@ export default function App() {
         </div>
       )}
 
-      {/* Dynamic Bottom Navigation */}
       <div className={`fixed bottom-0 sm:bottom-4 left-0 w-full sm:left-1/2 sm:-translate-x-1/2 sm:w-[95%] max-w-2xl z-50 overflow-x-auto hide-scrollbar transition-colors duration-500 ${t.navBg}`}>
-        <div className="flex justify-between px-2 py-2 sm:py-3 min-w-[360px]">
+        <div className="flex justify-between px-1 sm:px-2 py-1.5 sm:py-3 min-w-[320px] sm:min-w-[360px]">
           {[
             { id: 'dashboard', icon: Calendar, label: 'MISSION' },
             { id: 'study', icon: Activity, label: 'QUEUE' },
@@ -1813,10 +1749,10 @@ export default function App() {
             <button 
               key={tab.id}
               onClick={() => setActiveTab(tab.id)} 
-              className={`flex-1 flex flex-col items-center justify-center gap-1 sm:gap-1.5 p-2 transition-all duration-300 ${activeTab === tab.id ? t.navItemActive : t.navItemInactive}`}
+              className={`flex-1 flex flex-col items-center justify-center gap-1 sm:gap-1.5 p-1 sm:p-2 transition-all duration-300 ${activeTab === tab.id ? t.navItemActive : t.navItemInactive}`}
             >
-              <tab.icon size={20} className={activeTab === tab.id ? t.iconActive : t.iconBase} />
-              <span className={`text-[8px] sm:text-[9px] ${t.fontHeading}`}>{tab.label}</span>
+              <tab.icon className={`w-5 h-5 sm:w-[22px] sm:h-[22px] ${activeTab === tab.id ? t.iconActive : t.iconBase}`} />
+              <span className={`text-[7px] sm:text-[9px] ${t.fontHeading}`}>{tab.label}</span>
             </button>
           ))}
         </div>
