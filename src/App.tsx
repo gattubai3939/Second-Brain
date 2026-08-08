@@ -182,6 +182,45 @@ const THEMES = {
     btnPrimary: 'bg-[#cc0000] text-[#ffcc00] border border-[#ffcc00] hover:bg-[#ffcc00] hover:text-[#cc0000] shadow-[0_0_15px_rgba(204,0,0,0.4)] rounded-lg font-black uppercase',
     btnWarning: 'bg-[#141414] text-[#00f3ff] border border-[#00f3ff] hover:bg-[#00f3ff] hover:text-black rounded-lg font-black uppercase',
     fontHeading: 'font-mono tracking-widest uppercase', borderAccent: 'border-[#00f3ff]', badge: 'bg-[#00f3ff]/20 text-[#00f3ff] border border-[#00f3ff] rounded font-mono'
+  },
+  mario: {
+    id: 'mario', name: 'Super Plumber',
+    appBg: 'bg-[#5CB946] text-white font-sans selection:bg-[#E52521] selection:text-white',
+    devBar: 'bg-[#E52521] text-white border-b-4 border-black font-black',
+    header: 'bg-[#E52521] text-white border-4 border-black shadow-[6px_6px_0px_#111] rounded-2xl',
+    card: 'bg-[#FBD000] border-4 border-black shadow-[6px_6px_0px_#111] rounded-2xl text-black',
+    cardInner: 'bg-white border-4 border-black hover:border-[#E52521] hover:shadow-[4px_4px_0px_#E52521] transition-all rounded-xl text-black',
+    textMain: 'text-black', textMuted: 'text-zinc-700', textAccent: 'text-[#E52521]', textWarning: 'text-[#5CB946]',
+    input: 'bg-white border-4 border-black text-black placeholder:text-zinc-400 focus:border-[#E52521] rounded-xl px-4 font-black',
+    btnPrimary: 'bg-[#E52521] text-white border-4 border-black hover:bg-[#5CB946] shadow-[4px_4px_0px_black] active:translate-y-1 active:shadow-none rounded-xl font-black uppercase',
+    btnWarning: 'bg-[#FBD000] text-black border-4 border-black hover:bg-white shadow-[4px_4px_0px_black] rounded-xl font-black uppercase active:translate-y-1',
+    fontHeading: 'font-black tracking-wide', borderAccent: 'border-black', badge: 'bg-[#E52521] text-white border-2 border-black font-black rounded-lg'
+  },
+  batman: {
+    id: 'batman', name: 'Dark Knight',
+    appBg: 'bg-[#111] text-white font-sans selection:bg-[#FFEB3B] selection:text-black',
+    devBar: 'bg-[#FFEB3B] text-black border-b-4 border-black font-black',
+    header: 'bg-[#222] text-white border-4 border-black shadow-[6px_6px_0px_#FFEB3B] rounded-none',
+    card: 'bg-[#1a1a1a] border-4 border-[#333] shadow-[6px_6px_0px_black] rounded-none',
+    cardInner: 'bg-[#111] border-2 border-[#555] hover:border-[#FFEB3B] hover:shadow-[4px_4px_0px_#FFEB3B] transition-all rounded-none',
+    textMain: 'text-white', textMuted: 'text-zinc-500', textAccent: 'text-[#FFEB3B]', textWarning: 'text-white',
+    input: 'bg-[#111] border-4 border-[#333] text-white placeholder:text-zinc-600 focus:border-[#FFEB3B] rounded-none px-4',
+    btnPrimary: 'bg-[#FFEB3B] text-black border-4 border-black hover:bg-white shadow-[4px_4px_0px_#333] active:translate-y-1 active:shadow-none rounded-none font-black uppercase tracking-widest',
+    btnWarning: 'bg-[#333] text-[#FFEB3B] border-4 border-black hover:bg-[#555] shadow-[4px_4px_0px_black] rounded-none font-black uppercase active:translate-y-1',
+    fontHeading: 'font-black tracking-wider uppercase', borderAccent: 'border-[#FFEB3B]', badge: 'bg-[#FFEB3B] text-black border-2 border-black font-black rounded-sm'
+  },
+  wolverine: {
+    id: 'wolverine', name: 'Weapon X',
+    appBg: 'bg-[#FFCC00] text-black font-sans selection:bg-[#0033CC] selection:text-white',
+    devBar: 'bg-[#0033CC] text-white border-b-4 border-black font-black',
+    header: 'bg-[#0033CC] text-white border-4 border-black shadow-[8px_8px_0px_black] rounded-2xl',
+    card: 'bg-white border-4 border-black shadow-[8px_8px_0px_black] rounded-2xl',
+    cardInner: 'bg-[#FFF5CC] border-4 border-black hover:border-[#0033CC] hover:bg-[#FFCC00] transition-all rounded-xl',
+    textMain: 'text-black', textMuted: 'text-zinc-700', textAccent: 'text-[#0033CC]', textWarning: 'text-[#FF0000]',
+    input: 'bg-white border-4 border-black text-black placeholder:text-zinc-500 focus:border-[#0033CC] rounded-xl px-4 font-black',
+    btnPrimary: 'bg-[#FFCC00] text-black border-4 border-black hover:bg-[#0033CC] hover:text-white shadow-[6px_6px_0px_black] active:translate-y-1 active:shadow-none rounded-xl font-black uppercase',
+    btnWarning: 'bg-[#0033CC] text-white border-4 border-black hover:bg-black shadow-[6px_6px_0px_black] rounded-xl font-black uppercase active:translate-y-1',
+    fontHeading: 'font-black uppercase', borderAccent: 'border-black', badge: 'bg-black text-[#FFCC00] border-2 border-black font-black rounded-lg'
   }
 };
 
@@ -348,6 +387,26 @@ const LongPressItem = ({ item, onDelete, children, duration = 800, t }) => {
 // MAIN APP COMPONENT
 // ==========================================
 export default function App() {
+  const [bootStep, setBootStep] = useState(0);
+  const [bootText, setBootText] = useState("");
+
+  useEffect(() => {
+    if (bootStep >= 4) return;
+    const sequence = [
+      { t: 100, s: 1, text: "" },
+      { t: 1000, s: 2, text: "CALIBRATING NEURAL LINK..." },
+      { t: 2300, s: 2, text: "PURGING CHEAP DOPAMINE..." },
+      { t: 3600, s: 2, text: "APEX MIND OS ONLINE" },
+      { t: 4900, s: 3, text: "" }, 
+      { t: 5700, s: 4, text: "" }  
+    ];
+    const timers = sequence.map(ev => setTimeout(() => {
+      setBootStep(ev.s);
+      if(ev.text) setBootText(ev.text);
+    }, ev.t));
+    return () => timers.forEach(clearTimeout);
+  }, []);
+
   const [appMode, setAppMode] = useState("habit"); // 'habit' | 'brain'
   const [user, setUser] = useState(null);
   const [todayStr, setTodayStr] = useState(getRealTodayStr()); 
@@ -1486,378 +1545,6 @@ export default function App() {
     </div>
   );
 
-  // ==========================================
-  // BRAIN RENDERERS (STYLED WITH THEMES)
-  // ==========================================
-  const renderBrainDashboard = () => {
-    const remainingChapters = brain.stagingTopics.length;
-    const pace = remainingChapters > 0 ? (brain.globalDeadlineDays / remainingChapters).toFixed(1) : 0;
-    
-    let paceStatus = { text: "ON TRACK", color: t.textMain };
-    if (pace < 1 && remainingChapters > 0) paceStatus = { text: "DANGER", color: "text-red-500" };
-    else if (pace >= 1 && pace <= 1.5) paceStatus = { text: "WARNING", color: "text-yellow-500" };
-    else if (remainingChapters === 0) paceStatus = { text: "STANDBY", color: t.textMuted };
-
-    const todaysRevisions = [];
-    brain.studyTopics.forEach(topic => {
-      topic.schedule.forEach(rev => {
-        if (rev.targetDate <= todayStr && !rev.completed) {
-          todaysRevisions.push({ topicId: topic.id, title: topic.title, category: topic.category, targetDate: rev.targetDate, dayOffset: rev.dayOffset, isOverdue: rev.targetDate < todayStr });
-        }
-      });
-    });
-
-    const todaysCustomMissions = brain.customMissions.filter(m => m.targetDate <= todayStr && !m.completed);
-    const quoteOfTheDay = MORNING_QUOTES[new Date().getDate() % MORNING_QUOTES.length];
-
-    return (
-      <div className="space-y-6 sm:space-y-8 pb-20 animate-in fade-in zoom-in duration-300">
-        
-        <div className={`p-4 sm:p-6 ${t.cardInner} border-l-4 ${t.borderAccent}`}>
-          <h3 className={`text-xs font-black uppercase tracking-[0.2em] mb-3 sm:mb-4 flex items-center gap-2 border-b pb-2 ${t.textAccent} ${t.fontHeading} border-current opacity-80`}><Zap size={16} /> PROTOCOL INITIATED</h3>
-          <p className={`text-xl sm:text-2xl font-black uppercase tracking-tight leading-snug ${t.textMain} ${t.fontHeading}`}>"{quoteOfTheDay}"</p>
-        </div>
-
-        <div className={`p-4 sm:p-6 ${t.card} relative overflow-hidden`}>
-          <h2 className={`text-[10px] font-black uppercase tracking-[0.2em] mb-4 border-b pb-2 ${t.textAccent} border-current opacity-50 ${t.fontHeading}`}>GLOBAL DEADLINE</h2>
-          <div className="flex justify-between items-end">
-            <div className={`flex items-baseline gap-1 sm:gap-2 border-b-2 border-transparent transition-colors focus-within:${t.borderAccent}`}>
-              <input type="number" value={brain.globalDeadlineDays} onChange={(e) => updateBrainFirebase({ globalDeadlineDays: Math.max(1, parseInt(e.target.value) || 1) })} className={`w-16 sm:w-24 bg-transparent text-4xl sm:text-6xl font-black tracking-tighter outline-none p-0 m-0 ${t.textMain} ${t.fontHeading}`} />
-              <span className={`text-lg sm:text-xl font-black ${t.textAccent} ${t.fontHeading}`}>DAYS</span>
-            </div>
-            <div className="text-right">
-              <p className={`text-[9px] sm:text-[10px] tracking-widest font-bold uppercase mb-1 ${t.textMuted} ${t.fontHeading}`}>PACE DETECTOR</p>
-              <p className={`text-xl sm:text-2xl font-black ${paceStatus.color} ${t.fontHeading}`}>{pace} <span className="text-[10px] sm:text-xs">CH/DAY</span></p>
-              <p className={`text-[9px] sm:text-[10px] font-black uppercase tracking-widest mt-1 ${paceStatus.color} ${t.fontHeading}`}>{paceStatus.text}</p>
-            </div>
-          </div>
-          
-          {brain.stagingTopics.length > 0 && (
-            <div className={`mt-6 sm:mt-8 p-3 sm:p-4 border-2 ${t.cardInner} ${t.borderAccent}`}>
-              <h3 className={`text-[10px] font-black uppercase tracking-[0.2em] mb-2 ${t.textAccent} ${t.fontHeading}`}>CURRENT STRIKE TARGET</h3>
-              <h2 className={`text-lg sm:text-xl font-black uppercase tracking-tight truncate ${t.textMain} ${t.fontHeading}`}>{brain.stagingTopics[0].title}</h2>
-              <span className={`text-[9px] sm:text-[10px] font-bold uppercase tracking-wider px-2 py-1 mt-2 inline-block ${t.badge} ${t.fontHeading}`}>{brain.stagingTopics[0].category}</span>
-              <button onClick={() => handleStartRevision(brain.stagingTopics[0].id)} className={`w-full mt-4 py-2.5 sm:py-3 text-sm sm:text-base font-black tracking-widest uppercase active:translate-y-1 transition-all ${t.btnPrimary} ${t.fontHeading}`}>TARGET DESTROYED</button>
-            </div>
-          )}
-        </div>
-
-        {todaysCustomMissions.length > 0 && (
-          <div className="pt-2 sm:pt-4">
-            <h3 className={`text-[10px] font-black uppercase tracking-[0.2em] mb-3 sm:mb-4 ${t.textAccent} ${t.fontHeading}`}>TODAY'S MISSIONS</h3>
-            {todaysCustomMissions.map((mission) => (
-              <div key={mission.id} className={`flex items-center justify-between p-3 sm:p-4 mb-2 sm:mb-3 shadow-md ${t.cardInner}`}>
-                <span className={`font-bold uppercase tracking-wider text-xs sm:text-sm ${t.textMain} ${t.fontHeading}`}>{mission.text}</span>
-                <button onClick={() => {
-                  updateBrainFirebase({ customMissions: brain.customMissions.filter(m => m.id !== mission.id) });
-                  const remaining = todaysCustomMissions.length - 1;
-                  if (remaining === 0) triggerCrossReward(3, "All Daily Missions Cleared!");
-                }} className={`transition-colors ${t.textMuted} hover:${t.textAccent}`}><CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]" /></button>
-              </div>
-            ))}
-          </div>
-        )}
-
-        <div className="pt-2 sm:pt-4">
-          <h3 className={`text-[10px] font-black uppercase tracking-[0.2em] mb-3 sm:mb-4 ${t.textAccent} ${t.fontHeading}`}>MANDATORY REVISIONS</h3>
-          {todaysRevisions.length === 0 ? (
-            <div className={`text-center py-8 sm:py-10 border-2 border-dashed font-black uppercase tracking-widest text-xs sm:text-sm ${t.cardInner} ${t.textMuted} border-current opacity-50`}>SYSTEM CLEAR</div>
-          ) : (
-            <div className="space-y-3 sm:space-y-4">
-              {todaysRevisions.map((rev, idx) => (
-                <div key={idx} className={`p-3 sm:p-4 flex items-center justify-between shadow-md ${t.cardInner} ${rev.isOverdue ? 'border border-red-500' : ''}`}>
-                  <div>
-                    <h4 className={`font-black uppercase text-xs sm:text-sm flex items-center gap-2 ${t.textMain} ${t.fontHeading}`}>{rev.title} {rev.isOverdue && <span className="text-[8px] sm:text-[9px] bg-red-500 text-white px-2 py-0.5 sm:py-1 tracking-widest">OVERDUE</span>}</h4>
-                    <div className="flex gap-2 mt-2">
-                      <span className={`text-[8px] sm:text-[9px] font-black uppercase tracking-widest ${t.textAccent}`}>{rev.category}</span>
-                      <span className={`text-[8px] sm:text-[9px] font-black uppercase tracking-widest ${t.textMuted}`}>DAY {rev.dayOffset}</span>
-                    </div>
-                  </div>
-                  <button onClick={() => markRevisionComplete(rev.topicId, rev.targetDate, rev.dayOffset)} className={`w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center transition-colors active:translate-y-1 shrink-0 ${t.btnPrimary}`}><Check size={20} className="sm:size-6 stroke-[3]" /></button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
-
-  const renderBrainStudy = () => (
-    <div className="space-y-6 sm:space-y-8 pb-20 animate-in slide-in-from-right-4 duration-300">
-      <div className={`p-4 sm:p-5 ${t.card}`}>
-        <div className={`flex justify-between items-center mb-4 sm:mb-6 border-b pb-2 ${t.borderAccent}`}>
-           <h3 className={`font-black uppercase tracking-widest flex items-center gap-2 text-xs sm:text-sm ${t.textAccent} ${t.fontHeading}`}>LIQUID STRIKE QUEUE</h3>
-           <span className={`text-[9px] sm:text-[10px] font-black uppercase tracking-widest ${t.textMuted}`}>Hold to drag</span>
-        </div>
-        
-        <div className="flex gap-2 mb-4 sm:mb-6">
-          <input type="text" value={newSyllabusCat} onChange={(e) => setNewSyllabusCat(e.target.value)} placeholder="NEW TAG..." className={`flex-1 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-black uppercase outline-none ${t.input} ${t.fontHeading}`} />
-          <button onClick={handleAddSyllabusCategory} className={`px-3 sm:px-4 font-black uppercase active:translate-y-1 transition-all ${t.btnPrimary}`}><Plus size={18} className="sm:size-5 stroke-[3]" /></button>
-        </div>
-
-        {brain.syllabusCategories.length > 1 && (
-           <div className="flex flex-wrap gap-2 mb-4 sm:mb-6">
-             {brain.syllabusCategories.map(cat => (
-               <div key={cat} className={`group flex items-center gap-2 px-2 sm:px-3 py-1 sm:py-2 text-[10px] sm:text-xs font-black uppercase tracking-widest transition-colors cursor-pointer border ${t.cardInner} hover:${t.borderAccent} ${t.textMain}`}>
-                 {cat}
-                 {cat !== "Raw Backlog" && <button onClick={() => handleDeleteSyllabusCategory(cat)} className={`transition-colors ${t.textMuted} hover:text-red-500`}><Trash2 size={12} className="sm:size-4" /></button>}
-               </div>
-             ))}
-           </div>
-        )}
-
-        <div className="flex gap-2">
-          <select value={selectedSyllabusCat} onChange={(e) => setSelectedSyllabusCat(e.target.value)} className={`w-1/3 px-1 sm:px-2 py-2 sm:py-3 text-[9px] sm:text-xs font-black uppercase tracking-widest outline-none cursor-pointer ${t.input} ${t.textAccent} ${t.fontHeading}`}>
-            {brain.syllabusCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-          </select>
-          <input type="text" value={newTopic} onChange={(e) => setNewTopic(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleAddStagingTopic()} placeholder="CHAPTER NAME..." className={`flex-1 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-black uppercase outline-none ${t.input} ${t.fontHeading}`} />
-          <button onClick={handleAddStagingTopic} className={`px-4 sm:px-5 font-black active:translate-y-1 transition-all ${t.btnPrimary}`}><Plus size={18} className="sm:size-5 stroke-[3]" /></button>
-        </div>
-
-        <div className="mt-6 sm:mt-8 space-y-2 sm:space-y-3">
-          {brain.stagingTopics.length === 0 && <div className={`text-center py-8 sm:py-10 border-2 border-dashed font-black uppercase tracking-widest text-xs sm:text-sm ${t.cardInner} ${t.textMuted} border-current opacity-50`}>QUEUE EMPTY</div>}
-          {brain.stagingTopics.map((topic, index) => (
-            <LongPressItem key={topic.id} item={topic} onDelete={(id) => updateBrainFirebase({ stagingTopics: brain.stagingTopics.filter(t => t.id !== id) })} t={t}>
-              <div draggable onDragStart={() => setDraggedItemIndex(index)} onDragOver={(e) => e.preventDefault()} onDrop={() => {
-                if (draggedItemIndex === null) return;
-                const items = [...brain.stagingTopics]; const draggedItem = items[draggedItemIndex];
-                items.splice(draggedItemIndex, 1); items.splice(index, 0, draggedItem);
-                updateBrainFirebase({ stagingTopics: items }); setDraggedItemIndex(null);
-              }} className={`p-3 sm:p-4 border flex items-center justify-between cursor-move transition-all select-none ${index === 0 ? t.borderAccent + " " + t.cardInner : t.cardInner} ${draggedItemIndex === index ? 'opacity-50' : 'opacity-100'}`}>
-                <div className="flex items-center gap-3 sm:gap-4">
-                  <GripVertical size={18} className={`sm:size-5 ${index === 0 ? t.textAccent : t.textMuted}`} />
-                  <div>
-                    <h4 className={`font-black text-xs sm:text-sm uppercase flex items-center gap-2 ${t.textMain} ${t.fontHeading}`}>{topic.title} {index === 0 && <span className={`text-[8px] sm:text-[9px] px-1.5 sm:px-2 py-0.5 tracking-widest font-black ${t.badge} ${t.textAccent}`}>NEXT</span>}</h4>
-                    <span className={`text-[9px] sm:text-[10px] font-black uppercase tracking-widest mt-1 block ${t.textMuted} ${t.fontHeading}`}>{topic.category}</span>
-                  </div>
-                </div>
-              </div>
-            </LongPressItem>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderBrainHistory = () => (
-    <div className="space-y-6 sm:space-y-8 pb-20 animate-in slide-in-from-right-4 duration-300">
-      <div className={`p-4 sm:p-5 ${t.card}`}>
-        <h3 className={`font-black uppercase tracking-widest mb-4 sm:mb-6 flex items-center gap-2 text-xs sm:text-sm border-b pb-2 ${t.textAccent} ${t.fontHeading} ${t.borderAccent}`}>ONGOING CYCLES</h3>
-        {brain.studyTopics.length === 0 ? (
-          <div className={`text-center py-8 sm:py-10 border-2 border-dashed font-black uppercase tracking-widest text-xs sm:text-sm ${t.cardInner} ${t.textMuted} border-current opacity-50`}>NO ACTIVE CYCLES</div>
-        ) : (
-          <div className="space-y-4 sm:space-y-6">
-            {brain.studyTopics.map(topic => (
-              <LongPressItem key={topic.id} item={topic} onDelete={(id) => updateBrainFirebase({ studyTopics: brain.studyTopics.filter(t => t.id !== id) })} duration={5000} t={t}>
-                <div className={`p-4 sm:p-5 shadow-md ${t.cardInner}`}>
-                  <div className="flex justify-between items-start mb-4 sm:mb-6">
-                    <div>
-                      <h4 className={`font-black text-base sm:text-lg uppercase ${t.textMain} ${t.fontHeading}`}>{topic.title}</h4>
-                      <span className={`text-[9px] sm:text-[10px] font-black uppercase tracking-widest px-2 py-1 mt-2 inline-block ${t.badge}`}>{topic.category}</span>
-                    </div>
-                    <span className={`text-[9px] sm:text-[10px] font-black tracking-widest border px-1 sm:px-2 py-1 ${t.textAccent} border-current opacity-80`}>INIT: {topic.startDate}</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2 sm:gap-3">
-                    {topic.schedule.map((rev, i) => {
-                      const isPending = !rev.completed && rev.targetDate <= todayStr;
-                      return (
-                        <div key={i} className={`flex flex-col items-center justify-center py-1.5 sm:py-2 px-2 sm:px-3 border transition-all ${rev.completed ? t.btnPrimary : isPending ? 'border-red-500 text-red-500 shadow-md' : t.card + ' ' + t.textMuted}`}>
-                          <span className={`text-[9px] sm:text-[10px] font-black uppercase tracking-widest ${t.fontHeading}`}>D{rev.dayOffset}</span>
-                          {rev.completed ? <Check size={14} className="sm:size-4 mt-1 stroke-[4]" /> : <Circle size={14} className={`sm:size-4 mt-1 stroke-[3] ${isPending ? 'animate-pulse' : ''}`} />}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </LongPressItem>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <div className={`p-4 sm:p-6 ${t.card}`}>
-        <h3 className={`font-black uppercase tracking-widest mb-4 sm:mb-6 flex items-center gap-2 text-xs sm:text-sm border-b pb-2 ${t.textMain} ${t.fontHeading} ${t.borderAccent} opacity-80`}>HALL OF FAME (MASTERED)</h3>
-        {brain.masteredTopics.length === 0 ? (
-          <div className={`text-center py-8 sm:py-10 border-2 border-dashed font-black uppercase tracking-widest text-xs sm:text-sm ${t.cardInner} ${t.textMuted} border-current opacity-50`}>EMPTY VAULT</div>
-        ) : (
-          <div className="grid grid-cols-1 gap-3 sm:gap-4">
-            {brain.masteredTopics.map(topic => (
-              <div key={topic.id} className={`p-3 sm:p-4 border flex items-center gap-3 sm:gap-4 transition-colors ${t.cardInner} hover:${t.borderAccent}`}>
-                <div className={`w-10 h-10 sm:w-12 sm:h-12 border flex items-center justify-center shrink-0 ${t.card} ${t.borderAccent}`}>
-                   <Trophy size={18} className={`sm:size-5 ${t.textAccent}`} />
-                </div>
-                <div>
-                  <h4 className={`font-black text-xs sm:text-sm uppercase ${t.textMain} ${t.fontHeading}`}>{topic.title}</h4>
-                  <p className={`text-[9px] sm:text-[10px] font-black uppercase tracking-widest mt-1 ${t.textMuted} ${t.fontHeading}`}>{topic.category} • {topic.masteredDate}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-
-  const renderBrainWisdom = () => {
-    if (expandedWisdomCategory) {
-      const filteredNotes = brain.wisdomNotes.filter(n => n.category === expandedWisdomCategory);
-      return (
-        <div className="space-y-4 sm:space-y-6 pb-20 animate-in fade-in zoom-in duration-300">
-          <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
-            <button onClick={() => setExpandedWisdomCategory(null)} className={`p-2 sm:p-3 active:translate-y-1 ${t.btnPrimary}`}><ChevronLeft size={20} className="sm:size-6 stroke-[3]"/></button>
-            <h2 className={`text-lg sm:text-xl font-black uppercase tracking-widest flex items-center gap-2 ${t.textMain} ${t.fontHeading}`}><FolderOpen size={20} className={`sm:size-6 ${t.textMuted}`} /> {expandedWisdomCategory}</h2>
-          </div>
-          <div className="flex gap-2 mb-6 sm:mb-8">
-            <input type="text" value={newWisdom} onChange={(e) => setNewWisdom(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleAddWisdom()} placeholder="DUMP KNOWLEDGE..." className={`flex-1 px-3 sm:px-4 py-3 sm:py-4 text-xs sm:text-sm font-black uppercase outline-none ${t.input} ${t.fontHeading}`} />
-            <button onClick={handleAddWisdom} className={`px-4 sm:px-6 font-black transition-all active:scale-95 ${t.btnPrimary}`}><Plus size={20} className="sm:size-6 stroke-[4]" /></button>
-          </div>
-          <div className="grid gap-3 sm:gap-4">
-            {filteredNotes.length === 0 && <div className={`text-center py-8 sm:py-10 border-2 border-dashed font-black uppercase tracking-widest text-xs sm:text-sm ${t.cardInner} ${t.textMuted} border-current opacity-50`}>EMPTY FOLDER</div>}
-            {filteredNotes.map(note => (
-              <LongPressItem key={note.id} item={note} onDelete={(id) => updateBrainFirebase({ wisdomNotes: brain.wisdomNotes.filter(n => n.id !== id) })} t={t}>
-                <div className={`p-4 sm:p-5 flex flex-col gap-3 sm:gap-4 group transition-colors cursor-pointer border ${t.cardInner} hover:${t.borderAccent}`}>
-                  <div className="flex items-start gap-2 sm:gap-3">
-                     <Mic size={16} className={`sm:size-4 mt-1 flex-shrink-0 ${t.textMuted}`} />
-                     <p className={`text-xs sm:text-sm font-bold leading-relaxed ${t.textMain}`}>{note.text}</p>
-                  </div>
-                  <div className={`flex justify-between items-center pt-3 sm:pt-4 border-t ${t.borderAccent}`}>
-                    <span className={`text-[9px] sm:text-[10px] font-black uppercase tracking-widest ${t.textMuted}`}>{note.date}</span>
-                    <div className="flex items-center gap-2">
-                       <MoveRight size={12} className={`sm:size-3 opacity-0 group-hover:opacity-100 transition-opacity ${t.textMuted}`} />
-                       <select onChange={(e) => updateBrainFirebase({ wisdomNotes: brain.wisdomNotes.map(n => n.id === note.id ? { ...n, category: e.target.value } : n) })} value={note.category} className={`text-[9px] sm:text-[10px] font-black uppercase px-1 sm:px-2 py-1 outline-none cursor-pointer ${t.badge} ${t.fontHeading}`}>
-                         {brain.wisdomCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                       </select>
-                    </div>
-                  </div>
-                </div>
-              </LongPressItem>
-            ))}
-          </div>
-        </div>
-      );
-    }
-    return (
-      <div className="space-y-6 sm:space-y-8 pb-20 animate-in slide-in-from-right-4 duration-300">
-        <div className={`p-4 sm:p-6 ${t.card}`}>
-          <h3 className={`font-black uppercase tracking-widest mb-3 sm:mb-4 flex items-center gap-2 text-xs sm:text-sm border-b pb-2 ${t.textAccent} ${t.fontHeading} ${t.borderAccent}`}><Sparkles size={16} className="sm:size-5" /> ASK THE ORACLE</h3>
-          <p className={`text-[9px] sm:text-[10px] font-bold tracking-widest uppercase mb-3 sm:mb-4 ${t.textMuted}`}>Chat with your Second Brain. Uses your saved Wisdom.</p>
-          <div className="flex gap-2">
-            <input type="text" value={oracleQuery} onChange={(e) => setOracleQuery(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleAskOracle('wisdom')} placeholder="QUERY..." className={`flex-1 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-black uppercase outline-none ${t.input} ${t.fontHeading}`} />
-            <button onClick={() => handleAskOracle('wisdom')} disabled={isOracleThinking} className={`px-4 sm:px-6 font-black uppercase active:translate-y-1 transition-all disabled:opacity-50 ${t.btnPrimary}`}>{isOracleThinking ? <Circle size={18} className="sm:size-5 animate-pulse stroke-[4]" /> : <Send size={18} className="sm:size-5 stroke-[3]" />}</button>
-          </div>
-          {oracleResponse && <div className={`mt-4 sm:mt-6 p-4 sm:p-5 border-l-4 ${t.cardInner} ${t.borderAccent}`}><p className={`text-xs sm:text-sm font-bold leading-relaxed ${t.textMain}`}>{oracleResponse}</p></div>}
-        </div>
-
-        <div className={`p-4 sm:p-6 ${t.card}`}>
-          <h3 className={`font-black uppercase tracking-widest mb-4 sm:mb-6 flex items-center gap-2 text-xs sm:text-sm border-b pb-2 ${t.textMain} ${t.fontHeading} ${t.borderAccent} opacity-80`}><Folder size={16} className="sm:size-5" /> WISDOM FOLDERS</h3>
-          <div className="flex gap-2 mb-6 sm:mb-8">
-            <input type="text" value={newWisdomCat} onChange={(e) => setNewWisdomCat(e.target.value)} placeholder="NEW FOLDER..." className={`flex-1 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-black uppercase outline-none ${t.input} ${t.fontHeading}`} />
-            <button onClick={() => { if (newWisdomCat.trim() && !brain.wisdomCategories.includes(newWisdomCat.trim())) { updateBrainFirebase({ wisdomCategories: [...brain.wisdomCategories, newWisdomCat.trim()] }); setNewWisdomCat(""); } }} className={`px-4 sm:px-5 font-black transition-colors ${t.btnPrimary}`}><Plus size={18} className="sm:size-5 stroke-[3]" /></button>
-          </div>
-          <div className="grid grid-cols-2 gap-3 sm:gap-4">
-            {brain.wisdomCategories.map(cat => {
-              const count = brain.wisdomNotes.filter(n => n.category === cat).length;
-              return (
-                <div key={cat} className="group relative">
-                  <button onClick={() => setExpandedWisdomCategory(cat)} className={`w-full p-4 sm:p-5 flex flex-col items-start gap-3 sm:gap-4 transition-all text-left active:translate-y-1 h-full border ${t.cardInner} hover:${t.borderAccent}`}>
-                    <FolderOpen size={24} className={`sm:size-8 transition-colors ${t.textMuted} group-hover:${t.textAccent}`} />
-                    <div>
-                      <h4 className={`font-black text-xs sm:text-sm uppercase truncate w-full ${t.textMain} ${t.fontHeading}`}>{cat}</h4>
-                      <span className={`text-[9px] sm:text-[10px] font-black uppercase tracking-widest mt-1 block ${t.textMuted} ${t.fontHeading}`}>{count} NOTES</span>
-                    </div>
-                  </button>
-                  {cat !== "Quick Thoughts" && <button onClick={(e) => { e.stopPropagation(); updateBrainFirebase({ wisdomCategories: brain.wisdomCategories.filter(c => c !== cat), wisdomNotes: brain.wisdomNotes.map(n => n.category === cat ? { ...n, category: "Quick Thoughts" } : n) }); }} className={`absolute top-2 right-2 sm:top-3 sm:right-3 p-1.5 sm:p-2 transition-colors ${t.textMuted} hover:text-red-500`}><Trash2 size={14} className="sm:size-4" /></button>}
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderBrainVault = () => {
-    if (expandedVaultCategory) {
-      const notesInCat = brain.vaultNotes.filter(n => n.category === expandedVaultCategory);
-      return (
-        <div className="space-y-4 sm:space-y-6 pb-20 animate-in fade-in zoom-in duration-300">
-          <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
-            <button onClick={() => setExpandedVaultCategory(null)} className={`p-2 sm:p-3 active:translate-y-1 ${t.btnPrimary}`}><ChevronLeft size={20} className="sm:size-6 stroke-[3]"/></button>
-            <h2 className={`text-lg sm:text-xl font-black uppercase tracking-widest flex items-center gap-2 ${t.textMain} ${t.fontHeading}`}><FolderOpen size={20} className={`sm:size-6 ${t.textMuted}`} /> {expandedVaultCategory}</h2>
-          </div>
-          <div className="grid gap-3 sm:gap-4">
-            {notesInCat.length === 0 && <div className={`text-center py-8 sm:py-10 border-2 border-dashed font-black uppercase tracking-widest text-xs sm:text-sm ${t.cardInner} ${t.textMuted} border-current opacity-50`}>EMPTY FOLDER</div>}
-            {notesInCat.map(note => (
-              <LongPressItem key={note.id} item={note} onDelete={(id) => updateBrainFirebase({ vaultNotes: brain.vaultNotes.filter(n => n.id !== id) })} t={t}>
-                <div className={`p-4 sm:p-5 flex items-start gap-3 sm:gap-4 transition-colors group cursor-pointer border ${t.cardInner} hover:${t.borderAccent}`}>
-                  <BrainCircuit size={18} className={`sm:size-5 mt-1 shrink-0 transition-colors ${t.textMuted} group-hover:${t.textAccent}`} />
-                  <div>
-                    <p className={`text-xs sm:text-sm font-bold leading-relaxed ${t.textMain}`}>{note.text}</p>
-                    <span className={`text-[9px] sm:text-[10px] font-black uppercase tracking-widest mt-2 sm:mt-3 block ${t.textMuted} ${t.fontHeading}`}>{note.date}</span>
-                  </div>
-                </div>
-              </LongPressItem>
-            ))}
-          </div>
-        </div>
-      );
-    }
-    return (
-      <div className="space-y-6 sm:space-y-8 pb-20 animate-in slide-in-from-right-4 duration-300">
-        <div className={`p-4 sm:p-6 ${t.card}`}>
-          <h3 className={`font-black uppercase tracking-widest mb-3 sm:mb-4 flex items-center gap-2 text-xs sm:text-sm border-b pb-2 ${t.textAccent} ${t.fontHeading} ${t.borderAccent}`}><Sparkles size={16} className="sm:size-5" /> ASK THE ORACLE</h3>
-          <p className={`text-[9px] sm:text-[10px] font-bold tracking-widest uppercase mb-3 sm:mb-4 ${t.textMuted}`}>Chat with your Second Brain. Uses your saved Dump notes.</p>
-          <div className="flex gap-2">
-            <input type="text" value={oracleQuery} onChange={(e) => setOracleQuery(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleAskOracle('vault')} placeholder="QUERY..." className={`flex-1 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-black uppercase outline-none ${t.input} ${t.fontHeading}`} />
-            <button onClick={() => handleAskOracle('vault')} disabled={isOracleThinking} className={`px-4 sm:px-6 font-black uppercase active:translate-y-1 transition-all disabled:opacity-50 ${t.btnPrimary}`}>{isOracleThinking ? <Circle size={18} className="sm:size-5 animate-pulse stroke-[4]" /> : <Send size={18} className="sm:size-5 stroke-[3]" />}</button>
-          </div>
-          {oracleResponse && <div className={`mt-4 sm:mt-6 p-4 sm:p-5 border-l-4 ${t.cardInner} ${t.borderAccent}`}><p className={`text-xs sm:text-sm font-bold leading-relaxed ${t.textMain}`}>{oracleResponse}</p></div>}
-        </div>
-
-        <div className={`p-4 sm:p-6 ${t.card}`}>
-          <div className={`flex justify-between items-center mb-3 sm:mb-4 border-b pb-2 ${t.borderAccent} opacity-80`}>
-            <h3 className={`font-black uppercase tracking-widest text-xs sm:text-sm flex items-center gap-2 ${t.textMain} ${t.fontHeading}`}><BrainCircuit size={16} className="sm:size-5" /> BRAIN DUMP (INBOX)</h3>
-            {isVaultSorting && <span className={`text-[8px] sm:text-[9px] px-1.5 sm:px-2 py-1 font-black uppercase tracking-widest animate-pulse flex items-center ${t.badge} ${t.textAccent}`}><Sparkles size={10} className="inline mr-1" /> AI SORTING</span>}
-          </div>
-          <p className={`text-[9px] sm:text-[10px] font-bold uppercase tracking-widest mb-4 sm:mb-5 leading-relaxed ${t.textMuted}`}>Fast-capture raw ideas. Add 3 similar thoughts, and AI builds a new folder.</p>
-          <div className="flex gap-2 relative">
-            <button onClick={() => {
-                const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-                if (!SR) { alert("Voice typing not supported."); return; }
-                const rec = new SR(); rec.onstart = () => setIsListening(true);
-                rec.onresult = (e) => setNewNote(p => p + (p ? " " : "") + e.results[e.resultIndex][0].transcript);
-                rec.onerror = () => setIsListening(false); rec.onend = () => setIsListening(false); rec.start();
-              }} className={`p-2 sm:p-3 transition-all ${isListening ? 'bg-red-500 text-white animate-pulse' : t.cardInner + ' ' + t.textMuted}`}><Mic size={20} className="sm:size-6" /></button>
-            <input type="text" value={newNote} onChange={(e) => setNewNote(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleAddNote()} placeholder={isListening ? "SPEAKING..." : "RAW THOUGHT..."} className={`flex-1 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-black uppercase outline-none ${t.input} ${t.fontHeading}`} />
-            <button onClick={handleAddNote} disabled={isVaultSorting} className={`px-4 sm:px-5 font-black uppercase active:translate-y-1 transition-all disabled:opacity-50 ${t.btnPrimary}`}><Send size={18} className="sm:size-5 stroke-[3]" /></button>
-          </div>
-        </div>
-
-        <div className="space-y-4 sm:space-y-6">
-          <h3 className={`font-black uppercase tracking-widest text-xs sm:text-sm flex items-center gap-2 px-1 ${t.textMain} ${t.fontHeading}`}><Folder size={16} className="sm:size-5" /> VAULT FOLDERS</h3>
-          <div className="grid grid-cols-2 gap-3 sm:gap-4">
-            {brain.vaultCategories.map(cat => {
-              const count = brain.vaultNotes.filter(n => n.category === cat).length;
-              return (
-                <div key={cat} className="group relative">
-                  <button onClick={() => setExpandedVaultCategory(cat)} className={`w-full p-4 sm:p-5 flex flex-col items-start gap-3 sm:gap-4 transition-all text-left active:translate-y-1 h-full border ${t.cardInner} hover:${t.borderAccent}`}>
-                    <FolderOpen size={24} className={`sm:size-8 transition-colors ${t.textMuted} group-hover:${t.textAccent}`} />
-                    <div>
-                      <h4 className={`font-black text-xs sm:text-sm uppercase truncate w-full ${t.textMain} ${t.fontHeading}`}>{cat}</h4>
-                      <span className={`text-[9px] sm:text-[10px] font-black uppercase tracking-widest mt-1 block ${t.textMuted} ${t.fontHeading}`}>{count} NOTES</span>
-                    </div>
-                  </button>
-                  {cat !== "Others" && <button onClick={(e) => { e.stopPropagation(); updateBrainFirebase({ vaultCategories: brain.vaultCategories.filter(c => c !== cat), vaultNotes: brain.vaultNotes.map(n => n.category === cat ? { ...n, category: "Others" } : n) }); }} className={`absolute top-2 right-2 sm:top-3 sm:right-3 p-1.5 sm:p-2 transition-colors ${t.textMuted} hover:text-red-500`}><Trash2 size={14} className="sm:size-4" /></button>}
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   const renderHabitSettings = () => {
     if (settingsRoute === "menu") {
       return (
@@ -2016,133 +1703,277 @@ export default function App() {
   // ==========================================
   // TOP BAR & APP WRAPPER
   // ==========================================
-  return (
-    <div className={`min-h-screen ${t.appBg} ${t.fontHeading} transition-colors duration-500 relative`}>
-      {testMode && (
-        <div className={`fixed top-0 left-0 w-full z-50 p-2 flex flex-wrap justify-center items-center gap-2 sm:gap-4 shadow-lg ${t.devBar} ${t.fontHeading} text-[9px] sm:text-xs`}>
-          <span className="font-black tracking-widest hidden sm:inline">DEV Mode:</span>
-          <button onClick={() => { const d = new Date(todayStr); d.setDate(d.getDate() - 1); setTodayStr(formatDate(d)); }} className="px-2 sm:px-3 py-1 sm:py-1.5 bg-black/20 hover:bg-black/40 border border-current active:scale-95 transition-all rounded">- DAY</button>
-          
-          {/* Custom Date Picker for Devs */}
-          <input 
-            type="date" 
-            value={todayStr} 
-            onChange={(e) => { if(e.target.value) setTodayStr(e.target.value); }} 
-            className="px-1 sm:px-2 py-1 sm:py-1.5 bg-black/30 border border-current rounded text-inherit outline-none"
-          />
+  const activeThemeId = profile.activeTheme || 'brutalist';
+  
+  const getSplashBg = (id) => {
+    if(id === 'squid') return 'bg-[#111]';
+    if(id === 'shinchan') return 'bg-[#ffeb3b]';
+    if(id === 'spider') return 'bg-[#0a0a0a]';
+    if(id === 'mario') return 'bg-[#5CB946]';
+    if(id === 'batman') return 'bg-[#111]';
+    if(id === 'wolverine') return 'bg-[#FFCC00]';
+    if(id === 'goku') return 'bg-[#FF5E00]';
+    if(id === 'doraemonDark' || id === 'doraemonLight') return 'bg-[#09111e]';
+    if(id === 'naruto') return 'bg-[#1c1c1c]';
+    return 'bg-[#030014]';
+  };
 
-          <button onClick={() => { const d = new Date(todayStr); d.setDate(d.getDate() + 1); setTodayStr(formatDate(d)); }} className="px-2 sm:px-3 py-1 sm:py-1.5 bg-black/20 hover:bg-black/40 border border-current active:scale-95 transition-all rounded">+ DAY</button>
-          <button onClick={() => setTodayStr(getRealTodayStr())} className="px-2 sm:px-3 py-1 sm:py-1.5 bg-black/20 hover:bg-black/40 border border-current active:scale-95 transition-all rounded">TODAY</button>
-          
-          {/* Star Boost for testing shop */}
-          <button onClick={() => updateProfileFirebase({ stars: profile.stars + 50 })} className="px-2 py-1 bg-yellow-500 text-black hover:bg-yellow-400 border border-black active:scale-95 transition-all rounded font-bold">+50 ⭐</button>
+  const renderThemeSplash = (themeId) => {
+    if (themeId === 'squid') {
+      return (
+        <div className="flex flex-col items-center justify-center gap-8">
+          <div className="flex gap-6 items-center">
+            <Circle size={80} className="text-[#ff0055] stroke-[4] animate-[bounce_1s_infinite] shadow-[0_0_20px_#ff0055] rounded-full" />
+            <div className="w-0 h-0 border-l-[40px] border-r-[40px] border-b-[75px] border-l-transparent border-r-transparent border-b-[#ff0055] animate-[bounce_1s_infinite_100ms] drop-shadow-[0_0_20px_#ff0055]"></div>
+            <div className="w-20 h-20 border-[8px] border-[#ff0055] animate-[bounce_1s_infinite_200ms] shadow-[0_0_20px_#ff0055,inset_0_0_20px_#ff0055]"></div>
+          </div>
+          {bootStep >= 2 && <h1 className="text-[#ff0055] font-black tracking-[0.5em] text-xl sm:text-3xl uppercase animate-pulse drop-shadow-[0_0_15px_#ff0055]">INITIATING GAME...</h1>}
+        </div>
+      );
+    }
+    if (themeId === 'doraemonDark' || themeId === 'doraemonLight') {
+       return (
+         <div className="flex flex-col items-center gap-8">
+            <div className="w-32 h-32 bg-white rounded-full border-4 border-[#1E3A5F] flex flex-col items-center overflow-hidden relative shadow-[0_0_40px_#0096FE]">
+               <div className="w-full h-1/2 bg-[#0096FE]"></div>
+               <div className="w-full h-1/2 bg-white"></div>
+               <div className="absolute w-24 h-24 bg-white rounded-full border-4 border-[#1E3A5F] -bottom-4"></div>
+               <div className="absolute w-12 h-4 bg-[#E50020] rounded-full border-2 border-[#1E3A5F] top-[40%]"></div>
+               <div className="absolute w-8 h-8 bg-[#FFD900] rounded-full border-2 border-[#1E3A5F] top-[50%] animate-[spin_2s_infinite]"></div>
+            </div>
+            {bootStep >= 2 && <h1 className="text-white font-black text-2xl sm:text-3xl tracking-widest animate-bounce drop-shadow-[0_4px_4px_rgba(0,150,254,0.8)]">GADGET ACTIVATED</h1>}
+         </div>
+       );
+    }
+    if (themeId === 'spider') {
+       return (
+         <div className="flex flex-col items-center gap-6 relative">
+            <div className="absolute inset-0 bg-[#e23636] mix-blend-overlay animate-[ping_0.5s_infinite]"></div>
+            <div className="text-[#e23636] font-black text-5xl sm:text-7xl tracking-tighter drop-shadow-[6px_6px_0px_#0033cc] animate-[bounce_0.2s_infinite]">SPIDER-OS</div>
+            {bootStep >= 2 && <p className="text-white font-black tracking-[0.3em] sm:tracking-[0.5em] text-sm sm:text-xl bg-black px-4 py-2 border-4 border-[#e23636]">DIMENSION LINKING...</p>}
+         </div>
+       );
+    }
+    if (themeId === 'shinchan') {
+       return (
+         <div className="flex flex-col items-center gap-6">
+            <div className="text-6xl sm:text-8xl font-black text-[#ff0000] drop-shadow-[8px_8px_0px_black] animate-[ping_1s_infinite]">WAHAHA!</div>
+            {bootStep >= 2 && <div className="text-3xl sm:text-5xl font-black text-[#ffeb3b] drop-shadow-[6px_6px_0px_black] bg-[#00a8ff] px-6 py-2 border-8 border-black transform -rotate-3 animate-[pulse_0.5s_infinite]">ACTION BEAM!</div>}
+         </div>
+       );
+    }
+    if (themeId === 'goku') {
+       return (
+         <div className="flex flex-col items-center gap-10">
+            <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-8 border-[#FF5E00] shadow-[0_0_100px_#FFD700,inset_0_0_100px_#FFD700] animate-[ping_1s_infinite]"></div>
+            {bootStep >= 2 && <h1 className="text-[#FFD700] font-black text-3xl sm:text-5xl tracking-widest drop-shadow-[0_0_10px_#FF5E00] animate-[pulse_0.2s_infinite]">POWERING UP...</h1>}
+         </div>
+       );
+    }
+    if (themeId === 'naruto') {
+       return (
+         <div className="flex flex-col items-center gap-10">
+            <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-red-600 border-8 border-black flex items-center justify-center relative animate-[spin_0.5s_linear_infinite] shadow-[0_0_50px_red]">
+               <div className="w-6 h-6 sm:w-8 sm:h-8 bg-black rounded-full absolute"></div>
+               <div className="w-3 h-3 sm:w-4 sm:h-4 bg-black rounded-full absolute top-2 right-4 sm:right-6"></div>
+               <div className="w-3 h-3 sm:w-4 sm:h-4 bg-black rounded-full absolute bottom-4 left-3 sm:left-4"></div>
+               <div className="w-3 h-3 sm:w-4 sm:h-4 bg-black rounded-full absolute top-6 left-2"></div>
+            </div>
+            {bootStep >= 2 && <h1 className="text-red-500 font-black text-xl sm:text-3xl tracking-[0.5em] animate-pulse">SHARINGAN ACTIVE</h1>}
+         </div>
+       );
+    }
+    if (themeId === 'mario') {
+       return (
+         <div className="flex flex-col items-center gap-8">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-[#FBD000] border-8 border-black flex items-center justify-center shadow-[8px_8px_0px_black] animate-[bounce_0.5s_infinite]">
+               <span className="text-4xl sm:text-5xl font-black text-black">?</span>
+            </div>
+            {bootStep >= 2 && <h1 className="text-[#E52521] font-black text-3xl sm:text-4xl drop-shadow-[4px_4px_0px_black] bg-white px-4 py-2 border-4 border-black">LEVEL UP!</h1>}
+         </div>
+       );
+    }
+    if (themeId === 'batman') {
+       return (
+         <div className="flex flex-col items-center gap-10">
+            <div className="w-32 h-16 sm:w-40 sm:h-20 bg-[#FFEB3B] rounded-[100px] border-8 border-black flex items-center justify-center shadow-[0_0_80px_#FFEB3B] animate-[pulse_2s_infinite]">
+               <div className="w-20 h-8 sm:w-24 sm:h-10 bg-black" style={{ clipPath: "polygon(0 40%, 30% 0, 40% 40%, 50% 10%, 60% 40%, 70% 0, 100% 40%, 80% 100%, 50% 80%, 20% 100%)" }}></div>
+            </div>
+            {bootStep >= 2 && <h1 className="text-white font-black text-2xl sm:text-3xl tracking-[0.5em] uppercase drop-shadow-[0_0_10px_white]">SYSTEM SECURED</h1>}
+         </div>
+       );
+    }
+    if (themeId === 'wolverine') {
+       return (
+         <div className="flex flex-col items-center gap-10">
+            <div className="flex gap-4 sm:gap-6 animate-[bounce_0.5s_infinite]">
+               <div className="w-2 sm:w-3 h-24 sm:h-32 bg-gray-100 shadow-[0_0_15px_white] skew-x-[20deg] rounded-t-full"></div>
+               <div className="w-2 sm:w-3 h-24 sm:h-32 bg-gray-100 shadow-[0_0_15px_white] rounded-t-full"></div>
+               <div className="w-2 sm:w-3 h-24 sm:h-32 bg-gray-100 shadow-[0_0_15px_white] -skew-x-[20deg] rounded-t-full"></div>
+            </div>
+            {bootStep >= 2 && <h1 className="text-[#FFCC00] font-black text-4xl sm:text-5xl drop-shadow-[4px_4px_0px_#0033CC] uppercase">WEAPON X</h1>}
+         </div>
+       );
+    }
+    // Default Fallback (Neural Core - Cyber/Stark/Brutalist/RPG/Synthwave/etc)
+    return (
+       <div className="relative flex flex-col items-center justify-center w-full h-full">
+           <div className="absolute w-32 h-32 rounded-full bg-[#00f3ff]/10 blur-xl animate-[corePulse_2s_ease-in-out_infinite]"></div>
+           <div className="absolute w-64 h-64 rounded-full border-[1px] border-dashed border-[#00f3ff]/30 animate-[ringSpin3_10s_linear_infinite]"></div>
+           <div className="absolute w-48 h-48 rounded-full border-2 border-t-[#00f3ff] border-b-[#ff007f] border-l-transparent border-r-transparent animate-[ringSpin1_2s_linear_infinite]"></div>
+           <div className="absolute w-40 h-40 rounded-full border-2 border-r-[#00f3ff] border-l-[#ff007f] border-t-transparent border-b-transparent animate-[ringSpin2_3s_linear_infinite]"></div>
+           <div className="absolute w-12 h-12 rounded-full bg-[#00f3ff]/30 blur-md animate-[corePulse_1.5s_ease-in-out_infinite]"></div>
+           <div className="absolute w-4 h-4 rounded-full bg-white shadow-[0_0_20px_#fff,0_0_40px_#00f3ff] z-10 animate-[coreCore_1.5s_ease-in-out_infinite]"></div>
+           {bootStep >= 2 && (
+             <div className="absolute mt-[250px] sm:mt-[300px] text-[#00f3ff] font-mono text-[10px] sm:text-xs font-black uppercase tracking-[0.5em] text-center w-full drop-shadow-[0_0_10px_rgba(0,243,255,0.8)]">
+               {bootStep === 2 ? "CALIBRATING NEURAL LINK..." : "APEX MIND OS ONLINE."}
+             </div>
+           )}
+       </div>
+    );
+  };
+
+  return (
+    <>
+      {bootStep < 4 && (
+        <div className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden transition-all duration-700 ease-in-out ${bootStep === 3 ? 'opacity-0 scale-110' : 'opacity-100'} ${getSplashBg(activeThemeId)}`}>
+          <style>{`
+            @keyframes corePulse { 0% { transform: scale(0.8); } 50% { transform: scale(1.2); } 100% { transform: scale(0.8); } }
+            @keyframes coreCore { 0% { transform: scale(0.5); filter: brightness(1); } 50% { transform: scale(1.5); filter: brightness(1.5); } 100% { transform: scale(0.5); filter: brightness(1); } }
+            @keyframes ringSpin1 { 0% { transform: rotate(0deg) scale(1); } 50% { transform: rotate(180deg) scale(1.1); } 100% { transform: rotate(360deg) scale(1); } }
+            @keyframes ringSpin2 { 0% { transform: rotate(360deg) scale(0.8); } 50% { transform: rotate(180deg) scale(1.1); } 100% { transform: rotate(0deg) scale(0.8); } }
+            @keyframes ringSpin3 { 0% { transform: rotate(0deg) scale(1.2); } 100% { transform: rotate(-360deg) scale(1.2); } }
+          `}</style>
+          {renderThemeSplash(activeThemeId)}
         </div>
       )}
 
-      {/* TOP BAR SWITCH */}
-      <div className={`fixed ${testMode ? 'top-10 sm:top-12' : 'top-0'} left-0 w-full z-40 p-3 sm:p-4 bg-inherit backdrop-blur-sm border-b ${t.borderAccent} opacity-95 flex justify-center items-center`}>
-        <div className={`flex w-full max-w-sm rounded-full p-1 border shadow-xl ${t.cardInner} ${t.borderAccent}`}>
-          <button onClick={() => setAppMode("habit")} className={`flex-1 py-2 sm:py-2.5 text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-full transition-all ${appMode === 'habit' ? t.btnPrimary : t.textMuted + ' hover:' + t.textMain}`}>HABIT OS</button>
-          <button onClick={() => setAppMode("brain")} className={`flex-1 py-2 sm:py-2.5 text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-full transition-all ${appMode === 'brain' ? t.btnPrimary : t.textMuted + ' hover:' + t.textMain}`}>SECOND BRAIN</button>
+      <div className={`min-h-screen ${t.appBg} ${t.fontHeading} transition-colors duration-500 relative ${bootStep < 4 ? 'h-screen overflow-hidden' : ''}`}>
+        {testMode && (
+          <div className={`fixed top-0 left-0 w-full z-50 p-2 flex flex-wrap justify-center items-center gap-2 sm:gap-4 shadow-lg ${t.devBar} ${t.fontHeading} text-[9px] sm:text-xs`}>
+            <span className="font-black tracking-widest hidden sm:inline">DEV Mode:</span>
+            <button onClick={() => { const d = new Date(todayStr); d.setDate(d.getDate() - 1); setTodayStr(formatDate(d)); }} className="px-2 sm:px-3 py-1 sm:py-1.5 bg-black/20 hover:bg-black/40 border border-current active:scale-95 transition-all rounded">- DAY</button>
+            
+            {/* Custom Date Picker for Devs */}
+            <input 
+              type="date" 
+              value={todayStr} 
+              onChange={(e) => { if(e.target.value) setTodayStr(e.target.value); }} 
+              className="px-1 sm:px-2 py-1 sm:py-1.5 bg-black/30 border border-current rounded text-inherit outline-none"
+            />
+
+            <button onClick={() => { const d = new Date(todayStr); d.setDate(d.getDate() + 1); setTodayStr(formatDate(d)); }} className="px-2 sm:px-3 py-1 sm:py-1.5 bg-black/20 hover:bg-black/40 border border-current active:scale-95 transition-all rounded">+ DAY</button>
+            <button onClick={() => setTodayStr(getRealTodayStr())} className="px-2 sm:px-3 py-1 sm:py-1.5 bg-black/20 hover:bg-black/40 border border-current active:scale-95 transition-all rounded">TODAY</button>
+            
+            {/* Star Boost for testing shop */}
+            <button onClick={() => updateProfileFirebase({ stars: profile.stars + 50 })} className="px-2 py-1 bg-yellow-500 text-black hover:bg-yellow-400 border border-black active:scale-95 transition-all rounded font-bold">+50 ⭐</button>
+          </div>
+        )}
+
+        {/* TOP BAR SWITCH */}
+        <div className={`fixed ${testMode ? 'top-10 sm:top-12' : 'top-0'} left-0 w-full z-40 p-3 sm:p-4 bg-inherit backdrop-blur-sm border-b ${t.borderAccent} opacity-95 flex justify-center items-center`}>
+          <div className={`flex w-full max-w-sm rounded-full p-1 border shadow-xl ${t.cardInner} ${t.borderAccent}`}>
+            <button onClick={() => setAppMode("habit")} className={`flex-1 py-2 sm:py-2.5 text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-full transition-all ${appMode === 'habit' ? t.btnPrimary : t.textMuted + ' hover:' + t.textMain}`}>HABIT OS</button>
+            <button onClick={() => setAppMode("brain")} className={`flex-1 py-2 sm:py-2.5 text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-full transition-all ${appMode === 'brain' ? t.btnPrimary : t.textMuted + ' hover:' + t.textMain}`}>SECOND BRAIN</button>
+          </div>
         </div>
-      </div>
 
-      <div className={`p-4 md:p-8 relative pt-24 sm:pt-28 ${testMode ? 'mt-8 sm:mt-12' : ''}`}>
-        {toast && (
-          <div className={`fixed top-28 sm:top-32 left-1/2 transform -translate-x-1/2 px-4 sm:px-6 py-2 sm:py-3 shadow-2xl z-[100] animate-bounce flex items-center gap-2 text-[10px] sm:text-sm uppercase tracking-widest ${t.badge} ${t.fontHeading}`}>
-            <Check size={16} className={`sm:size-5 ${t.textAccent ? t.textAccent : 'text-current'}`} /> {toast}
-          </div>
-        )}
-        {errorMsg && (
-          <div className={`max-w-5xl mx-auto p-3 sm:p-4 mb-4 sm:mb-6 flex items-start gap-2 shadow-lg text-[10px] sm:text-sm uppercase tracking-widest bg-red-900/80 text-white ${t.fontHeading}`}>
-            <AlertTriangle size={18} className="sm:size-5 mt-0.5 flex-shrink-0" />
-            <span className="flex-1 leading-relaxed">{errorMsg}</span>
-            <button onClick={() => setErrorMsg("")} className="hover:opacity-70 active:scale-90"><X size={16} className="sm:size-5" /></button>
-          </div>
-        )}
-
-        <div className="max-w-5xl mx-auto">
-          {appMode === 'habit' && (
-            <>
-              {habitRoute === "hub" && renderHabitHub()}
-              {habitRoute === "arena" && renderHabitArena()}
-              {habitRoute === "tracker" && renderHabitTracker()}
-              {habitRoute === "shop" && renderShop()}
-              {habitRoute === "settings" && renderHabitSettings()}
-              {habitRoute === "analysis" && renderAnalysis()}
-              {habitRoute === "plan" && renderOngoingPlan()}
-              {habitRoute === "vault" && renderVault()}
-              {habitRoute === "coach" && renderCoach()}
-            </>
+        <div className={`p-4 md:p-8 relative pt-24 sm:pt-28 ${testMode ? 'mt-8 sm:mt-12' : ''}`}>
+          {toast && (
+            <div className={`fixed top-28 sm:top-32 left-1/2 transform -translate-x-1/2 px-4 sm:px-6 py-2 sm:py-3 shadow-2xl z-[100] animate-bounce flex items-center gap-2 text-[10px] sm:text-sm uppercase tracking-widest ${t.badge} ${t.fontHeading}`}>
+              <Check size={16} className={`sm:size-5 ${t.textAccent ? t.textAccent : 'text-current'}`} /> {toast}
+            </div>
+          )}
+          {errorMsg && (
+            <div className={`max-w-5xl mx-auto p-3 sm:p-4 mb-4 sm:mb-6 flex items-start gap-2 shadow-lg text-[10px] sm:text-sm uppercase tracking-widest bg-red-900/80 text-white ${t.fontHeading}`}>
+              <AlertTriangle size={18} className="sm:size-5 mt-0.5 flex-shrink-0" />
+              <span className="flex-1 leading-relaxed">{errorMsg}</span>
+              <button onClick={() => setErrorMsg("")} className="hover:opacity-70 active:scale-90"><X size={16} className="sm:size-5" /></button>
+            </div>
           )}
 
-          {appMode === 'brain' && (
-            <>
-              {brainTab === 'dashboard' && renderBrainDashboard()}
-              {brainTab === 'study' && renderBrainStudy()}
-              {brainTab === 'history' && renderBrainHistory()}
-              {brainTab === 'wisdom' && renderBrainWisdom()}
-              {brainTab === 'vault' && renderBrainVault()}
-              {brainTab === 'urge' && renderBrainUrge()}
+          <div className="max-w-5xl mx-auto">
+            {appMode === 'habit' && (
+              <>
+                {habitRoute === "hub" && renderHabitHub()}
+                {habitRoute === "arena" && renderHabitArena()}
+                {habitRoute === "tracker" && renderHabitTracker()}
+                {habitRoute === "shop" && renderShop()}
+                {habitRoute === "settings" && renderHabitSettings()}
+                {habitRoute === "analysis" && renderAnalysis()}
+                {habitRoute === "plan" && renderOngoingPlan()}
+                {habitRoute === "vault" && renderVault()}
+                {habitRoute === "coach" && renderCoach()}
+              </>
+            )}
 
-              {/* Night Shift Widget */}
-              {isNightTime && (
-                <div className="fixed bottom-24 sm:bottom-28 right-4 z-40 flex flex-col items-end">
-                  {!isNightShiftOpen ? (
-                    <button onClick={() => setIsNightShiftOpen(true)} className={`px-4 sm:px-6 py-3 sm:py-4 flex items-center gap-2 sm:gap-3 text-xs sm:text-sm uppercase tracking-widest active:translate-y-1 transition-all ${t.btnWarning} ${t.fontHeading}`}><Moon size={18} className="sm:size-5 stroke-[3]" /> PLAN TOMORROW</button>
-                  ) : (
-                    <div className={`p-4 sm:p-6 w-[280px] sm:w-[320px] shadow-2xl border-t-4 ${t.card} ${t.borderAccent}`}>
-                       <div className={`flex justify-between items-center mb-4 sm:mb-6 border-b pb-2 sm:pb-3 ${t.borderAccent} opacity-80`}>
-                         <h3 className={`font-black text-[10px] sm:text-xs uppercase tracking-widest flex items-center gap-2 ${t.textAccent}`}><Moon size={14} className="sm:size-4 stroke-[3]"/> NIGHT SHIFT INBOX</h3>
-                         <button onClick={() => setIsNightShiftOpen(false)} className={`transition-colors ${t.textMuted} hover:text-red-500`}><X size={16} className="sm:size-5 stroke-[3]"/></button>
-                       </div>
-                       <p className={`text-[9px] sm:text-[10px] font-bold mb-3 sm:mb-4 ${t.textMuted}`}>Add tasks for tomorrow, or pin a queue target.</p>
-                       <div className="flex gap-2 mb-4 sm:mb-6">
-                         <input type="text" value={newCustomMission} onChange={(e) => setNewCustomMission(e.target.value)} onKeyPress={(e) => {
-                              if(e.key === 'Enter' && newCustomMission.trim()) {
-                                 updateBrainFirebase({ customMissions: [...brain.customMissions, { id: Date.now().toString(), text: newCustomMission.trim(), targetDate: addDays(todayStr, 1), completed: false }] });
-                                 setNewCustomMission("");
-                              }
-                           }} placeholder="CUSTOM TASK..." className={`flex-1 px-2 sm:px-3 py-2 sm:py-3 text-[10px] sm:text-xs font-black uppercase outline-none ${t.input}`} />
-                         <button onClick={() => {
-                              if(newCustomMission.trim()) {
-                                 updateBrainFirebase({ customMissions: [...brain.customMissions, { id: Date.now().toString(), text: newCustomMission.trim(), targetDate: addDays(todayStr, 1), completed: false }] });
-                                 setNewCustomMission("");
-                              }
-                           }} className={`px-3 sm:px-4 active:translate-y-1 transition-all ${t.btnPrimary}`}><Send size={14} className="sm:size-4 stroke-[3]" /></button>
-                       </div>
-                       {brain.customMissions.filter(m => m.targetDate === addDays(todayStr, 1)).length > 0 && (
-                          <div className="mb-4 sm:mb-6 space-y-1.5 sm:space-y-2">
-                            {brain.customMissions.filter(m => m.targetDate === addDays(todayStr, 1)).map(m => (
-                               <div key={m.id} className={`text-[10px] sm:text-xs font-black uppercase tracking-wider px-2 sm:px-3 py-1.5 sm:py-2 flex justify-between items-center border ${t.cardInner} ${t.textMain} ${t.borderAccent}`}>
-                                 <span className="truncate pr-2">• {m.text}</span>
-                                 <button onClick={() => updateBrainFirebase({ customMissions: brain.customMissions.filter(task => task.id !== m.id) })} className={`transition-colors ${t.textMuted} hover:text-red-500 shrink-0`}><Trash2 size={12} className="sm:size-3 stroke-[3]" /></button>
-                               </div>
-                            ))}
-                          </div>
-                       )}
-                       {brain.stagingTopics.length > 0 && (
-                         <>
-                           <div className={`text-[9px] sm:text-[10px] font-black uppercase tracking-widest mb-2 sm:mb-3 border-t pt-3 sm:pt-4 ${t.textAccent} ${t.borderAccent} opacity-80`}>PIN SYLLABUS TARGET</div>
-                           <div className="space-y-1.5 sm:space-y-2 max-h-32 overflow-y-auto hide-scrollbar pr-1">
-                             {brain.stagingTopics.slice(0, 3).map((topic, idx) => (
-                               <button key={topic.id} onClick={() => {
-                                   const items = [...brain.stagingTopics]; const clickedItem = items.splice(idx, 1)[0]; items.unshift(clickedItem);
-                                   updateBrainFirebase({ stagingTopics: items });
-                                 }} className={`w-full text-left p-2 sm:p-3 transition-colors flex items-center justify-between group border ${t.cardInner} hover:${t.borderAccent}`}>
-                                 <span className={`font-black text-[9px] sm:text-[10px] uppercase truncate pr-2 tracking-widest ${t.textMain}`}>{topic.title}</span>
-                                 <span className={`text-[8px] sm:text-[9px] font-black uppercase tracking-widest px-1.5 sm:px-2 py-0.5 opacity-0 group-hover:opacity-100 transition-opacity ${t.badge} ${t.textAccent}`}>PIN</span>
-                               </button>
-                             ))}
-                           </div>
-                         </>
-                       )}
-                    </div>
-                  )}
-                </div>
-              )}
+            {appMode === 'brain' && (
+              <>
+                {brainTab === 'dashboard' && renderBrainDashboard()}
+                {brainTab === 'study' && renderBrainStudy()}
+                {brainTab === 'history' && renderBrainHistory()}
+                {brainTab === 'wisdom' && renderBrainWisdom()}
+                {brainTab === 'vault' && renderBrainVault()}
+                {brainTab === 'urge' && renderBrainUrge()}
 
-              {/* Second Brain Bottom Nav */}
+                {/* Night Shift Widget */}
+                {isNightTime && (
+                  <div className="fixed bottom-24 sm:bottom-28 right-4 z-40 flex flex-col items-end">
+                    {!isNightShiftOpen ? (
+                      <button onClick={() => setIsNightShiftOpen(true)} className={`px-4 sm:px-6 py-3 sm:py-4 flex items-center gap-2 sm:gap-3 text-xs sm:text-sm uppercase tracking-widest active:translate-y-1 transition-all ${t.btnWarning} ${t.fontHeading}`}><Moon size={18} className="sm:size-5 stroke-[3]" /> PLAN TOMORROW</button>
+                    ) : (
+                      <div className={`p-4 sm:p-6 w-[280px] sm:w-[320px] shadow-2xl border-t-4 ${t.card} ${t.borderAccent}`}>
+                         <div className={`flex justify-between items-center mb-4 sm:mb-6 border-b pb-2 sm:pb-3 ${t.borderAccent} opacity-80`}>
+                           <h3 className={`font-black text-[10px] sm:text-xs uppercase tracking-widest flex items-center gap-2 ${t.textAccent}`}><Moon size={14} className="sm:size-4 stroke-[3]"/> NIGHT SHIFT INBOX</h3>
+                           <button onClick={() => setIsNightShiftOpen(false)} className={`transition-colors ${t.textMuted} hover:text-red-500`}><X size={16} className="sm:size-5 stroke-[3]"/></button>
+                         </div>
+                         <p className={`text-[9px] sm:text-[10px] font-bold mb-3 sm:mb-4 ${t.textMuted}`}>Add tasks for tomorrow, or pin a queue target.</p>
+                         <div className="flex gap-2 mb-4 sm:mb-6">
+                           <input type="text" value={newCustomMission} onChange={(e) => setNewCustomMission(e.target.value)} onKeyPress={(e) => {
+                                if(e.key === 'Enter' && newCustomMission.trim()) {
+                                   updateBrainFirebase({ customMissions: [...brain.customMissions, { id: Date.now().toString(), text: newCustomMission.trim(), targetDate: addDays(todayStr, 1), completed: false }] });
+                                   setNewCustomMission("");
+                                }
+                             }} placeholder="CUSTOM TASK..." className={`flex-1 px-2 sm:px-3 py-2 sm:py-3 text-[10px] sm:text-xs font-black uppercase outline-none ${t.input}`} />
+                           <button onClick={() => {
+                                if(newCustomMission.trim()) {
+                                   updateBrainFirebase({ customMissions: [...brain.customMissions, { id: Date.now().toString(), text: newCustomMission.trim(), targetDate: addDays(todayStr, 1), completed: false }] });
+                                   setNewCustomMission("");
+                                }
+                             }} className={`px-3 sm:px-4 active:translate-y-1 transition-all ${t.btnPrimary}`}><Send size={14} className="sm:size-4 stroke-[3]" /></button>
+                         </div>
+                         {brain.customMissions.filter(m => m.targetDate === addDays(todayStr, 1)).length > 0 && (
+                            <div className="mb-4 sm:mb-6 space-y-1.5 sm:space-y-2">
+                              {brain.customMissions.filter(m => m.targetDate === addDays(todayStr, 1)).map(m => (
+                                 <div key={m.id} className={`text-[10px] sm:text-xs font-black uppercase tracking-wider px-2 sm:px-3 py-1.5 sm:py-2 flex justify-between items-center border ${t.cardInner} ${t.textMain} ${t.borderAccent}`}>
+                                   <span className="truncate pr-2">• {m.text}</span>
+                                   <button onClick={() => updateBrainFirebase({ customMissions: brain.customMissions.filter(task => task.id !== m.id) })} className={`transition-colors ${t.textMuted} hover:text-red-500 shrink-0`}><Trash2 size={12} className="sm:size-3 stroke-[3]" /></button>
+                                 </div>
+                              ))}
+                            </div>
+                         )}
+                         {brain.stagingTopics.length > 0 && (
+                           <>
+                             <div className={`text-[9px] sm:text-[10px] font-black uppercase tracking-widest mb-2 sm:mb-3 border-t pt-3 sm:pt-4 ${t.textAccent} ${t.borderAccent} opacity-80`}>PIN SYLLABUS TARGET</div>
+                             <div className="space-y-1.5 sm:space-y-2 max-h-32 overflow-y-auto hide-scrollbar pr-1">
+                               {brain.stagingTopics.slice(0, 3).map((topic, idx) => (
+                                 <button key={topic.id} onClick={() => {
+                                     const items = [...brain.stagingTopics]; const clickedItem = items.splice(idx, 1)[0]; items.unshift(clickedItem);
+                                     updateBrainFirebase({ stagingTopics: items });
+                                   }} className={`w-full text-left p-2 sm:p-3 transition-colors flex items-center justify-between group border ${t.cardInner} hover:${t.borderAccent}`}>
+                                   <span className={`font-black text-[9px] sm:text-[10px] uppercase truncate pr-2 tracking-widest ${t.textMain}`}>{topic.title}</span>
+                                   <span className={`text-[8px] sm:text-[9px] font-black uppercase tracking-widest px-1.5 sm:px-2 py-0.5 opacity-0 group-hover:opacity-100 transition-opacity ${t.badge} ${t.textAccent}`}>PIN</span>
+                                 </button>
+                               ))}
+                             </div>
+                           </>
+                         )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Second Brain Bottom Nav */}
               <div className={`fixed bottom-0 left-0 w-full border-t-2 z-50 overflow-x-auto hide-scrollbar ${t.header} ${t.borderAccent}`}>
                 <div className="max-w-2xl mx-auto flex justify-between px-1 sm:px-2 py-2 sm:py-3 min-w-[320px]">
                   {[{ id: 'dashboard', icon: CalendarIcon, label: 'MISSION' }, { id: 'study', icon: Activity, label: 'QUEUE' }, { id: 'history', icon: History, label: 'HISTORY' }, { id: 'wisdom', icon: Folder, label: 'WISDOM' }, { id: 'vault', icon: BrainCircuit, label: 'DUMP' }, { id: 'urge', icon: ShieldAlert, label: 'URGE' }].map(tab => (
@@ -2158,5 +1989,6 @@ export default function App() {
         </div>
       </div>
     </div>
+    </>
   );
 }
