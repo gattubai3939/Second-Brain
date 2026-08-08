@@ -364,10 +364,17 @@ export default function App() {
   const [trackerData, setTrackerData] = useState(() => JSON.parse(localStorage.getItem('apex_tracker_v5') || '{}'));
   const [profile, setProfile] = useState(() => {
     const local = JSON.parse(localStorage.getItem('apex_profile_v5') || '{}');
+    const oldV4 = JSON.parse(localStorage.getItem('apexMindData_Final_V4') || '{}');
+    
     return {
-      name: "Prateek Maurya", stars: 0, geminiKey: "", inventory: [], dp: "", 
-      activeTheme: "brutalist", customTasks: DEFAULT_TASKS, customShopItems: SHOP_ITEMS,
-      ...local
+      name: local.name || oldV4.userName || "Prateek Maurya", 
+      stars: local.stars || 0, 
+      geminiKey: local.geminiKey || oldV4.groqKey || "", 
+      inventory: local.inventory || [], 
+      dp: local.dp || oldV4.profilePic || "", 
+      activeTheme: local.activeTheme || oldV4.activeTheme || "brutalist", 
+      customTasks: local.customTasks || DEFAULT_TASKS, 
+      customShopItems: local.customShopItems || SHOP_ITEMS
     };
   });
 
@@ -399,12 +406,32 @@ export default function App() {
   // ================= BRAIN STATE =================
   const [brainTab, setBrainTab] = useState("dashboard");
   const [brain, setBrain] = useState(() => {
-    const local = JSON.parse(localStorage.getItem('apex_brain_v5') || '{}');
+    const local = JSON.parse(localStorage.getItem('apex_brain_v5'));
+    const oldV4 = JSON.parse(localStorage.getItem('apexMindData_Final_V4') || '{}');
+    
+    // Agar naye (V5) app mein data hai, toh usko use karo
+    if (local && Object.keys(local).length > 0) {
+      return {
+        syllabusCategories: ["Raw Backlog"], stagingTopics: [], studyTopics: [], masteredTopics: [],
+        wisdomCategories: ["Quick Thoughts"], wisdomNotes: [], vaultNotes: [], vaultCategories: ["Others"],
+        globalDeadlineDays: 30, customMissions: [], lastActiveDate: getRealTodayStr(),
+        ...local
+      };
+    }
+    
+    // Warna, purane (V4) app se poora Second Brain migrate kar lo
     return {
-      syllabusCategories: ["Raw Backlog"], stagingTopics: [], studyTopics: [], masteredTopics: [],
-      wisdomCategories: ["Quick Thoughts"], wisdomNotes: [], vaultNotes: [], vaultCategories: ["Others"],
-      globalDeadlineDays: 30, customMissions: [], lastActiveDate: getRealTodayStr(),
-      ...local
+      syllabusCategories: oldV4.syllabusCategories || ["Raw Backlog"], 
+      stagingTopics: oldV4.stagingTopics || [], 
+      studyTopics: oldV4.studyTopics || [], 
+      masteredTopics: oldV4.masteredTopics || [],
+      wisdomCategories: oldV4.wisdomCategories || ["Quick Thoughts"], 
+      wisdomNotes: oldV4.wisdomNotes || [], 
+      vaultNotes: oldV4.vaultNotes || [], 
+      vaultCategories: oldV4.vaultCategories || ["Others"],
+      globalDeadlineDays: oldV4.globalDeadlineDays || 30, 
+      customMissions: oldV4.customMissions || [], 
+      lastActiveDate: oldV4.lastActiveDate || getRealTodayStr()
     };
   });
   
