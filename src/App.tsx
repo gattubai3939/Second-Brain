@@ -1545,6 +1545,378 @@ export default function App() {
     </div>
   );
 
+  // ==========================================
+  // BRAIN RENDERERS (STYLED WITH THEMES)
+  // ==========================================
+  const renderBrainDashboard = () => {
+    const remainingChapters = brain.stagingTopics.length;
+    const pace = remainingChapters > 0 ? (brain.globalDeadlineDays / remainingChapters).toFixed(1) : 0;
+    
+    let paceStatus = { text: "ON TRACK", color: t.textMain };
+    if (pace < 1 && remainingChapters > 0) paceStatus = { text: "DANGER", color: "text-red-500" };
+    else if (pace >= 1 && pace <= 1.5) paceStatus = { text: "WARNING", color: "text-yellow-500" };
+    else if (remainingChapters === 0) paceStatus = { text: "STANDBY", color: t.textMuted };
+
+    const todaysRevisions = [];
+    brain.studyTopics.forEach(topic => {
+      topic.schedule.forEach(rev => {
+        if (rev.targetDate <= todayStr && !rev.completed) {
+          todaysRevisions.push({ topicId: topic.id, title: topic.title, category: topic.category, targetDate: rev.targetDate, dayOffset: rev.dayOffset, isOverdue: rev.targetDate < todayStr });
+        }
+      });
+    });
+
+    const todaysCustomMissions = brain.customMissions.filter(m => m.targetDate <= todayStr && !m.completed);
+    const quoteOfTheDay = MORNING_QUOTES[new Date().getDate() % MORNING_QUOTES.length];
+
+    return (
+      <div className="space-y-6 sm:space-y-8 pb-20 animate-in fade-in zoom-in duration-300">
+        
+        <div className={`p-4 sm:p-6 ${t.cardInner} border-l-4 ${t.borderAccent}`}>
+          <h3 className={`text-xs font-black uppercase tracking-[0.2em] mb-3 sm:mb-4 flex items-center gap-2 border-b pb-2 ${t.textAccent} ${t.fontHeading} border-current opacity-80`}><Zap size={16} /> PROTOCOL INITIATED</h3>
+          <p className={`text-xl sm:text-2xl font-black uppercase tracking-tight leading-snug ${t.textMain} ${t.fontHeading}`}>"{quoteOfTheDay}"</p>
+        </div>
+
+        <div className={`p-4 sm:p-6 ${t.card} relative overflow-hidden`}>
+          <h2 className={`text-[10px] font-black uppercase tracking-[0.2em] mb-4 border-b pb-2 ${t.textAccent} border-current opacity-50 ${t.fontHeading}`}>GLOBAL DEADLINE</h2>
+          <div className="flex justify-between items-end">
+            <div className={`flex items-baseline gap-1 sm:gap-2 border-b-2 border-transparent transition-colors focus-within:${t.borderAccent}`}>
+              <input type="number" value={brain.globalDeadlineDays} onChange={(e) => updateBrainFirebase({ globalDeadlineDays: Math.max(1, parseInt(e.target.value) || 1) })} className={`w-16 sm:w-24 bg-transparent text-4xl sm:text-6xl font-black tracking-tighter outline-none p-0 m-0 ${t.textMain} ${t.fontHeading}`} />
+              <span className={`text-lg sm:text-xl font-black ${t.textAccent} ${t.fontHeading}`}>DAYS</span>
+            </div>
+            <div className="text-right">
+              <p className={`text-[9px] sm:text-[10px] tracking-widest font-bold uppercase mb-1 ${t.textMuted} ${t.fontHeading}`}>PACE DETECTOR</p>
+              <p className={`text-xl sm:text-2xl font-black ${paceStatus.color} ${t.fontHeading}`}>{pace} <span className="text-[10px] sm:text-xs">CH/DAY</span></p>
+              <p className={`text-[9px] sm:text-[10px] font-black uppercase tracking-widest mt-1 ${paceStatus.color} ${t.fontHeading}`}>{paceStatus.text}</p>
+            </div>
+          </div>
+          
+          {brain.stagingTopics.length > 0 && (
+            <div className={`mt-6 sm:mt-8 p-3 sm:p-4 border-2 ${t.cardInner} ${t.borderAccent}`}>
+              <h3 className={`text-[10px] font-black uppercase tracking-[0.2em] mb-2 ${t.textAccent} ${t.fontHeading}`}>CURRENT STRIKE TARGET</h3>
+              <h2 className={`text-lg sm:text-xl font-black uppercase tracking-tight truncate ${t.textMain} ${t.fontHeading}`}>{brain.stagingTopics[0].title}</h2>
+              <span className={`text-[9px] sm:text-[10px] font-bold uppercase tracking-wider px-2 py-1 mt-2 inline-block ${t.badge} ${t.fontHeading}`}>{brain.stagingTopics[0].category}</span>
+              <button onClick={() => handleStartRevision(brain.stagingTopics[0].id)} className={`w-full mt-4 py-2.5 sm:py-3 text-sm sm:text-base font-black tracking-widest uppercase active:translate-y-1 transition-all ${t.btnPrimary} ${t.fontHeading}`}>TARGET DESTROYED</button>
+            </div>
+          )}
+        </div>
+
+        {todaysCustomMissions.length > 0 && (
+          <div className="pt-2 sm:pt-4">
+            <h3 className={`text-[10px] font-black uppercase tracking-[0.2em] mb-3 sm:mb-4 ${t.textAccent} ${t.fontHeading}`}>TODAY'S MISSIONS</h3>
+            {todaysCustomMissions.map((mission) => (
+              <div key={mission.id} className={`flex items-center justify-between p-3 sm:p-4 mb-2 sm:mb-3 shadow-md ${t.cardInner}`}>
+                <span className={`font-bold uppercase tracking-wider text-xs sm:text-sm ${t.textMain} ${t.fontHeading}`}>{mission.text}</span>
+                <button onClick={() => {
+                  updateBrainFirebase({ customMissions: brain.customMissions.filter(m => m.id !== mission.id) });
+                  const remaining = todaysCustomMissions.length - 1;
+                  if (remaining === 0) triggerCrossReward(3, "All Daily Missions Cleared!");
+                }} className={`transition-colors ${t.textMuted} hover:${t.textAccent}`}><CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]" /></button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="pt-2 sm:pt-4">
+          <h3 className={`text-[10px] font-black uppercase tracking-[0.2em] mb-3 sm:mb-4 ${t.textAccent} ${t.fontHeading}`}>MANDATORY REVISIONS</h3>
+          {todaysRevisions.length === 0 ? (
+            <div className={`text-center py-8 sm:py-10 border-2 border-dashed font-black uppercase tracking-widest text-xs sm:text-sm ${t.cardInner} ${t.textMuted} border-current opacity-50`}>SYSTEM CLEAR</div>
+          ) : (
+            <div className="space-y-3 sm:space-y-4">
+              {todaysRevisions.map((rev, idx) => (
+                <div key={idx} className={`p-3 sm:p-4 flex items-center justify-between shadow-md ${t.cardInner} ${rev.isOverdue ? 'border border-red-500' : ''}`}>
+                  <div>
+                    <h4 className={`font-black uppercase text-xs sm:text-sm flex items-center gap-2 ${t.textMain} ${t.fontHeading}`}>{rev.title} {rev.isOverdue && <span className="text-[8px] sm:text-[9px] bg-red-500 text-white px-2 py-0.5 sm:py-1 tracking-widest">OVERDUE</span>}</h4>
+                    <div className="flex gap-2 mt-2">
+                      <span className={`text-[8px] sm:text-[9px] font-black uppercase tracking-widest ${t.textAccent}`}>{rev.category}</span>
+                      <span className={`text-[8px] sm:text-[9px] font-black uppercase tracking-widest ${t.textMuted}`}>DAY {rev.dayOffset}</span>
+                    </div>
+                  </div>
+                  <button onClick={() => markRevisionComplete(rev.topicId, rev.targetDate, rev.dayOffset)} className={`w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center transition-colors active:translate-y-1 shrink-0 ${t.btnPrimary}`}><Check size={20} className="sm:size-6 stroke-[3]" /></button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderBrainStudy = () => (
+    <div className="space-y-6 sm:space-y-8 pb-20 animate-in slide-in-from-right-4 duration-300">
+      <div className={`p-4 sm:p-5 ${t.card}`}>
+        <div className={`flex justify-between items-center mb-4 sm:mb-6 border-b pb-2 ${t.borderAccent}`}>
+           <h3 className={`font-black uppercase tracking-widest flex items-center gap-2 text-xs sm:text-sm ${t.textAccent} ${t.fontHeading}`}>LIQUID STRIKE QUEUE</h3>
+           <span className={`text-[9px] sm:text-[10px] font-black uppercase tracking-widest ${t.textMuted}`}>Hold to drag</span>
+        </div>
+        
+        <div className="flex gap-2 mb-4 sm:mb-6">
+          <input type="text" value={newSyllabusCat} onChange={(e) => setNewSyllabusCat(e.target.value)} placeholder="NEW TAG..." className={`flex-1 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-black uppercase outline-none ${t.input} ${t.fontHeading}`} />
+          <button onClick={handleAddSyllabusCategory} className={`px-3 sm:px-4 font-black uppercase active:translate-y-1 transition-all ${t.btnPrimary}`}><Plus size={18} className="sm:size-5 stroke-[3]" /></button>
+        </div>
+
+        {brain.syllabusCategories.length > 1 && (
+           <div className="flex flex-wrap gap-2 mb-4 sm:mb-6">
+             {brain.syllabusCategories.map(cat => (
+               <div key={cat} className={`group flex items-center gap-2 px-2 sm:px-3 py-1 sm:py-2 text-[10px] sm:text-xs font-black uppercase tracking-widest transition-colors cursor-pointer border ${t.cardInner} hover:${t.borderAccent} ${t.textMain}`}>
+                 {cat}
+                 {cat !== "Raw Backlog" && <button onClick={() => handleDeleteSyllabusCategory(cat)} className={`transition-colors ${t.textMuted} hover:text-red-500`}><Trash2 size={12} className="sm:size-4" /></button>}
+               </div>
+             ))}
+           </div>
+        )}
+
+        <div className="flex gap-2">
+          <select value={selectedSyllabusCat} onChange={(e) => setSelectedSyllabusCat(e.target.value)} className={`w-1/3 px-1 sm:px-2 py-2 sm:py-3 text-[9px] sm:text-xs font-black uppercase tracking-widest outline-none cursor-pointer ${t.input} ${t.textAccent} ${t.fontHeading}`}>
+            {brain.syllabusCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+          </select>
+          <input type="text" value={newTopic} onChange={(e) => setNewTopic(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleAddStagingTopic()} placeholder="CHAPTER NAME..." className={`flex-1 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-black uppercase outline-none ${t.input} ${t.fontHeading}`} />
+          <button onClick={handleAddStagingTopic} className={`px-4 sm:px-5 font-black active:translate-y-1 transition-all ${t.btnPrimary}`}><Plus size={18} className="sm:size-5 stroke-[3]" /></button>
+        </div>
+
+        <div className="mt-6 sm:mt-8 space-y-2 sm:space-y-3">
+          {brain.stagingTopics.length === 0 && <div className={`text-center py-8 sm:py-10 border-2 border-dashed font-black uppercase tracking-widest text-xs sm:text-sm ${t.cardInner} ${t.textMuted} border-current opacity-50`}>QUEUE EMPTY</div>}
+          {brain.stagingTopics.map((topic, index) => (
+            <LongPressItem key={topic.id} item={topic} onDelete={(id) => updateBrainFirebase({ stagingTopics: brain.stagingTopics.filter(t => t.id !== id) })} t={t}>
+              <div draggable onDragStart={() => setDraggedItemIndex(index)} onDragOver={(e) => e.preventDefault()} onDrop={() => {
+                if (draggedItemIndex === null) return;
+                const items = [...brain.stagingTopics]; const draggedItem = items[draggedItemIndex];
+                items.splice(draggedItemIndex, 1); items.splice(index, 0, draggedItem);
+                updateBrainFirebase({ stagingTopics: items }); setDraggedItemIndex(null);
+              }} className={`p-3 sm:p-4 border flex items-center justify-between cursor-move transition-all select-none ${index === 0 ? t.borderAccent + " " + t.cardInner : t.cardInner} ${draggedItemIndex === index ? 'opacity-50' : 'opacity-100'}`}>
+                <div className="flex items-center gap-3 sm:gap-4">
+                  <GripVertical size={18} className={`sm:size-5 ${index === 0 ? t.textAccent : t.textMuted}`} />
+                  <div>
+                    <h4 className={`font-black text-xs sm:text-sm uppercase flex items-center gap-2 ${t.textMain} ${t.fontHeading}`}>{topic.title} {index === 0 && <span className={`text-[8px] sm:text-[9px] px-1.5 sm:px-2 py-0.5 tracking-widest font-black ${t.badge} ${t.textAccent}`}>NEXT</span>}</h4>
+                    <span className={`text-[9px] sm:text-[10px] font-black uppercase tracking-widest mt-1 block ${t.textMuted} ${t.fontHeading}`}>{topic.category}</span>
+                  </div>
+                </div>
+              </div>
+            </LongPressItem>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderBrainHistory = () => (
+    <div className="space-y-6 sm:space-y-8 pb-20 animate-in slide-in-from-right-4 duration-300">
+      <div className={`p-4 sm:p-5 ${t.card}`}>
+        <h3 className={`font-black uppercase tracking-widest mb-4 sm:mb-6 flex items-center gap-2 text-xs sm:text-sm border-b pb-2 ${t.textAccent} ${t.fontHeading} ${t.borderAccent}`}>ONGOING CYCLES</h3>
+        {brain.studyTopics.length === 0 ? (
+          <div className={`text-center py-8 sm:py-10 border-2 border-dashed font-black uppercase tracking-widest text-xs sm:text-sm ${t.cardInner} ${t.textMuted} border-current opacity-50`}>NO ACTIVE CYCLES</div>
+        ) : (
+          <div className="space-y-4 sm:space-y-6">
+            {brain.studyTopics.map(topic => (
+              <LongPressItem key={topic.id} item={topic} onDelete={(id) => updateBrainFirebase({ studyTopics: brain.studyTopics.filter(t => t.id !== id) })} duration={5000} t={t}>
+                <div className={`p-4 sm:p-5 shadow-md ${t.cardInner}`}>
+                  <div className="flex justify-between items-start mb-4 sm:mb-6">
+                    <div>
+                      <h4 className={`font-black text-base sm:text-lg uppercase ${t.textMain} ${t.fontHeading}`}>{topic.title}</h4>
+                      <span className={`text-[9px] sm:text-[10px] font-black uppercase tracking-widest px-2 py-1 mt-2 inline-block ${t.badge}`}>{topic.category}</span>
+                    </div>
+                    <span className={`text-[9px] sm:text-[10px] font-black tracking-widest border px-1 sm:px-2 py-1 ${t.textAccent} border-current opacity-80`}>INIT: {topic.startDate}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2 sm:gap-3">
+                    {topic.schedule.map((rev, i) => {
+                      const isPending = !rev.completed && rev.targetDate <= todayStr;
+                      return (
+                        <div key={i} className={`flex flex-col items-center justify-center py-1.5 sm:py-2 px-2 sm:px-3 border transition-all ${rev.completed ? t.btnPrimary : isPending ? 'border-red-500 text-red-500 shadow-md' : t.card + ' ' + t.textMuted}`}>
+                          <span className={`text-[9px] sm:text-[10px] font-black uppercase tracking-widest ${t.fontHeading}`}>D{rev.dayOffset}</span>
+                          {rev.completed ? <Check size={14} className="sm:size-4 mt-1 stroke-[4]" /> : <Circle size={14} className={`sm:size-4 mt-1 stroke-[3] ${isPending ? 'animate-pulse' : ''}`} />}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </LongPressItem>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className={`p-4 sm:p-6 ${t.card}`}>
+        <h3 className={`font-black uppercase tracking-widest mb-4 sm:mb-6 flex items-center gap-2 text-xs sm:text-sm border-b pb-2 ${t.textMain} ${t.fontHeading} ${t.borderAccent} opacity-80`}>HALL OF FAME (MASTERED)</h3>
+        {brain.masteredTopics.length === 0 ? (
+          <div className={`text-center py-8 sm:py-10 border-2 border-dashed font-black uppercase tracking-widest text-xs sm:text-sm ${t.cardInner} ${t.textMuted} border-current opacity-50`}>EMPTY VAULT</div>
+        ) : (
+          <div className="grid grid-cols-1 gap-3 sm:gap-4">
+            {brain.masteredTopics.map(topic => (
+              <div key={topic.id} className={`p-3 sm:p-4 border flex items-center gap-3 sm:gap-4 transition-colors ${t.cardInner} hover:${t.borderAccent}`}>
+                <div className={`w-10 h-10 sm:w-12 sm:h-12 border flex items-center justify-center shrink-0 ${t.card} ${t.borderAccent}`}>
+                   <Trophy size={18} className={`sm:size-5 ${t.textAccent}`} />
+                </div>
+                <div>
+                  <h4 className={`font-black text-xs sm:text-sm uppercase ${t.textMain} ${t.fontHeading}`}>{topic.title}</h4>
+                  <p className={`text-[9px] sm:text-[10px] font-black uppercase tracking-widest mt-1 ${t.textMuted} ${t.fontHeading}`}>{topic.category} • {topic.masteredDate}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  const renderBrainWisdom = () => {
+    if (expandedWisdomCategory) {
+      const filteredNotes = brain.wisdomNotes.filter(n => n.category === expandedWisdomCategory);
+      return (
+        <div className="space-y-4 sm:space-y-6 pb-20 animate-in fade-in zoom-in duration-300">
+          <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+            <button onClick={() => setExpandedWisdomCategory(null)} className={`p-2 sm:p-3 active:translate-y-1 ${t.btnPrimary}`}><ChevronLeft size={20} className="sm:size-6 stroke-[3]"/></button>
+            <h2 className={`text-lg sm:text-xl font-black uppercase tracking-widest flex items-center gap-2 ${t.textMain} ${t.fontHeading}`}><FolderOpen size={20} className={`sm:size-6 ${t.textMuted}`} /> {expandedWisdomCategory}</h2>
+          </div>
+          <div className="flex gap-2 mb-6 sm:mb-8">
+            <input type="text" value={newWisdom} onChange={(e) => setNewWisdom(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleAddWisdom()} placeholder="DUMP KNOWLEDGE..." className={`flex-1 px-3 sm:px-4 py-3 sm:py-4 text-xs sm:text-sm font-black uppercase outline-none ${t.input} ${t.fontHeading}`} />
+            <button onClick={handleAddWisdom} className={`px-4 sm:px-6 font-black transition-all active:scale-95 ${t.btnPrimary}`}><Plus size={20} className="sm:size-6 stroke-[4]" /></button>
+          </div>
+          <div className="grid gap-3 sm:gap-4">
+            {filteredNotes.length === 0 && <div className={`text-center py-8 sm:py-10 border-2 border-dashed font-black uppercase tracking-widest text-xs sm:text-sm ${t.cardInner} ${t.textMuted} border-current opacity-50`}>EMPTY FOLDER</div>}
+            {filteredNotes.map(note => (
+              <LongPressItem key={note.id} item={note} onDelete={(id) => updateBrainFirebase({ wisdomNotes: brain.wisdomNotes.filter(n => n.id !== id) })} t={t}>
+                <div className={`p-4 sm:p-5 flex flex-col gap-3 sm:gap-4 group transition-colors cursor-pointer border ${t.cardInner} hover:${t.borderAccent}`}>
+                  <div className="flex items-start gap-2 sm:gap-3">
+                     <Mic size={16} className={`sm:size-4 mt-1 flex-shrink-0 ${t.textMuted}`} />
+                     <p className={`text-xs sm:text-sm font-bold leading-relaxed ${t.textMain}`}>{note.text}</p>
+                  </div>
+                  <div className={`flex justify-between items-center pt-3 sm:pt-4 border-t ${t.borderAccent}`}>
+                    <span className={`text-[9px] sm:text-[10px] font-black uppercase tracking-widest ${t.textMuted}`}>{note.date}</span>
+                    <div className="flex items-center gap-2">
+                       <MoveRight size={12} className={`sm:size-3 opacity-0 group-hover:opacity-100 transition-opacity ${t.textMuted}`} />
+                       <select onChange={(e) => updateBrainFirebase({ wisdomNotes: brain.wisdomNotes.map(n => n.id === note.id ? { ...n, category: e.target.value } : n) })} value={note.category} className={`text-[9px] sm:text-[10px] font-black uppercase px-1 sm:px-2 py-1 outline-none cursor-pointer ${t.badge} ${t.fontHeading}`}>
+                         {brain.wisdomCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                       </select>
+                    </div>
+                  </div>
+                </div>
+              </LongPressItem>
+            ))}
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div className="space-y-6 sm:space-y-8 pb-20 animate-in slide-in-from-right-4 duration-300">
+        <div className={`p-4 sm:p-6 ${t.card}`}>
+          <h3 className={`font-black uppercase tracking-widest mb-3 sm:mb-4 flex items-center gap-2 text-xs sm:text-sm border-b pb-2 ${t.textAccent} ${t.fontHeading} ${t.borderAccent}`}><Sparkles size={16} className="sm:size-5" /> ASK THE ORACLE</h3>
+          <p className={`text-[9px] sm:text-[10px] font-bold tracking-widest uppercase mb-3 sm:mb-4 ${t.textMuted}`}>Chat with your Second Brain. Uses your saved Wisdom.</p>
+          <div className="flex gap-2">
+            <input type="text" value={oracleQuery} onChange={(e) => setOracleQuery(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleAskOracle('wisdom')} placeholder="QUERY..." className={`flex-1 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-black uppercase outline-none ${t.input} ${t.fontHeading}`} />
+            <button onClick={() => handleAskOracle('wisdom')} disabled={isOracleThinking} className={`px-4 sm:px-6 font-black uppercase active:translate-y-1 transition-all disabled:opacity-50 ${t.btnPrimary}`}>{isOracleThinking ? <Circle size={18} className="sm:size-5 animate-pulse stroke-[4]" /> : <Send size={18} className="sm:size-5 stroke-[3]" />}</button>
+          </div>
+          {oracleResponse && <div className={`mt-4 sm:mt-6 p-4 sm:p-5 border-l-4 ${t.cardInner} ${t.borderAccent}`}><p className={`text-xs sm:text-sm font-bold leading-relaxed ${t.textMain}`}>{oracleResponse}</p></div>}
+        </div>
+
+        <div className={`p-4 sm:p-6 ${t.card}`}>
+          <h3 className={`font-black uppercase tracking-widest mb-4 sm:mb-6 flex items-center gap-2 text-xs sm:text-sm border-b pb-2 ${t.textMain} ${t.fontHeading} ${t.borderAccent} opacity-80`}><Folder size={16} className="sm:size-5" /> WISDOM FOLDERS</h3>
+          <div className="flex gap-2 mb-6 sm:mb-8">
+            <input type="text" value={newWisdomCat} onChange={(e) => setNewWisdomCat(e.target.value)} placeholder="NEW FOLDER..." className={`flex-1 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-black uppercase outline-none ${t.input} ${t.fontHeading}`} />
+            <button onClick={() => { if (newWisdomCat.trim() && !brain.wisdomCategories.includes(newWisdomCat.trim())) { updateBrainFirebase({ wisdomCategories: [...brain.wisdomCategories, newWisdomCat.trim()] }); setNewWisdomCat(""); } }} className={`px-4 sm:px-5 font-black transition-colors ${t.btnPrimary}`}><Plus size={18} className="sm:size-5 stroke-[3]" /></button>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
+            {brain.wisdomCategories.map(cat => {
+              const count = brain.wisdomNotes.filter(n => n.category === cat).length;
+              return (
+                <div key={cat} className="group relative">
+                  <button onClick={() => setExpandedWisdomCategory(cat)} className={`w-full p-4 sm:p-5 flex flex-col items-start gap-3 sm:gap-4 transition-all text-left active:translate-y-1 h-full border ${t.cardInner} hover:${t.borderAccent}`}>
+                    <FolderOpen size={24} className={`sm:size-8 transition-colors ${t.textMuted} group-hover:${t.textAccent}`} />
+                    <div>
+                      <h4 className={`font-black text-xs sm:text-sm uppercase truncate w-full ${t.textMain} ${t.fontHeading}`}>{cat}</h4>
+                      <span className={`text-[9px] sm:text-[10px] font-black uppercase tracking-widest mt-1 block ${t.textMuted} ${t.fontHeading}`}>{count} NOTES</span>
+                    </div>
+                  </button>
+                  {cat !== "Quick Thoughts" && <button onClick={(e) => { e.stopPropagation(); updateBrainFirebase({ wisdomCategories: brain.wisdomCategories.filter(c => c !== cat), wisdomNotes: brain.wisdomNotes.map(n => n.category === cat ? { ...n, category: "Quick Thoughts" } : n) }); }} className={`absolute top-2 right-2 sm:top-3 sm:right-3 p-1.5 sm:p-2 transition-colors ${t.textMuted} hover:text-red-500`}><Trash2 size={14} className="sm:size-4" /></button>}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderBrainVault = () => {
+    if (expandedVaultCategory) {
+      const notesInCat = brain.vaultNotes.filter(n => n.category === expandedVaultCategory);
+      return (
+        <div className="space-y-4 sm:space-y-6 pb-20 animate-in fade-in zoom-in duration-300">
+          <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+            <button onClick={() => setExpandedVaultCategory(null)} className={`p-2 sm:p-3 active:translate-y-1 ${t.btnPrimary}`}><ChevronLeft size={20} className="sm:size-6 stroke-[3]"/></button>
+            <h2 className={`text-lg sm:text-xl font-black uppercase tracking-widest flex items-center gap-2 ${t.textMain} ${t.fontHeading}`}><FolderOpen size={20} className={`sm:size-6 ${t.textMuted}`} /> {expandedVaultCategory}</h2>
+          </div>
+          <div className="grid gap-3 sm:gap-4">
+            {notesInCat.length === 0 && <div className={`text-center py-8 sm:py-10 border-2 border-dashed font-black uppercase tracking-widest text-xs sm:text-sm ${t.cardInner} ${t.textMuted} border-current opacity-50`}>EMPTY FOLDER</div>}
+            {notesInCat.map(note => (
+              <LongPressItem key={note.id} item={note} onDelete={(id) => updateBrainFirebase({ vaultNotes: brain.vaultNotes.filter(n => n.id !== id) })} t={t}>
+                <div className={`p-4 sm:p-5 flex items-start gap-3 sm:gap-4 transition-colors group cursor-pointer border ${t.cardInner} hover:${t.borderAccent}`}>
+                  <BrainCircuit size={18} className={`sm:size-5 mt-1 shrink-0 transition-colors ${t.textMuted} group-hover:${t.textAccent}`} />
+                  <div>
+                    <p className={`text-xs sm:text-sm font-bold leading-relaxed ${t.textMain}`}>{note.text}</p>
+                    <span className={`text-[9px] sm:text-[10px] font-black uppercase tracking-widest mt-2 sm:mt-3 block ${t.textMuted} ${t.fontHeading}`}>{note.date}</span>
+                  </div>
+                </div>
+              </LongPressItem>
+            ))}
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div className="space-y-6 sm:space-y-8 pb-20 animate-in slide-in-from-right-4 duration-300">
+        <div className={`p-4 sm:p-6 ${t.card}`}>
+          <h3 className={`font-black uppercase tracking-widest mb-3 sm:mb-4 flex items-center gap-2 text-xs sm:text-sm border-b pb-2 ${t.textAccent} ${t.fontHeading} ${t.borderAccent}`}><Sparkles size={16} className="sm:size-5" /> ASK THE ORACLE</h3>
+          <p className={`text-[9px] sm:text-[10px] font-bold tracking-widest uppercase mb-3 sm:mb-4 ${t.textMuted}`}>Chat with your Second Brain. Uses your saved Dump notes.</p>
+          <div className="flex gap-2">
+            <input type="text" value={oracleQuery} onChange={(e) => setOracleQuery(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleAskOracle('vault')} placeholder="QUERY..." className={`flex-1 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-black uppercase outline-none ${t.input} ${t.fontHeading}`} />
+            <button onClick={() => handleAskOracle('vault')} disabled={isOracleThinking} className={`px-4 sm:px-6 font-black uppercase active:translate-y-1 transition-all disabled:opacity-50 ${t.btnPrimary}`}>{isOracleThinking ? <Circle size={18} className="sm:size-5 animate-pulse stroke-[4]" /> : <Send size={18} className="sm:size-5 stroke-[3]" />}</button>
+          </div>
+          {oracleResponse && <div className={`mt-4 sm:mt-6 p-4 sm:p-5 border-l-4 ${t.cardInner} ${t.borderAccent}`}><p className={`text-xs sm:text-sm font-bold leading-relaxed ${t.textMain}`}>{oracleResponse}</p></div>}
+        </div>
+
+        <div className={`p-4 sm:p-6 ${t.card}`}>
+          <div className={`flex justify-between items-center mb-3 sm:mb-4 border-b pb-2 ${t.borderAccent} opacity-80`}>
+            <h3 className={`font-black uppercase tracking-widest text-xs sm:text-sm flex items-center gap-2 ${t.textMain} ${t.fontHeading}`}><BrainCircuit size={16} className="sm:size-5" /> BRAIN DUMP (INBOX)</h3>
+            {isVaultSorting && <span className={`text-[8px] sm:text-[9px] px-1.5 sm:px-2 py-1 font-black uppercase tracking-widest animate-pulse flex items-center ${t.badge} ${t.textAccent}`}><Sparkles size={10} className="inline mr-1" /> AI SORTING</span>}
+          </div>
+          <p className={`text-[9px] sm:text-[10px] font-bold uppercase tracking-widest mb-4 sm:mb-5 leading-relaxed ${t.textMuted}`}>Fast-capture raw ideas. Add 3 similar thoughts, and AI builds a new folder.</p>
+          <div className="flex gap-2 relative">
+            <button onClick={() => {
+                const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SR) { alert("Voice typing not supported."); return; }
+                const rec = new SR(); rec.onstart = () => setIsListening(true);
+                rec.onresult = (e) => setNewNote(p => p + (p ? " " : "") + e.results[e.resultIndex][0].transcript);
+                rec.onerror = () => setIsListening(false); rec.onend = () => setIsListening(false); rec.start();
+              }} className={`p-2 sm:p-3 transition-all ${isListening ? 'bg-red-500 text-white animate-pulse' : t.cardInner + ' ' + t.textMuted}`}><Mic size={20} className="sm:size-6" /></button>
+            <input type="text" value={newNote} onChange={(e) => setNewNote(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleAddNote()} placeholder={isListening ? "SPEAKING..." : "RAW THOUGHT..."} className={`flex-1 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-black uppercase outline-none ${t.input} ${t.fontHeading}`} />
+            <button onClick={handleAddNote} disabled={isVaultSorting} className={`px-4 sm:px-5 font-black uppercase active:translate-y-1 transition-all disabled:opacity-50 ${t.btnPrimary}`}><Send size={18} className="sm:size-5 stroke-[3]" /></button>
+          </div>
+        </div>
+
+        <div className="space-y-4 sm:space-y-6">
+          <h3 className={`font-black uppercase tracking-widest text-xs sm:text-sm flex items-center gap-2 px-1 ${t.textMain} ${t.fontHeading}`}><Folder size={16} className="sm:size-5" /> VAULT FOLDERS</h3>
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
+            {brain.vaultCategories.map(cat => {
+              const count = brain.vaultNotes.filter(n => n.category === cat).length;
+              return (
+                <div key={cat} className="group relative">
+                  <button onClick={() => setExpandedVaultCategory(cat)} className={`w-full p-4 sm:p-5 flex flex-col items-start gap-3 sm:gap-4 transition-all text-left active:translate-y-1 h-full border ${t.cardInner} hover:${t.borderAccent}`}>
+                    <FolderOpen size={24} className={`sm:size-8 transition-colors ${t.textMuted} group-hover:${t.textAccent}`} />
+                    <div>
+                      <h4 className={`font-black text-xs sm:text-sm uppercase truncate w-full ${t.textMain} ${t.fontHeading}`}>{cat}</h4>
+                      <span className={`text-[9px] sm:text-[10px] font-black uppercase tracking-widest mt-1 block ${t.textMuted} ${t.fontHeading}`}>{count} NOTES</span>
+                    </div>
+                  </button>
+                  {cat !== "Others" && <button onClick={(e) => { e.stopPropagation(); updateBrainFirebase({ vaultCategories: brain.vaultCategories.filter(c => c !== cat), vaultNotes: brain.vaultNotes.map(n => n.category === cat ? { ...n, category: "Others" } : n) }); }} className={`absolute top-2 right-2 sm:top-3 sm:right-3 p-1.5 sm:p-2 transition-colors ${t.textMuted} hover:text-red-500`}><Trash2 size={14} className="sm:size-4" /></button>}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const renderHabitSettings = () => {
     if (settingsRoute === "menu") {
       return (
