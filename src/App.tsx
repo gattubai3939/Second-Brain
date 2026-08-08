@@ -182,45 +182,6 @@ const THEMES = {
     btnPrimary: 'bg-[#cc0000] text-[#ffcc00] border border-[#ffcc00] hover:bg-[#ffcc00] hover:text-[#cc0000] shadow-[0_0_15px_rgba(204,0,0,0.4)] rounded-lg font-black uppercase',
     btnWarning: 'bg-[#141414] text-[#00f3ff] border border-[#00f3ff] hover:bg-[#00f3ff] hover:text-black rounded-lg font-black uppercase',
     fontHeading: 'font-mono tracking-widest uppercase', borderAccent: 'border-[#00f3ff]', badge: 'bg-[#00f3ff]/20 text-[#00f3ff] border border-[#00f3ff] rounded font-mono'
-  },
-  mario: {
-    id: 'mario', name: 'Super Plumber',
-    appBg: 'bg-[#5CB946] text-white font-sans selection:bg-[#E52521] selection:text-white',
-    devBar: 'bg-[#E52521] text-white border-b-4 border-black font-black',
-    header: 'bg-[#E52521] text-white border-4 border-black shadow-[6px_6px_0px_#111] rounded-2xl',
-    card: 'bg-[#FBD000] border-4 border-black shadow-[6px_6px_0px_#111] rounded-2xl text-black',
-    cardInner: 'bg-white border-4 border-black hover:border-[#E52521] hover:shadow-[4px_4px_0px_#E52521] transition-all rounded-xl text-black',
-    textMain: 'text-black', textMuted: 'text-zinc-700', textAccent: 'text-[#E52521]', textWarning: 'text-[#5CB946]',
-    input: 'bg-white border-4 border-black text-black placeholder:text-zinc-400 focus:border-[#E52521] rounded-xl px-4 font-black',
-    btnPrimary: 'bg-[#E52521] text-white border-4 border-black hover:bg-[#5CB946] shadow-[4px_4px_0px_black] active:translate-y-1 active:shadow-none rounded-xl font-black uppercase',
-    btnWarning: 'bg-[#FBD000] text-black border-4 border-black hover:bg-white shadow-[4px_4px_0px_black] rounded-xl font-black uppercase active:translate-y-1',
-    fontHeading: 'font-black tracking-wide', borderAccent: 'border-black', badge: 'bg-[#E52521] text-white border-2 border-black font-black rounded-lg'
-  },
-  batman: {
-    id: 'batman', name: 'Dark Knight',
-    appBg: 'bg-[#111] text-white font-sans selection:bg-[#FFEB3B] selection:text-black',
-    devBar: 'bg-[#FFEB3B] text-black border-b-4 border-black font-black',
-    header: 'bg-[#222] text-white border-4 border-black shadow-[6px_6px_0px_#FFEB3B] rounded-none',
-    card: 'bg-[#1a1a1a] border-4 border-[#333] shadow-[6px_6px_0px_black] rounded-none',
-    cardInner: 'bg-[#111] border-2 border-[#555] hover:border-[#FFEB3B] hover:shadow-[4px_4px_0px_#FFEB3B] transition-all rounded-none',
-    textMain: 'text-white', textMuted: 'text-zinc-500', textAccent: 'text-[#FFEB3B]', textWarning: 'text-white',
-    input: 'bg-[#111] border-4 border-[#333] text-white placeholder:text-zinc-600 focus:border-[#FFEB3B] rounded-none px-4',
-    btnPrimary: 'bg-[#FFEB3B] text-black border-4 border-black hover:bg-white shadow-[4px_4px_0px_#333] active:translate-y-1 active:shadow-none rounded-none font-black uppercase tracking-widest',
-    btnWarning: 'bg-[#333] text-[#FFEB3B] border-4 border-black hover:bg-[#555] shadow-[4px_4px_0px_black] rounded-none font-black uppercase active:translate-y-1',
-    fontHeading: 'font-black tracking-wider uppercase', borderAccent: 'border-[#FFEB3B]', badge: 'bg-[#FFEB3B] text-black border-2 border-black font-black rounded-sm'
-  },
-  wolverine: {
-    id: 'wolverine', name: 'Weapon X',
-    appBg: 'bg-[#FFCC00] text-black font-sans selection:bg-[#0033CC] selection:text-white',
-    devBar: 'bg-[#0033CC] text-white border-b-4 border-black font-black',
-    header: 'bg-[#0033CC] text-white border-4 border-black shadow-[8px_8px_0px_black] rounded-2xl',
-    card: 'bg-white border-4 border-black shadow-[8px_8px_0px_black] rounded-2xl',
-    cardInner: 'bg-[#FFF5CC] border-4 border-black hover:border-[#0033CC] hover:bg-[#FFCC00] transition-all rounded-xl',
-    textMain: 'text-black', textMuted: 'text-zinc-700', textAccent: 'text-[#0033CC]', textWarning: 'text-[#FF0000]',
-    input: 'bg-white border-4 border-black text-black placeholder:text-zinc-500 focus:border-[#0033CC] rounded-xl px-4 font-black',
-    btnPrimary: 'bg-[#FFCC00] text-black border-4 border-black hover:bg-[#0033CC] hover:text-white shadow-[6px_6px_0px_black] active:translate-y-1 active:shadow-none rounded-xl font-black uppercase',
-    btnWarning: 'bg-[#0033CC] text-white border-4 border-black hover:bg-black shadow-[6px_6px_0px_black] rounded-xl font-black uppercase active:translate-y-1',
-    fontHeading: 'font-black uppercase', borderAccent: 'border-black', badge: 'bg-black text-[#FFCC00] border-2 border-black font-black rounded-lg'
   }
 };
 
@@ -387,26 +348,6 @@ const LongPressItem = ({ item, onDelete, children, duration = 800, t }) => {
 // MAIN APP COMPONENT
 // ==========================================
 export default function App() {
-  const [bootStep, setBootStep] = useState(0);
-  const [bootText, setBootText] = useState("");
-
-  useEffect(() => {
-    if (bootStep >= 4) return;
-    const sequence = [
-      { t: 100, s: 1, text: "" },
-      { t: 1000, s: 2, text: "CALIBRATING NEURAL LINK..." },
-      { t: 2300, s: 2, text: "PURGING CHEAP DOPAMINE..." },
-      { t: 3600, s: 2, text: "APEX MIND OS ONLINE" },
-      { t: 4900, s: 3, text: "" }, 
-      { t: 5700, s: 4, text: "" }  
-    ];
-    const timers = sequence.map(ev => setTimeout(() => {
-      setBootStep(ev.s);
-      if(ev.text) setBootText(ev.text);
-    }, ev.t));
-    return () => timers.forEach(clearTimeout);
-  }, []);
-
   const [appMode, setAppMode] = useState("habit"); // 'habit' | 'brain'
   const [user, setUser] = useState(null);
   const [todayStr, setTodayStr] = useState(getRealTodayStr()); 
@@ -2075,277 +2016,133 @@ export default function App() {
   // ==========================================
   // TOP BAR & APP WRAPPER
   // ==========================================
-  const activeThemeId = profile.activeTheme || 'brutalist';
-  
-  const getSplashBg = (id) => {
-    if(id === 'squid') return 'bg-[#111]';
-    if(id === 'shinchan') return 'bg-[#ffeb3b]';
-    if(id === 'spider') return 'bg-[#0a0a0a]';
-    if(id === 'mario') return 'bg-[#5CB946]';
-    if(id === 'batman') return 'bg-[#111]';
-    if(id === 'wolverine') return 'bg-[#FFCC00]';
-    if(id === 'goku') return 'bg-[#FF5E00]';
-    if(id === 'doraemonDark' || id === 'doraemonLight') return 'bg-[#09111e]';
-    if(id === 'naruto') return 'bg-[#1c1c1c]';
-    return 'bg-[#030014]';
-  };
-
-  const renderThemeSplash = (themeId) => {
-    if (themeId === 'squid') {
-      return (
-        <div className="flex flex-col items-center justify-center gap-8">
-          <div className="flex gap-6 items-center">
-            <Circle size={80} className="text-[#ff0055] stroke-[4] animate-[bounce_1s_infinite] shadow-[0_0_20px_#ff0055] rounded-full" />
-            <div className="w-0 h-0 border-l-[40px] border-r-[40px] border-b-[75px] border-l-transparent border-r-transparent border-b-[#ff0055] animate-[bounce_1s_infinite_100ms] drop-shadow-[0_0_20px_#ff0055]"></div>
-            <div className="w-20 h-20 border-[8px] border-[#ff0055] animate-[bounce_1s_infinite_200ms] shadow-[0_0_20px_#ff0055,inset_0_0_20px_#ff0055]"></div>
-          </div>
-          {bootStep >= 2 && <h1 className="text-[#ff0055] font-black tracking-[0.5em] text-xl sm:text-3xl uppercase animate-pulse drop-shadow-[0_0_15px_#ff0055]">INITIATING GAME...</h1>}
-        </div>
-      );
-    }
-    if (themeId === 'doraemonDark' || themeId === 'doraemonLight') {
-       return (
-         <div className="flex flex-col items-center gap-8">
-            <div className="w-32 h-32 bg-white rounded-full border-4 border-[#1E3A5F] flex flex-col items-center overflow-hidden relative shadow-[0_0_40px_#0096FE]">
-               <div className="w-full h-1/2 bg-[#0096FE]"></div>
-               <div className="w-full h-1/2 bg-white"></div>
-               <div className="absolute w-24 h-24 bg-white rounded-full border-4 border-[#1E3A5F] -bottom-4"></div>
-               <div className="absolute w-12 h-4 bg-[#E50020] rounded-full border-2 border-[#1E3A5F] top-[40%]"></div>
-               <div className="absolute w-8 h-8 bg-[#FFD900] rounded-full border-2 border-[#1E3A5F] top-[50%] animate-[spin_2s_infinite]"></div>
-            </div>
-            {bootStep >= 2 && <h1 className="text-white font-black text-2xl sm:text-3xl tracking-widest animate-bounce drop-shadow-[0_4px_4px_rgba(0,150,254,0.8)]">GADGET ACTIVATED</h1>}
-         </div>
-       );
-    }
-    if (themeId === 'spider') {
-       return (
-         <div className="flex flex-col items-center gap-6 relative">
-            <div className="absolute inset-0 bg-[#e23636] mix-blend-overlay animate-[ping_0.5s_infinite]"></div>
-            <div className="text-[#e23636] font-black text-5xl sm:text-7xl tracking-tighter drop-shadow-[6px_6px_0px_#0033cc] animate-[bounce_0.2s_infinite]">SPIDER-OS</div>
-            {bootStep >= 2 && <p className="text-white font-black tracking-[0.3em] sm:tracking-[0.5em] text-sm sm:text-xl bg-black px-4 py-2 border-4 border-[#e23636]">DIMENSION LINKING...</p>}
-         </div>
-       );
-    }
-    if (themeId === 'shinchan') {
-       return (
-         <div className="flex flex-col items-center gap-6">
-            <div className="text-6xl sm:text-8xl font-black text-[#ff0000] drop-shadow-[8px_8px_0px_black] animate-[ping_1s_infinite]">WAHAHA!</div>
-            {bootStep >= 2 && <div className="text-3xl sm:text-5xl font-black text-[#ffeb3b] drop-shadow-[6px_6px_0px_black] bg-[#00a8ff] px-6 py-2 border-8 border-black transform -rotate-3 animate-[pulse_0.5s_infinite]">ACTION BEAM!</div>}
-         </div>
-       );
-    }
-    if (themeId === 'goku') {
-       return (
-         <div className="flex flex-col items-center gap-10">
-            <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-8 border-[#FF5E00] shadow-[0_0_100px_#FFD700,inset_0_0_100px_#FFD700] animate-[ping_1s_infinite]"></div>
-            {bootStep >= 2 && <h1 className="text-[#FFD700] font-black text-3xl sm:text-5xl tracking-widest drop-shadow-[0_0_10px_#FF5E00] animate-[pulse_0.2s_infinite]">POWERING UP...</h1>}
-         </div>
-       );
-    }
-    if (themeId === 'naruto') {
-       return (
-         <div className="flex flex-col items-center gap-10">
-            <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-red-600 border-8 border-black flex items-center justify-center relative animate-[spin_0.5s_linear_infinite] shadow-[0_0_50px_red]">
-               <div className="w-6 h-6 sm:w-8 sm:h-8 bg-black rounded-full absolute"></div>
-               <div className="w-3 h-3 sm:w-4 sm:h-4 bg-black rounded-full absolute top-2 right-4 sm:right-6"></div>
-               <div className="w-3 h-3 sm:w-4 sm:h-4 bg-black rounded-full absolute bottom-4 left-3 sm:left-4"></div>
-               <div className="w-3 h-3 sm:w-4 sm:h-4 bg-black rounded-full absolute top-6 left-2"></div>
-            </div>
-            {bootStep >= 2 && <h1 className="text-red-500 font-black text-xl sm:text-3xl tracking-[0.5em] animate-pulse">SHARINGAN ACTIVE</h1>}
-         </div>
-       );
-    }
-    if (themeId === 'mario') {
-       return (
-         <div className="flex flex-col items-center gap-8">
-            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-[#FBD000] border-8 border-black flex items-center justify-center shadow-[8px_8px_0px_black] animate-[bounce_0.5s_infinite]">
-               <span className="text-4xl sm:text-5xl font-black text-black">?</span>
-            </div>
-            {bootStep >= 2 && <h1 className="text-[#E52521] font-black text-3xl sm:text-4xl drop-shadow-[4px_4px_0px_black] bg-white px-4 py-2 border-4 border-black">LEVEL UP!</h1>}
-         </div>
-       );
-    }
-    if (themeId === 'batman') {
-       return (
-         <div className="flex flex-col items-center gap-10">
-            <div className="w-32 h-16 sm:w-40 sm:h-20 bg-[#FFEB3B] rounded-[100px] border-8 border-black flex items-center justify-center shadow-[0_0_80px_#FFEB3B] animate-[pulse_2s_infinite]">
-               <div className="w-20 h-8 sm:w-24 sm:h-10 bg-black" style={{ clipPath: "polygon(0 40%, 30% 0, 40% 40%, 50% 10%, 60% 40%, 70% 0, 100% 40%, 80% 100%, 50% 80%, 20% 100%)" }}></div>
-            </div>
-            {bootStep >= 2 && <h1 className="text-white font-black text-2xl sm:text-3xl tracking-[0.5em] uppercase drop-shadow-[0_0_10px_white]">SYSTEM SECURED</h1>}
-         </div>
-       );
-    }
-    if (themeId === 'wolverine') {
-       return (
-         <div className="flex flex-col items-center gap-10">
-            <div className="flex gap-4 sm:gap-6 animate-[bounce_0.5s_infinite]">
-               <div className="w-2 sm:w-3 h-24 sm:h-32 bg-gray-100 shadow-[0_0_15px_white] skew-x-[20deg] rounded-t-full"></div>
-               <div className="w-2 sm:w-3 h-24 sm:h-32 bg-gray-100 shadow-[0_0_15px_white] rounded-t-full"></div>
-               <div className="w-2 sm:w-3 h-24 sm:h-32 bg-gray-100 shadow-[0_0_15px_white] -skew-x-[20deg] rounded-t-full"></div>
-            </div>
-            {bootStep >= 2 && <h1 className="text-[#FFCC00] font-black text-4xl sm:text-5xl drop-shadow-[4px_4px_0px_#0033CC] uppercase">WEAPON X</h1>}
-         </div>
-       );
-    }
-    // Default Fallback (Neural Core - Cyber/Stark/Brutalist/RPG/Synthwave/etc)
-    return (
-       <div className="relative flex flex-col items-center justify-center w-full h-full">
-           <div className="absolute w-32 h-32 rounded-full bg-[#00f3ff]/10 blur-xl animate-[corePulse_2s_ease-in-out_infinite]"></div>
-           <div className="absolute w-64 h-64 rounded-full border-[1px] border-dashed border-[#00f3ff]/30 animate-[ringSpin3_10s_linear_infinite]"></div>
-           <div className="absolute w-48 h-48 rounded-full border-2 border-t-[#00f3ff] border-b-[#ff007f] border-l-transparent border-r-transparent animate-[ringSpin1_2s_linear_infinite]"></div>
-           <div className="absolute w-40 h-40 rounded-full border-2 border-r-[#00f3ff] border-l-[#ff007f] border-t-transparent border-b-transparent animate-[ringSpin2_3s_linear_infinite]"></div>
-           <div className="absolute w-12 h-12 rounded-full bg-[#00f3ff]/30 blur-md animate-[corePulse_1.5s_ease-in-out_infinite]"></div>
-           <div className="absolute w-4 h-4 rounded-full bg-white shadow-[0_0_20px_#fff,0_0_40px_#00f3ff] z-10 animate-[coreCore_1.5s_ease-in-out_infinite]"></div>
-           {bootStep >= 2 && (
-             <div className="absolute mt-[250px] sm:mt-[300px] text-[#00f3ff] font-mono text-[10px] sm:text-xs font-black uppercase tracking-[0.5em] text-center w-full drop-shadow-[0_0_10px_rgba(0,243,255,0.8)]">
-               {bootStep === 2 ? "CALIBRATING NEURAL LINK..." : "APEX MIND OS ONLINE."}
-             </div>
-           )}
-       </div>
-    );
-  };
-
   return (
-    <>
-      {bootStep < 4 && (
-        <div className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden transition-all duration-700 ease-in-out ${bootStep === 3 ? 'opacity-0 scale-110' : 'opacity-100'} ${getSplashBg(activeThemeId)}`}>
-          <style>{`
-            @keyframes corePulse { 0% { transform: scale(0.8); } 50% { transform: scale(1.2); } 100% { transform: scale(0.8); } }
-            @keyframes coreCore { 0% { transform: scale(0.5); filter: brightness(1); } 50% { transform: scale(1.5); filter: brightness(1.5); } 100% { transform: scale(0.5); filter: brightness(1); } }
-            @keyframes ringSpin1 { 0% { transform: rotate(0deg) scale(1); } 50% { transform: rotate(180deg) scale(1.1); } 100% { transform: rotate(360deg) scale(1); } }
-            @keyframes ringSpin2 { 0% { transform: rotate(360deg) scale(0.8); } 50% { transform: rotate(180deg) scale(1.1); } 100% { transform: rotate(0deg) scale(0.8); } }
-            @keyframes ringSpin3 { 0% { transform: rotate(0deg) scale(1.2); } 100% { transform: rotate(-360deg) scale(1.2); } }
-          `}</style>
-          {renderThemeSplash(activeThemeId)}
+    <div className={`min-h-screen ${t.appBg} ${t.fontHeading} transition-colors duration-500 relative`}>
+      {testMode && (
+        <div className={`fixed top-0 left-0 w-full z-50 p-2 flex flex-wrap justify-center items-center gap-2 sm:gap-4 shadow-lg ${t.devBar} ${t.fontHeading} text-[9px] sm:text-xs`}>
+          <span className="font-black tracking-widest hidden sm:inline">DEV Mode:</span>
+          <button onClick={() => { const d = new Date(todayStr); d.setDate(d.getDate() - 1); setTodayStr(formatDate(d)); }} className="px-2 sm:px-3 py-1 sm:py-1.5 bg-black/20 hover:bg-black/40 border border-current active:scale-95 transition-all rounded">- DAY</button>
+          
+          {/* Custom Date Picker for Devs */}
+          <input 
+            type="date" 
+            value={todayStr} 
+            onChange={(e) => { if(e.target.value) setTodayStr(e.target.value); }} 
+            className="px-1 sm:px-2 py-1 sm:py-1.5 bg-black/30 border border-current rounded text-inherit outline-none"
+          />
+
+          <button onClick={() => { const d = new Date(todayStr); d.setDate(d.getDate() + 1); setTodayStr(formatDate(d)); }} className="px-2 sm:px-3 py-1 sm:py-1.5 bg-black/20 hover:bg-black/40 border border-current active:scale-95 transition-all rounded">+ DAY</button>
+          <button onClick={() => setTodayStr(getRealTodayStr())} className="px-2 sm:px-3 py-1 sm:py-1.5 bg-black/20 hover:bg-black/40 border border-current active:scale-95 transition-all rounded">TODAY</button>
+          
+          {/* Star Boost for testing shop */}
+          <button onClick={() => updateProfileFirebase({ stars: profile.stars + 50 })} className="px-2 py-1 bg-yellow-500 text-black hover:bg-yellow-400 border border-black active:scale-95 transition-all rounded font-bold">+50 ⭐</button>
         </div>
       )}
 
-      <div className={`min-h-screen ${t.appBg} ${t.fontHeading} transition-colors duration-500 relative ${bootStep < 4 ? 'h-screen overflow-hidden' : ''}`}>
-        {testMode && (
-          <div className={`fixed top-0 left-0 w-full z-50 p-2 flex flex-wrap justify-center items-center gap-2 sm:gap-4 shadow-lg ${t.devBar} ${t.fontHeading} text-[9px] sm:text-xs`}>
-            <span className="font-black tracking-widest hidden sm:inline">DEV Mode:</span>
-            <button onClick={() => { const d = new Date(todayStr); d.setDate(d.getDate() - 1); setTodayStr(formatDate(d)); }} className="px-2 sm:px-3 py-1 sm:py-1.5 bg-black/20 hover:bg-black/40 border border-current active:scale-95 transition-all rounded">- DAY</button>
-            
-            {/* Custom Date Picker for Devs */}
-            <input 
-              type="date" 
-              value={todayStr} 
-              onChange={(e) => { if(e.target.value) setTodayStr(e.target.value); }} 
-              className="px-1 sm:px-2 py-1 sm:py-1.5 bg-black/30 border border-current rounded text-inherit outline-none"
-            />
+      {/* TOP BAR SWITCH */}
+      <div className={`fixed ${testMode ? 'top-10 sm:top-12' : 'top-0'} left-0 w-full z-40 p-3 sm:p-4 bg-inherit backdrop-blur-sm border-b ${t.borderAccent} opacity-95 flex justify-center items-center`}>
+        <div className={`flex w-full max-w-sm rounded-full p-1 border shadow-xl ${t.cardInner} ${t.borderAccent}`}>
+          <button onClick={() => setAppMode("habit")} className={`flex-1 py-2 sm:py-2.5 text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-full transition-all ${appMode === 'habit' ? t.btnPrimary : t.textMuted + ' hover:' + t.textMain}`}>HABIT OS</button>
+          <button onClick={() => setAppMode("brain")} className={`flex-1 py-2 sm:py-2.5 text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-full transition-all ${appMode === 'brain' ? t.btnPrimary : t.textMuted + ' hover:' + t.textMain}`}>SECOND BRAIN</button>
+        </div>
+      </div>
 
-            <button onClick={() => { const d = new Date(todayStr); d.setDate(d.getDate() + 1); setTodayStr(formatDate(d)); }} className="px-2 sm:px-3 py-1 sm:py-1.5 bg-black/20 hover:bg-black/40 border border-current active:scale-95 transition-all rounded">+ DAY</button>
-            <button onClick={() => setTodayStr(getRealTodayStr())} className="px-2 sm:px-3 py-1 sm:py-1.5 bg-black/20 hover:bg-black/40 border border-current active:scale-95 transition-all rounded">TODAY</button>
-            
-            {/* Star Boost for testing shop */}
-            <button onClick={() => updateProfileFirebase({ stars: profile.stars + 50 })} className="px-2 py-1 bg-yellow-500 text-black hover:bg-yellow-400 border border-black active:scale-95 transition-all rounded font-bold">+50 ⭐</button>
+      <div className={`p-4 md:p-8 relative pt-24 sm:pt-28 ${testMode ? 'mt-8 sm:mt-12' : ''}`}>
+        {toast && (
+          <div className={`fixed top-28 sm:top-32 left-1/2 transform -translate-x-1/2 px-4 sm:px-6 py-2 sm:py-3 shadow-2xl z-[100] animate-bounce flex items-center gap-2 text-[10px] sm:text-sm uppercase tracking-widest ${t.badge} ${t.fontHeading}`}>
+            <Check size={16} className={`sm:size-5 ${t.textAccent ? t.textAccent : 'text-current'}`} /> {toast}
+          </div>
+        )}
+        {errorMsg && (
+          <div className={`max-w-5xl mx-auto p-3 sm:p-4 mb-4 sm:mb-6 flex items-start gap-2 shadow-lg text-[10px] sm:text-sm uppercase tracking-widest bg-red-900/80 text-white ${t.fontHeading}`}>
+            <AlertTriangle size={18} className="sm:size-5 mt-0.5 flex-shrink-0" />
+            <span className="flex-1 leading-relaxed">{errorMsg}</span>
+            <button onClick={() => setErrorMsg("")} className="hover:opacity-70 active:scale-90"><X size={16} className="sm:size-5" /></button>
           </div>
         )}
 
-        {/* TOP BAR SWITCH */}
-        <div className={`fixed ${testMode ? 'top-10 sm:top-12' : 'top-0'} left-0 w-full z-40 p-3 sm:p-4 bg-inherit backdrop-blur-sm border-b ${t.borderAccent} opacity-95 flex justify-center items-center`}>
-          <div className={`flex w-full max-w-sm rounded-full p-1 border shadow-xl ${t.cardInner} ${t.borderAccent}`}>
-            <button onClick={() => setAppMode("habit")} className={`flex-1 py-2 sm:py-2.5 text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-full transition-all ${appMode === 'habit' ? t.btnPrimary : t.textMuted + ' hover:' + t.textMain}`}>HABIT OS</button>
-            <button onClick={() => setAppMode("brain")} className={`flex-1 py-2 sm:py-2.5 text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-full transition-all ${appMode === 'brain' ? t.btnPrimary : t.textMuted + ' hover:' + t.textMain}`}>SECOND BRAIN</button>
-          </div>
-        </div>
-
-        <div className={`p-4 md:p-8 relative pt-24 sm:pt-28 ${testMode ? 'mt-8 sm:mt-12' : ''}`}>
-          {toast && (
-            <div className={`fixed top-28 sm:top-32 left-1/2 transform -translate-x-1/2 px-4 sm:px-6 py-2 sm:py-3 shadow-2xl z-[100] animate-bounce flex items-center gap-2 text-[10px] sm:text-sm uppercase tracking-widest ${t.badge} ${t.fontHeading}`}>
-              <Check size={16} className={`sm:size-5 ${t.textAccent ? t.textAccent : 'text-current'}`} /> {toast}
-            </div>
-          )}
-          {errorMsg && (
-            <div className={`max-w-5xl mx-auto p-3 sm:p-4 mb-4 sm:mb-6 flex items-start gap-2 shadow-lg text-[10px] sm:text-sm uppercase tracking-widest bg-red-900/80 text-white ${t.fontHeading}`}>
-              <AlertTriangle size={18} className="sm:size-5 mt-0.5 flex-shrink-0" />
-              <span className="flex-1 leading-relaxed">{errorMsg}</span>
-              <button onClick={() => setErrorMsg("")} className="hover:opacity-70 active:scale-90"><X size={16} className="sm:size-5" /></button>
-            </div>
+        <div className="max-w-5xl mx-auto">
+          {appMode === 'habit' && (
+            <>
+              {habitRoute === "hub" && renderHabitHub()}
+              {habitRoute === "arena" && renderHabitArena()}
+              {habitRoute === "tracker" && renderHabitTracker()}
+              {habitRoute === "shop" && renderShop()}
+              {habitRoute === "settings" && renderHabitSettings()}
+              {habitRoute === "analysis" && renderAnalysis()}
+              {habitRoute === "plan" && renderOngoingPlan()}
+              {habitRoute === "vault" && renderVault()}
+              {habitRoute === "coach" && renderCoach()}
+            </>
           )}
 
-          <div className="max-w-5xl mx-auto">
-            {appMode === 'habit' && (
-              <>
-                {habitRoute === "hub" && renderHabitHub()}
-                {habitRoute === "arena" && renderHabitArena()}
-                {habitRoute === "tracker" && renderHabitTracker()}
-                {habitRoute === "shop" && renderShop()}
-                {habitRoute === "settings" && renderHabitSettings()}
-                {habitRoute === "analysis" && renderAnalysis()}
-                {habitRoute === "plan" && renderOngoingPlan()}
-                {habitRoute === "vault" && renderVault()}
-                {habitRoute === "coach" && renderCoach()}
-              </>
-            )}
+          {appMode === 'brain' && (
+            <>
+              {brainTab === 'dashboard' && renderBrainDashboard()}
+              {brainTab === 'study' && renderBrainStudy()}
+              {brainTab === 'history' && renderBrainHistory()}
+              {brainTab === 'wisdom' && renderBrainWisdom()}
+              {brainTab === 'vault' && renderBrainVault()}
+              {brainTab === 'urge' && renderBrainUrge()}
 
-            {appMode === 'brain' && (
-              <>
-                {brainTab === 'dashboard' && renderBrainDashboard()}
-                {brainTab === 'study' && renderBrainStudy()}
-                {brainTab === 'history' && renderBrainHistory()}
-                {brainTab === 'wisdom' && renderBrainWisdom()}
-                {brainTab === 'vault' && renderBrainVault()}
-                {brainTab === 'urge' && renderBrainUrge()}
+              {/* Night Shift Widget */}
+              {isNightTime && (
+                <div className="fixed bottom-24 sm:bottom-28 right-4 z-40 flex flex-col items-end">
+                  {!isNightShiftOpen ? (
+                    <button onClick={() => setIsNightShiftOpen(true)} className={`px-4 sm:px-6 py-3 sm:py-4 flex items-center gap-2 sm:gap-3 text-xs sm:text-sm uppercase tracking-widest active:translate-y-1 transition-all ${t.btnWarning} ${t.fontHeading}`}><Moon size={18} className="sm:size-5 stroke-[3]" /> PLAN TOMORROW</button>
+                  ) : (
+                    <div className={`p-4 sm:p-6 w-[280px] sm:w-[320px] shadow-2xl border-t-4 ${t.card} ${t.borderAccent}`}>
+                       <div className={`flex justify-between items-center mb-4 sm:mb-6 border-b pb-2 sm:pb-3 ${t.borderAccent} opacity-80`}>
+                         <h3 className={`font-black text-[10px] sm:text-xs uppercase tracking-widest flex items-center gap-2 ${t.textAccent}`}><Moon size={14} className="sm:size-4 stroke-[3]"/> NIGHT SHIFT INBOX</h3>
+                         <button onClick={() => setIsNightShiftOpen(false)} className={`transition-colors ${t.textMuted} hover:text-red-500`}><X size={16} className="sm:size-5 stroke-[3]"/></button>
+                       </div>
+                       <p className={`text-[9px] sm:text-[10px] font-bold mb-3 sm:mb-4 ${t.textMuted}`}>Add tasks for tomorrow, or pin a queue target.</p>
+                       <div className="flex gap-2 mb-4 sm:mb-6">
+                         <input type="text" value={newCustomMission} onChange={(e) => setNewCustomMission(e.target.value)} onKeyPress={(e) => {
+                              if(e.key === 'Enter' && newCustomMission.trim()) {
+                                 updateBrainFirebase({ customMissions: [...brain.customMissions, { id: Date.now().toString(), text: newCustomMission.trim(), targetDate: addDays(todayStr, 1), completed: false }] });
+                                 setNewCustomMission("");
+                              }
+                           }} placeholder="CUSTOM TASK..." className={`flex-1 px-2 sm:px-3 py-2 sm:py-3 text-[10px] sm:text-xs font-black uppercase outline-none ${t.input}`} />
+                         <button onClick={() => {
+                              if(newCustomMission.trim()) {
+                                 updateBrainFirebase({ customMissions: [...brain.customMissions, { id: Date.now().toString(), text: newCustomMission.trim(), targetDate: addDays(todayStr, 1), completed: false }] });
+                                 setNewCustomMission("");
+                              }
+                           }} className={`px-3 sm:px-4 active:translate-y-1 transition-all ${t.btnPrimary}`}><Send size={14} className="sm:size-4 stroke-[3]" /></button>
+                       </div>
+                       {brain.customMissions.filter(m => m.targetDate === addDays(todayStr, 1)).length > 0 && (
+                          <div className="mb-4 sm:mb-6 space-y-1.5 sm:space-y-2">
+                            {brain.customMissions.filter(m => m.targetDate === addDays(todayStr, 1)).map(m => (
+                               <div key={m.id} className={`text-[10px] sm:text-xs font-black uppercase tracking-wider px-2 sm:px-3 py-1.5 sm:py-2 flex justify-between items-center border ${t.cardInner} ${t.textMain} ${t.borderAccent}`}>
+                                 <span className="truncate pr-2">• {m.text}</span>
+                                 <button onClick={() => updateBrainFirebase({ customMissions: brain.customMissions.filter(task => task.id !== m.id) })} className={`transition-colors ${t.textMuted} hover:text-red-500 shrink-0`}><Trash2 size={12} className="sm:size-3 stroke-[3]" /></button>
+                               </div>
+                            ))}
+                          </div>
+                       )}
+                       {brain.stagingTopics.length > 0 && (
+                         <>
+                           <div className={`text-[9px] sm:text-[10px] font-black uppercase tracking-widest mb-2 sm:mb-3 border-t pt-3 sm:pt-4 ${t.textAccent} ${t.borderAccent} opacity-80`}>PIN SYLLABUS TARGET</div>
+                           <div className="space-y-1.5 sm:space-y-2 max-h-32 overflow-y-auto hide-scrollbar pr-1">
+                             {brain.stagingTopics.slice(0, 3).map((topic, idx) => (
+                               <button key={topic.id} onClick={() => {
+                                   const items = [...brain.stagingTopics]; const clickedItem = items.splice(idx, 1)[0]; items.unshift(clickedItem);
+                                   updateBrainFirebase({ stagingTopics: items });
+                                 }} className={`w-full text-left p-2 sm:p-3 transition-colors flex items-center justify-between group border ${t.cardInner} hover:${t.borderAccent}`}>
+                                 <span className={`font-black text-[9px] sm:text-[10px] uppercase truncate pr-2 tracking-widest ${t.textMain}`}>{topic.title}</span>
+                                 <span className={`text-[8px] sm:text-[9px] font-black uppercase tracking-widest px-1.5 sm:px-2 py-0.5 opacity-0 group-hover:opacity-100 transition-opacity ${t.badge} ${t.textAccent}`}>PIN</span>
+                               </button>
+                             ))}
+                           </div>
+                         </>
+                       )}
+                    </div>
+                  )}
+                </div>
+              )}
 
-                {/* Night Shift Widget */}
-                {isNightTime && (
-                  <div className="fixed bottom-24 sm:bottom-28 right-4 z-40 flex flex-col items-end">
-                    {!isNightShiftOpen ? (
-                      <button onClick={() => setIsNightShiftOpen(true)} className={`px-4 sm:px-6 py-3 sm:py-4 flex items-center gap-2 sm:gap-3 text-xs sm:text-sm uppercase tracking-widest active:translate-y-1 transition-all ${t.btnWarning} ${t.fontHeading}`}><Moon size={18} className="sm:size-5 stroke-[3]" /> PLAN TOMORROW</button>
-                    ) : (
-                      <div className={`p-4 sm:p-6 w-[280px] sm:w-[320px] shadow-2xl border-t-4 ${t.card} ${t.borderAccent}`}>
-                         <div className={`flex justify-between items-center mb-4 sm:mb-6 border-b pb-2 sm:pb-3 ${t.borderAccent} opacity-80`}>
-                           <h3 className={`font-black text-[10px] sm:text-xs uppercase tracking-widest flex items-center gap-2 ${t.textAccent}`}><Moon size={14} className="sm:size-4 stroke-[3]"/> NIGHT SHIFT INBOX</h3>
-                           <button onClick={() => setIsNightShiftOpen(false)} className={`transition-colors ${t.textMuted} hover:text-red-500`}><X size={16} className="sm:size-5 stroke-[3]"/></button>
-                         </div>
-                         <p className={`text-[9px] sm:text-[10px] font-bold mb-3 sm:mb-4 ${t.textMuted}`}>Add tasks for tomorrow, or pin a queue target.</p>
-                         <div className="flex gap-2 mb-4 sm:mb-6">
-                           <input type="text" value={newCustomMission} onChange={(e) => setNewCustomMission(e.target.value)} onKeyPress={(e) => {
-                                if(e.key === 'Enter' && newCustomMission.trim()) {
-                                   updateBrainFirebase({ customMissions: [...brain.customMissions, { id: Date.now().toString(), text: newCustomMission.trim(), targetDate: addDays(todayStr, 1), completed: false }] });
-                                   setNewCustomMission("");
-                                }
-                             }} placeholder="CUSTOM TASK..." className={`flex-1 px-2 sm:px-3 py-2 sm:py-3 text-[10px] sm:text-xs font-black uppercase outline-none ${t.input}`} />
-                           <button onClick={() => {
-                                if(newCustomMission.trim()) {
-                                   updateBrainFirebase({ customMissions: [...brain.customMissions, { id: Date.now().toString(), text: newCustomMission.trim(), targetDate: addDays(todayStr, 1), completed: false }] });
-                                   setNewCustomMission("");
-                                }
-                             }} className={`px-3 sm:px-4 active:translate-y-1 transition-all ${t.btnPrimary}`}><Send size={14} className="sm:size-4 stroke-[3]" /></button>
-                         </div>
-                         {brain.customMissions.filter(m => m.targetDate === addDays(todayStr, 1)).length > 0 && (
-                            <div className="mb-4 sm:mb-6 space-y-1.5 sm:space-y-2">
-                              {brain.customMissions.filter(m => m.targetDate === addDays(todayStr, 1)).map(m => (
-                                 <div key={m.id} className={`text-[10px] sm:text-xs font-black uppercase tracking-wider px-2 sm:px-3 py-1.5 sm:py-2 flex justify-between items-center border ${t.cardInner} ${t.textMain} ${t.borderAccent}`}>
-                                   <span className="truncate pr-2">• {m.text}</span>
-                                   <button onClick={() => updateBrainFirebase({ customMissions: brain.customMissions.filter(task => task.id !== m.id) })} className={`transition-colors ${t.textMuted} hover:text-red-500 shrink-0`}><Trash2 size={12} className="sm:size-3 stroke-[3]" /></button>
-                                 </div>
-                              ))}
-                            </div>
-                         )}
-                         {brain.stagingTopics.length > 0 && (
-                           <>
-                             <div className={`text-[9px] sm:text-[10px] font-black uppercase tracking-widest mb-2 sm:mb-3 border-t pt-3 sm:pt-4 ${t.textAccent} ${t.borderAccent} opacity-80`}>PIN SYLLABUS TARGET</div>
-                             <div className="space-y-1.5 sm:space-y-2 max-h-32 overflow-y-auto hide-scrollbar pr-1">
-                               {brain.stagingTopics.slice(0, 3).map((topic, idx) => (
-                                 <button key={topic.id} onClick={() => {
-                                     const items = [...brain.stagingTopics]; const clickedItem = items.splice(idx, 1)[0]; items.unshift(clickedItem);
-                                     updateBrainFirebase({ stagingTopics: items });
-                                   }} className={`w-full text-left p-2 sm:p-3 transition-colors flex items-center justify-between group border ${t.cardInner} hover:${t.borderAccent}`}>
-                                   <span className={`font-black text-[9px] sm:text-[10px] uppercase truncate pr-2 tracking-widest ${t.textMain}`}>{topic.title}</span>
-                                   <span className={`text-[8px] sm:text-[9px] font-black uppercase tracking-widest px-1.5 sm:px-2 py-0.5 opacity-0 group-hover:opacity-100 transition-opacity ${t.badge} ${t.textAccent}`}>PIN</span>
-                                 </button>
-                               ))}
-                             </div>
-                           </>
-                         )}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Second Brain Bottom Nav */}
+              {/* Second Brain Bottom Nav */}
               <div className={`fixed bottom-0 left-0 w-full border-t-2 z-50 overflow-x-auto hide-scrollbar ${t.header} ${t.borderAccent}`}>
                 <div className="max-w-2xl mx-auto flex justify-between px-1 sm:px-2 py-2 sm:py-3 min-w-[320px]">
                   {[{ id: 'dashboard', icon: CalendarIcon, label: 'MISSION' }, { id: 'study', icon: Activity, label: 'QUEUE' }, { id: 'history', icon: History, label: 'HISTORY' }, { id: 'wisdom', icon: Folder, label: 'WISDOM' }, { id: 'vault', icon: BrainCircuit, label: 'DUMP' }, { id: 'urge', icon: ShieldAlert, label: 'URGE' }].map(tab => (
@@ -2361,6 +2158,5 @@ export default function App() {
         </div>
       </div>
     </div>
-    </>
   );
 }
