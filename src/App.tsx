@@ -27,6 +27,84 @@ import {
 // THEME ENGINE 
 // ==========================================
 const THEMES = {
+   titan: {
+    id: 'titan', name: 'Mad Titan',
+    appBg: 'bg-[#1a0525] text-[#e0b0ff] font-sans selection:bg-[#ffd700] selection:text-black',
+    devBar: 'bg-[#ffd700] text-black border-b-4 border-[#4a148c] font-black',
+    header: 'bg-[#4a148c] text-[#ffd700] border-4 border-[#ffd700] shadow-[0_0_30px_rgba(255,215,0,0.3)] rounded-lg',
+    card: 'bg-[#2a0845] border-2 border-[#ffd700]/50 shadow-[8px_8px_0px_#ffd700] rounded-lg',
+    cardInner: 'bg-[#311b54] border border-[#ffd700]/30 hover:border-[#ffd700] transition-all rounded-md',
+    textMain: 'text-[#e0b0ff]', textMuted: 'text-[#8e5eb5]', textAccent: 'text-[#ffd700]', textWarning: 'text-[#ffb300]',
+    input: 'bg-[#1a0525] border-2 border-[#ffd700]/50 text-[#ffd700] placeholder:text-[#8e5eb5] focus:border-[#ffd700] rounded-md px-4',
+    btnPrimary: 'bg-[#ffd700] text-[#1a0525] border-2 border-[#ffd700] hover:bg-white shadow-[0_0_15px_rgba(255,215,0,0.5)] active:translate-y-1 active:shadow-none rounded-md font-black uppercase',
+    btnWarning: 'bg-[#4a148c] text-[#ffd700] border-2 border-[#ffd700] hover:bg-[#ffd700] hover:text-[#4a148c] shadow-[4px_4px_0px_black] rounded-md font-black uppercase',
+    fontHeading: 'font-black tracking-widest uppercase', borderAccent: 'border-[#ffd700]', badge: 'bg-[#ffd700] text-[#1a0525] font-black rounded-sm px-2'
+  },
+  speedster: {
+    id: 'speedster', name: 'Speed Force',
+    appBg: 'bg-[#990000] text-white font-sans selection:bg-[#ffcc00] selection:text-black',
+    devBar: 'bg-[#ffcc00] text-black border-b-4 border-black font-black',
+    header: 'bg-gradient-to-r from-[#cc0000] to-[#ff3333] text-white border-[3px] border-black shadow-[6px_6px_0px_#ffcc00] rounded-xl transform -skew-x-2',
+    card: 'bg-white border-[3px] border-black shadow-[6px_6px_0px_#111] rounded-xl',
+    cardInner: 'bg-[#fff5cc] border-2 border-black hover:bg-[#ffcc00] transition-all rounded-lg',
+    textMain: 'text-black', textMuted: 'text-zinc-600', textAccent: 'text-[#cc0000]', textWarning: 'text-[#ffcc00]',
+    input: 'bg-white border-2 border-black text-black placeholder:text-zinc-500 focus:border-[#cc0000] rounded-lg px-4',
+    btnPrimary: 'bg-[#cc0000] text-white border-[3px] border-black hover:bg-[#ffcc00] hover:text-black shadow-[4px_4px_0px_#111] active:translate-y-1 active:shadow-none rounded-lg font-black uppercase italic',
+    btnWarning: 'bg-[#ffcc00] text-black border-[3px] border-black hover:bg-white shadow-[2px_2px_0px_#111] rounded-lg font-black uppercase italic',
+    fontHeading: 'font-black tracking-widest italic', borderAccent: 'border-[#ffcc00]', badge: 'bg-[#ffcc00] text-black border-2 border-black font-black rounded-lg italic'
+  },
+  wolverine: {
+    id: 'wolverine', name: 'Weapon X',
+    appBg: 'bg-[#ffce00] text-black font-sans selection:bg-[#32527b] selection:text-white',
+    devBar: 'bg-[#32527b] text-white border-b-4 border-black font-black',
+    header: 'bg-[#32527b] text-white border-4 border-black shadow-[6px_6px_0px_#000] rounded-none',
+    card: 'bg-[#f4f4f4] border-4 border-black shadow-[6px_6px_0px_#000] rounded-none',
+    cardInner: 'bg-white border-2 border-black hover:border-[#32527b] transition-all rounded-none',
+    textMain: 'text-black', textMuted: 'text-zinc-600', textAccent: 'text-[#32527b]', textWarning: 'text-[#ffce00]',
+    input: 'bg-white border-2 border-black text-black placeholder:text-zinc-500 focus:border-[#32527b] rounded-none px-4',
+    btnPrimary: 'bg-[#32527b] text-white border-4 border-black hover:bg-[#ffce00] hover:text-black shadow-[4px_4px_0px_black] active:translate-y-1 active:shadow-none rounded-none font-black uppercase',
+    btnWarning: 'bg-[#ffce00] text-black border-4 border-black hover:bg-white shadow-[4px_4px_0px_black] rounded-none font-black uppercase',
+    fontHeading: 'font-black tracking-widest italic', borderAccent: 'border-[#32527b]', badge: 'bg-[#32527b] text-white border-2 border-black font-black rounded-none'
+  },
+  batman: {
+    id: 'batman', name: 'Dark Knight',
+    appBg: 'bg-[#0a0a0a] text-gray-300 font-sans selection:bg-[#ffe81f] selection:text-black',
+    devBar: 'bg-[#ffe81f] text-black border-b-2 border-black font-black',
+    header: 'bg-[#111] text-gray-100 border border-[#222] shadow-[0_10px_30px_rgba(255,232,31,0.1)] rounded-xl',
+    card: 'bg-[#151515] border border-[#222] shadow-2xl rounded-xl',
+    cardInner: 'bg-[#1a1a1a] border border-[#333] hover:border-[#ffe81f]/50 transition-all rounded-lg',
+    textMain: 'text-gray-200', textMuted: 'text-gray-500', textAccent: 'text-[#ffe81f]', textWarning: 'text-yellow-500',
+    input: 'bg-[#111] border border-[#333] text-white placeholder:text-gray-600 focus:border-[#ffe81f] rounded-lg px-4',
+    btnPrimary: 'bg-[#ffe81f] text-black border-none hover:bg-white shadow-[0_0_15px_rgba(255,232,31,0.3)] rounded-lg font-black uppercase',
+    btnWarning: 'bg-[#222] text-[#ffe81f] border border-[#ffe81f] hover:bg-[#ffe81f] hover:text-black rounded-lg font-black uppercase',
+    fontHeading: 'font-bold tracking-widest', borderAccent: 'border-[#ffe81f]/30', badge: 'bg-[#ffe81f]/10 text-[#ffe81f] border border-[#ffe81f]/20 rounded-md'
+  },
+   mario: {
+    id: 'mario', name: 'Super Plumber',
+    appBg: 'bg-[#5c94fc] text-white font-sans selection:bg-[#e02424] selection:text-white',
+    devBar: 'bg-[#e02424] text-white border-b-4 border-[#000] font-black',
+    header: 'bg-[#e02424] text-white border-4 border-black shadow-[6px_6px_0px_#fbd000] rounded-2xl',
+    card: 'bg-white border-4 border-black shadow-[6px_6px_0px_#000] rounded-2xl',
+    cardInner: 'bg-[#f8f8f8] border-2 border-black hover:border-[#e02424] transition-all rounded-xl',
+    textMain: 'text-black', textMuted: 'text-zinc-600', textAccent: 'text-[#e02424]', textWarning: 'text-[#fbd000]',
+    input: 'bg-white border-2 border-black text-black placeholder:text-zinc-400 focus:border-[#e02424] rounded-xl px-4',
+    btnPrimary: 'bg-[#e02424] text-white border-4 border-black hover:bg-[#43b047] shadow-[4px_4px_0px_black] active:translate-y-1 active:shadow-none rounded-xl font-black uppercase',
+    btnWarning: 'bg-[#fbd000] text-black border-4 border-black hover:bg-white shadow-[4px_4px_0px_black] rounded-xl font-black uppercase',
+    fontHeading: 'font-black tracking-wide', borderAccent: 'border-[#e02424]', badge: 'bg-[#43b047] text-white border-2 border-black font-black rounded-full'
+  },
+   stark: {
+    id: 'stark', name: 'Stark Tech',
+    appBg: 'bg-[#050505] text-[#e0e0e0] font-sans selection:bg-[#00f3ff] selection:text-black',
+    devBar: 'bg-[#990000] text-[#ffcc00] border-b border-[#ffcc00] font-bold',
+    header: 'bg-gradient-to-r from-[#800000] to-[#cc0000] text-[#ffcc00] border-b-2 border-[#00f3ff] shadow-[0_0_20px_rgba(204,0,0,0.5)] rounded-xl',
+    card: 'bg-[#0a0a0a] border border-[#333] shadow-[0_0_15px_rgba(0,243,255,0.1)] rounded-xl',
+    cardInner: 'bg-[#141414] border border-[#00f3ff]/30 hover:border-[#00f3ff] transition-all rounded-lg',
+    textMain: 'text-[#e0e0e0]', textMuted: 'text-[#666]', textAccent: 'text-[#00f3ff]', textWarning: 'text-[#ffcc00]',
+    input: 'bg-[#050505] border border-[#00f3ff]/50 text-[#00f3ff] placeholder:text-[#333] focus:border-[#00f3ff] focus:shadow-[0_0_10px_rgba(0,243,255,0.3)] rounded-lg px-4',
+    btnPrimary: 'bg-[#cc0000] text-[#ffcc00] border border-[#ffcc00] hover:bg-[#ffcc00] hover:text-[#cc0000] shadow-[0_0_15px_rgba(204,0,0,0.4)] rounded-lg font-black uppercase',
+    btnWarning: 'bg-[#141414] text-[#00f3ff] border border-[#00f3ff] hover:bg-[#00f3ff] hover:text-black rounded-lg font-black uppercase',
+    fontHeading: 'font-mono tracking-widest uppercase', borderAccent: 'border-[#00f3ff]', badge: 'bg-[#00f3ff]/20 text-[#00f3ff] border border-[#00f3ff] rounded font-mono'
+  },
   rpgDark: {
     id: 'rpgDark', name: 'RPG Stealth',
     appBg: 'bg-gray-950 text-gray-200 font-sans selection:bg-blue-500/30 selection:text-blue-200',
