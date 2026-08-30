@@ -1,41 +1,44 @@
 /*
- * Gemini 3.7 Flash bridge
+ * Gemini 3.7 Flash compatibility bridge.
  *
- * The existing app was written against Groq's OpenAI-compatible endpoint.
- * This small compatibility layer lets the existing AI features use Gemini
- * without rewriting the large App.tsx file yet.
- *
- * IMPORTANT: The key is still supplied by the existing app's settings field.
- * This is a transitional fix; a server-side secret should be the long-term design.
+ * App.tsx still calls Groq's OpenAI-compatible endpoint. Instead of rewriting
+ * the large component, redirect those requests to Google's OpenAI-compatible
+ * Gemini endpoint and only change the model name.
  */
 (function () {
   const originalFetch = window.fetch.bind(window);
   const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
+  const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
   const GEMINI_MODEL = "gemini-3.7-flash";
-  const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/" + GEMINI_MODEL + ":generateContent";
 
-  function makeErrorResponse(status, message) {
-    return new Response(JSON.stringify({ error: { message: message || "Gemini request failed." } }), {
-      status,
+  function errorResponse(status, message) {
+    return new Response(JSON.stringify({
+      error: { message: message || "Gemini request failed." }
+    }), {
+      status: status,
       headers: { "Content-Type": "application/json" }
     });
   }
 
   window.fetch = async function (input, init) {
     const url = typeof input === "string" ? input : input && input.url;
+
     if (!url || !url.startsWith(GROQ_URL)) {
       return originalFetch(input, init);
     }
 
     try {
       const requestInit = init || {};
-      const headers = new Headers(requestInit.headers || (input instanceof Request ? input.headers : undefined));
+      const sourceHeaders = requestInit.headers || (input instanceof Request ? input.headers : undefined);
+      const headers = new Headers(sourceHeaders || {});
       const authorization = headers.get("Authorization") || "";
-      const match = authorization.match(/^Bearer\\s+(.+)$/i);
+
+      // IMPORTANT: single backslash = real whitespace regex.
+      const match = authorization.match(/^Bearer\s+(.+)$/i);
       const apiKey = match ? match[1].trim() : "";
 
       if (!apiKey) {
-        return makeErrorResponse(401, "Gemini API key is missing.");
+        return errorResponse(401, "Gemini API key missing. Put your Gemini API key in Command Center.");
       }
 
       let body;
@@ -44,72 +47,53 @@
       } else if (input instanceof Request) {
         body = JSON.parse(await input.clone().text());
       } else {
-        return makeErrorResponse(400, "AI request body is missing.");
+        return errorResponse(400, "AI request body is missing.");
       }
 
-      const messages = Array.isArray(body.messages) ? body.messages : [];
-      const systemMessages = messages.filter(function (m) { return m && m.role === "system"; });
-      const conversationMessages = messages.filter(function (m) { return m && m.role !== "system"; });
-
-      const contents = conversationMessages.map(function (message) {
-        return {
-          role: message.role === "assistant" ? "model" : "user",
-          parts: [{ text: String(message.content || "") }]
-        };
-      }).filter(function (message) {
-        return message.parts[0].text.trim().length > 0;
-      });
-
-      const payload = {
-        systemInstruction: systemMessages.length ? {
-          parts: [{ text: systemMessages.map(function (m) { return String(m.content || ""); }).join("\\n\\n") }]
-        } : undefined,
-        contents: contents,
-        generationConfig: body.response_format
-          ? { responseMimeType: "application/json", thinkingConfig: { thinkingLevel: "medium" } }
-          : { thinkingConfig: { thinkingLevel: "medium" } }
-      };
-
-      if (!payload.contents.length) {
-        return makeErrorResponse(400, "Gemini needs at least one user message.");
-      }
+      // Gemini's OpenAI-compatible endpoint accepts the existing chat format.
+      // Preserve messages/response_format and only swap the model.
+      body.model = GEMINI_MODEL;
+      delete body.temperature;
+      delete body.top_p;
+      delete body.top_k;
 
       const response = await originalFetch(GEMINI_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-goog-api-key": apiKey
+          "Authorization": "Bearer " + apiKey
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(body)
       });
 
-      const geminiData = await response.json();
+      const rawText = await response.text();
+      let data;
+      try {
+        data = JSON.parse(rawText);
+      } catch (_) {
+        data = { error: { message: rawText || "Gemini returned an invalid response." } };
+      }
 
       if (!response.ok) {
-        const message = geminiData && geminiData.error && geminiData.error.message
-          ? geminiData.error.message
-          : "Gemini API request failed.";
-        return makeErrorResponse(response.status, message);
+        const message = data && data.error && data.error.message
+          ? data.error.message
+          : "Gemini API request failed with HTTP " + response.status + ".";
+        console.error("Gemini API error:", response.status, data);
+        return errorResponse(response.status, message);
       }
 
-      const text = geminiData && geminiData.candidates && geminiData.candidates[0] && geminiData.candidates[0].content
-        ? geminiData.candidates[0].content.parts.filter(function (p) { return typeof p.text === "string"; }).map(function (p) { return p.text; }).join("\\n")
-        : "";
-
-      if (!text) {
-        return makeErrorResponse(502, "Gemini returned an empty response.");
+      if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+        console.error("Unexpected Gemini response:", data);
+        return errorResponse(502, "Gemini returned an unexpected response format.");
       }
 
-      /* Return the response shape the existing App.tsx already expects. */
-      return new Response(JSON.stringify({
-        choices: [{ message: { role: "assistant", content: text } }]
-      }), {
+      return new Response(JSON.stringify(data), {
         status: 200,
         headers: { "Content-Type": "application/json" }
       });
     } catch (error) {
       console.error("Gemini bridge error:", error);
-      return makeErrorResponse(500, error && error.message ? error.message : "Gemini bridge failed.");
+      return errorResponse(500, error && error.message ? error.message : "Gemini bridge failed.");
     }
   };
 })();
