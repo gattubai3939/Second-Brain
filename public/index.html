@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no, maximum-scale=1, user-scalable=no"
+    />
+    <title>Second Brain & Habit OS</title>
+    <meta name="description" content="Next-Gen Gamified Habit Tracker & Second Brain Knowledge OS" />
+
+    <!-- App Manifest & Theme -->
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <meta name="theme-color" content="#0a0a0a" />
+
+    <!-- Custom Neural-Brain Logo -->
+    <link rel="icon" type="image/svg+xml" href="%PUBLIC_URL%/logo.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="%PUBLIC_URL%/favicon.png" />
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/apple-touch-icon.png" />
+
+    <!-- Google Fonts: Plus Jakarta Sans, Outfit, Space Grotesk, JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Tailwind CSS with Custom Config -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['"Plus Jakarta Sans"', 'Outfit', 'system-ui', 'sans-serif'],
+              heading: ['Outfit', '"Plus Jakarta Sans"', 'sans-serif'],
+              mono: ['"JetBrains Mono"', 'monospace'],
+              space: ['"Space Grotesk"', 'sans-serif'],
+            },
+            animation: {
+              'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'bounce-subtle': 'bounceSubtle 2s infinite',
+              'shimmer': 'shimmer 2.5s linear infinite',
+              'float': 'float 4s ease-in-out infinite',
+              'glow': 'glow 2s ease-in-out infinite alternate',
+            },
+            keyframes: {
+              bounceSubtle: {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-4px)' },
+              },
+              shimmer: {
+                '0%': { backgroundPosition: '-200% 0' },
+                '100%': { backgroundPosition: '200% 0' },
+              },
+              float: {
+                '0%, 100%': { transform: 'translateY(0px)' },
+                '50%': { transform: 'translateY(-6px)' },
+              },
+              glow: {
+                '0%': { filter: 'drop-shadow(0 0 4px rgba(250, 204, 21, 0.4))' },
+                '100%': { filter: 'drop-shadow(0 0 16px rgba(250, 204, 21, 0.9))' },
+              },
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+
+  <body class="bg-black text-white antialiased selection:bg-yellow-400 selection:text-black">
+    <noscript> You need to enable JavaScript to run this app. </noscript>
+    <div id="root"></div>
+  </body>
+</html>
